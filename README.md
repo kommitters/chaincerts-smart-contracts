@@ -1,6 +1,6 @@
 # Chaincerts Governance
 
-[![Version Badge](https://img.shields.io/badge/VERSION-v0.1.0-yellow?style=for-the-badge)](v0.0.1)
+![Version Badge](https://img.shields.io/badge/VERSION-v0.1.0-yellow?style=for-the-badge)
 [![License badge](https://img.shields.io/github/license/kommitters/chaincerts_governance?style=for-the-badge)](https://github.com/kommitters/chaincerts_governance/blob/main/LICENSE)
 [![OpenSSF Scorecard](https://img.shields.io/ossf-scorecard/github.com/kommitters/chaincerts_governance?label=openssf%20scorecard&style=for-the-badge)](https://api.securityscorecards.dev/projects/github.com/kommitters/chaincerts_governance)
 

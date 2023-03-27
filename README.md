@@ -26,7 +26,7 @@ This library is licensed under an MIT license. See [LICENSE][license] for detail
 
 Made with 💙 by [kommitters Open Source](https://kommit.co)
 
-[license]: https://github.com/kommitters/.template/blob/main/LICENSE
-[coc]: https://github.com/kommitters/.template/blob/main/CODE_OF_CONDUCT.md
-[changelog]: https://github.com/kommitters/.template/blob/main/CHANGELOG.md
-[contributing]: https://github.com/kommitters/.template/blob/main/CONTRIBUTING.md
+[license]: https://github.com/kommitters/chaincerts_governance/blob/main/LICENSE
+[coc]: https://github.com/kommitters/chaincerts_governance/blob/main/CODE_OF_CONDUCT.md
+[changelog]: https://github.com/kommitters/chaincerts_governance/blob/main/CHANGELOG.md
+[contributing]: https://github.com/kommitters/chaincerts_governance/blob/main/CONTRIBUTING.md

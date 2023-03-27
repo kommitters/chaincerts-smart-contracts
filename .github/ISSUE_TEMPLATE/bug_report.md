@@ -20,6 +20,9 @@ A clear and concise description of what the bug is.
 ### Environment
 
 * Operating system:
+* Rust version:
+* Soroban CLI version:
+* Soroban SDK version:
 
 ### Current behavior
 

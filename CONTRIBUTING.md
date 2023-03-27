@@ -59,8 +59,8 @@ Get in touch: [oss@kommit.co][mail-to] | [@kommitters_oss][twitter] on Twitter.
 [github-help]: https://help.github.com
 [github-help-pr]: https://help.github.com/articles/about-pull-requests
 [oss-how-to]: https://opensource.guide/how-to-contribute
-[coc]: https://github.com/kommitters/.template/blob/main/CODE_OF_CONDUCT.md
+[coc]: https://github.com/kommitters/chaincerts_governance/blob/main/CODE_OF_CONDUCT.md
 [commit-msg]: https://github.com/erlang/otp/wiki/Writing-good-commit-messages
-[good-first-issue]: https://github.com/kommitters/.template/issues?q=is%3Aopen+is%3Aissue+label%3A%22%F0%9F%91%8B+Good+first+issue%22
-[help-wanted]: https://github.com/kommitters/.template/issues?q=is%3Aopen+is%3Aissue+label%3A%22%F0%9F%86%98+Help+wanted%22
+[good-first-issue]: https://github.com/kommitters/chaincerts_governance/issues?q=is%3Aopen+is%3Aissue+label%3A%22%F0%9F%91%8B+Good+first+issue%22
+[help-wanted]: https://github.com/kommitters/chaincerts_governance/issues?q=is%3Aopen+is%3Aissue+label%3A%22%F0%9F%86%98+Help+wanted%22
 [contributions-under-repo]: https://help.github.com/articles/github-terms-of-service/#6-contributions-under-repository-license

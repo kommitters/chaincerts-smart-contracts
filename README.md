@@ -1,7 +1,7 @@
 # Chaincerts Governance
 
 [![Version Badge](https://img.shields.io/badge/VERSION-v0.1.0-yellow?style=for-the-badge)](v0.0.1)
-[![License badge](https://img.shields.io/github/license/kommitters/chaincerts_governance?style=for-the-badge)](https://github.com/kommitters/kadena.ex/blob/main/LICENSE)
+[![License badge](https://img.shields.io/github/license/kommitters/chaincerts_governance?style=for-the-badge)](https://github.com/kommitters/chaincerts_governance/blob/main/LICENSE)
 [![OpenSSF Scorecard](https://img.shields.io/ossf-scorecard/github.com/kommitters/chaincerts_governance?label=openssf%20scorecard&style=for-the-badge)](https://api.securityscorecards.dev/projects/github.com/kommitters/chaincerts_governance)
 
 **Chaincerts Governance** is a build in the open project, providing a set of Soroban smart contracts implementing specific behaviors of Soulbound tokens automating their governance.

@@ -20,7 +20,7 @@ For information on how to contribute, please refer to our [CONTRIBUTING][contrib
 
 ## License
 
-This library is licensed under an MIT license. See [LICENSE][license] for details.
+This library is licensed under an GNU AGPLv3 license. See [LICENSE][license] for details.
 
 ## Acknowledgements
 

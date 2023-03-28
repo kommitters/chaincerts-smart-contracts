@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 
-members = ["chaincerts_governance", "chaincerts_wallet"]
+members = ["certs_governance", "certs_wallet"]
 
 [profile.release-with-logs]
 inherits = "release"

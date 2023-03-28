@@ -1,8 +1,24 @@
-[package]
-name = "chaincerts_governance"
-version = "0.1.0"
-edition = "2021"
+[workspace]
+resolver = "2"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+members = ["chaincerts_governance", "chaincerts_wallet"]
 
-[dependencies]
+[profile.release-with-logs]
+inherits = "release"
+debug-assertions = true
+
+[profile.release]
+opt-level = "z"
+overflow-checks = true
+debug = 0
+strip = "symbols"
+debug-assertions = false
+panic = "abort"
+codegen-units = 1
+lto = true
+
+[workspace.dependencies.soroban-sdk]
+version = "0.6.0"
+
+[workspace.dependencies.soroban-auth]
+version = "0.6.0"

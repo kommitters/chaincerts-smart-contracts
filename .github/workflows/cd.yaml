@@ -1,0 +1,42 @@
+name: Smart Contract Deployment
+
+on:
+  release:
+    types: [published]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build_and_test:
+    name: Rust project - latest
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        toolchain:
+          - stable
+    steps:
+      - uses: actions/checkout@v3
+      - run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
+      - run: rustup target add wasm32-unknown-unknown
+      - name: Contract Build
+        run: |
+          cargo build --target wasm32-unknown-unknown --release
+      - name: Code Tests
+        run: |
+          cargo test
+      - run: cargo install --locked --version 0.6.0 soroban-cli
+      - name: Contract Deployment chaincerts-governance to futurenet
+        run: |
+          soroban contract deploy \
+          --wasm target/wasm32-unknown-unknown/release/certs_governance.wasm \
+          --secret-key ${{ secrets.DEPLOYER_SECRET }} \
+          --rpc-url https://horizon-futurenet.stellar.cash:443/soroban/rpc \
+          --network-passphrase 'Test SDF Future Network ; October 2022'
+      - name: Contract Deployment wallet-contract to futurenet
+        run: |
+          soroban contract deploy \
+          --wasm target/wasm32-unknown-unknown/release/certs_wallet.wasm \
+          --secret-key ${{ secrets.DEPLOYER_SECRET }} \
+          --rpc-url https://horizon-futurenet.stellar.cash:443/soroban/rpc \
+          --network-passphrase 'Test SDF Future Network ; October 2022'

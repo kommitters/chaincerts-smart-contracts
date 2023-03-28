@@ -1,5 +1,5 @@
 [package]
-name = "chaincerts_wallet"
+name = "certs_wallet"
 version = "0.1.0"
 edition = "2021"
 

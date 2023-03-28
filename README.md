@@ -18,7 +18,7 @@ The `cert_governance` contract is responsible for defining the governance rules 
 
 The `cert_wallet` contract stores the Chaincerts of a specific user, and each user must have their own `cert_wallet`. This contract allows users to view their Chaincerts, add organizations authorized to issue certificates to them, and execute distribution and revocation actions on their certificates. Only functions that can be executed by the `cert_governance` contract can modify certificates in a `cert_wallet`.
 
-For more information about Chaincerts, please visit [Chaincerts](chaincerts.co).
+For more information about Chaincerts, please visit [Chaincerts](https://chaincerts.co).
 
 ## Changelog
 

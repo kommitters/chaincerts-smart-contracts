@@ -45,6 +45,11 @@ pub fn write_expiration_time(e: &Env, expiration_time: Option<u64>) {
     e.storage().set(&key, &expiration_time)
 }
 
+pub fn read_receivers(e: &Env) -> Map<Address, CertData> {
+    let key = DataKey::Receivers;
+    e.storage().get_unchecked(&key).unwrap()
+}
+
 pub fn create_receivers(e: &Env, receivers_address: Vec<Address>) {
     let mut receivers: Map<Address, CertData> = map![e];
     receivers_address.iter().for_each(|receiver| {
@@ -72,4 +77,19 @@ pub fn read_distribution_limit(e: &Env) -> u32 {
 pub fn write_distribution_limit(e: &Env, distribution_limit: u32) {
     let key = DataKey::DistLimit;
     e.storage().set(&key, &distribution_limit)
+}
+
+pub fn write_supply(e: &Env, supply: u32) {
+    let key = DataKey::Supply;
+    e.storage().set(&key, &supply)
+}
+
+pub fn read_supply(e: &Env) -> u32 {
+    let key = DataKey::Supply;
+    e.storage().get_unchecked(&key).unwrap()
+}
+
+#[cfg(not(tarpaulin_include))]
+pub fn _increment_supply(e: &Env) {
+    write_supply(e, read_supply(e) + 1);
 }

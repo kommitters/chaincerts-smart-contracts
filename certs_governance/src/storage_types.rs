@@ -49,6 +49,16 @@ impl CertData {
     }
 }
 
+#[contracttype]
+#[derive(Clone, Debug, PartialEq)]
+pub struct Info {
+    pub name: Bytes,
+    pub revocable: bool,
+    pub exp_time: Opt,
+    pub dist_limit: u32,
+    pub supply: u32,
+}
+
 #[derive(Clone, Debug)]
 #[contracttype]
 pub enum DataKey {

@@ -72,6 +72,12 @@ fn test_successful_execution_of_wallet_capabilities() {
         &OptU64::Some(1711662757),
     );
 
+    test.wallet.revoke_cc(
+        &test.chaincert_id,
+        &test.contract_distributor,
+        &test.organizations.get_unchecked(0).unwrap(),
+    );
+
     test.wallet
         .rmv_org(&test.organizations.get_unchecked(0).unwrap());
 }
@@ -172,4 +178,60 @@ fn test_deposit_chaincert_chaincert_is_already_in_the_wallet() {
         &1680105831,
         &OptU64::Some(1711662757),
     );
+}
+
+#[test]
+#[should_panic(expected = "This wallet doesn't own any `chaincert` for the moment")]
+fn test_revoke_chaincert_when_chaincert_not_found() {
+    let test = ChaincertWalletTest::setup();
+
+    test.wallet
+        .add_org(&test.organizations.get_unchecked(0).unwrap());
+    test.wallet.revoke_cc(
+        &test.chaincert_id,
+        &test.contract_distributor,
+        &test.organizations.get_unchecked(0).unwrap(),
+    )
+}
+
+#[test]
+#[should_panic(expected = "The chaincert doesn't exist")]
+fn test_revoke_chaincert_when_no_chaincerts_in_wallet() {
+    let test = ChaincertWalletTest::setup();
+    let org1 = test.organizations.get_unchecked(0).unwrap();
+    let new_chaincert: Bytes = "CHAINCERT2".into_val(&test.env);
+
+    test.wallet.add_org(&org1);
+    test.wallet.deposit_cc(
+        &test.chaincert_id,
+        &test.cids.get(0).unwrap().unwrap(),
+        &test.contract_distributor,
+        &org1,
+        &1680105831,
+        &OptU64::Some(1711662757),
+    );
+
+    test.wallet
+        .revoke_cc(&new_chaincert, &test.contract_distributor, &org1);
+}
+
+#[test]
+#[should_panic(expected = "Not Authorized")]
+fn test_revoke_chaincert_when_not_authorized_contract_or_organization() {
+    let test = ChaincertWalletTest::setup();
+    let org1 = test.organizations.get_unchecked(0).unwrap();
+    let org2 = test.organizations.get_unchecked(1).unwrap();
+
+    test.wallet.add_org(&org1);
+    test.wallet.deposit_cc(
+        &test.chaincert_id,
+        &test.cids.get(0).unwrap().unwrap(),
+        &test.contract_distributor,
+        &org1,
+        &1680105831,
+        &OptU64::Some(1711662757),
+    );
+
+    test.wallet
+        .revoke_cc(&test.chaincert_id, &test.contract_distributor, &org2);
 }

@@ -52,6 +52,12 @@ impl Wallet {
             expiration_date,
         )
     }
+
+    /// Revoke a `Chaincert` from the wallet
+    pub fn revoke_cc(env: Env, chaincert_id: Bytes, contract_distributor: Address, org_id: Bytes) {
+        contract_distributor.require_auth();
+        chaincert::revoke_chaincert(&env, &chaincert_id, &contract_distributor, &org_id);
+    }
 }
 
 mod test;

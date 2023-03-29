@@ -11,6 +11,10 @@ pub(crate) fn has_owner(env: &Env) -> bool {
     env.storage().has(&OWNER_KEY)
 }
 
+pub(crate) fn read_owner(env: &Env) -> Address {
+    env.storage().get_unchecked(&OWNER_KEY).unwrap()
+}
+
 pub(crate) fn write_owner(env: &Env, owner: &Address) {
     env.storage().set(&OWNER_KEY, owner);
 }

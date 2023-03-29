@@ -7,4 +7,6 @@ use soroban_sdk::contracttype;
 #[contracttype]
 pub enum DataKey {
     Owner,
+    /// Access Control List
+    Acl,
 }

@@ -64,8 +64,12 @@ pub(crate) fn deposit_chaincert(
     let chaincerts = match env.storage().get(&CHAINCERT_KEY) {
         Some(cc_map) => {
             let mut cc_map: Map<Bytes, Chaincert> = cc_map.unwrap();
-            cc_map.set(chaincert_id, chaincert);
-            cc_map
+            if !cc_map.contains_key(chaincert_id.clone()) {
+                cc_map.set(chaincert_id, chaincert);
+                cc_map
+            } else {
+                panic!("The chaincert is already deposited in the wallet")
+            }
         }
         None => {
             let map: Map<Bytes, Chaincert> = map![env, (chaincert_id, chaincert)];

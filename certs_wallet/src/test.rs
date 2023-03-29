@@ -144,3 +144,32 @@ fn test_deposit_chaincert_when_no_organizations_in_the_acl() {
         &OptU64::Some(1711662757),
     );
 }
+
+#[test]
+#[should_panic(expected = "The chaincert is already deposited in the wallet")]
+fn test_deposit_chaincert_chaincert_is_already_in_the_wallet() {
+    let test = ChaincertWalletTest::setup();
+
+    test.wallet
+        .add_org(&test.organizations.get_unchecked(0).unwrap());
+    test.wallet
+        .add_org(&test.organizations.get_unchecked(1).unwrap());
+
+    test.wallet.deposit_cc(
+        &test.chaincert_id,
+        &test.cids.get_unchecked(0).unwrap(),
+        &test.contract_distributor,
+        &test.organizations.get_unchecked(0).unwrap(),
+        &1680105831,
+        &OptU64::Some(1711662757),
+    );
+
+    test.wallet.deposit_cc(
+        &test.chaincert_id,
+        &test.cids.get_unchecked(0).unwrap(),
+        &test.contract_distributor,
+        &test.organizations.get_unchecked(0).unwrap(),
+        &1680105831,
+        &OptU64::Some(1711662757),
+    );
+}

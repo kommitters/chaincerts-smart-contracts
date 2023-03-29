@@ -4,7 +4,7 @@
 use soroban_sdk::{Address, Bytes, Env, Map, Vec};
 
 use crate::storage_types::{CertData, Organization};
-pub trait ChaincertTrait {
+pub trait GovernanceTrait {
     /// Initialize the contract with a list of receivers.
     fn init_w_r(
         e: Env,

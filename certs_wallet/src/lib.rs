@@ -1,14 +1,18 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+#![no_std]
+mod owner;
+mod storage_types;
+use soroban_sdk::{contractimpl, Address, Env};
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+pub struct Wallet;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+#[contractimpl]
+impl Wallet {
+    pub fn initialize(env: Env, owner: Address) {
+        if owner::has_owner(&env) {
+            panic!("This wallet is already initialized");
+        }
+        owner::write_owner(&env, &owner);
     }
 }
+
+mod test;

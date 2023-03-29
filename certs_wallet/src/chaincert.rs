@@ -1,8 +1,10 @@
 //! Module Chaincert
 //!
 //! Module responsible of managing `Chaincerts` information and defining its corresponding struct.
-use crate::option::OptU64;
-use soroban_sdk::{contracttype, Address, Bytes};
+use crate::{option::OptU64, storage_types::DataKey};
+use soroban_sdk::{contracttype, map, Address, Bytes, Env, Map};
+
+const CHAINCERT_KEY: DataKey = DataKey::Chaincerts;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 #[contracttype]
@@ -22,8 +24,7 @@ pub struct Chaincert {
 }
 
 impl Chaincert {
-    #[cfg(not(tarpaulin_include))]
-    fn _new(
+    fn new(
         cid: Bytes,
         cont_dist: Address,
         org_id: Bytes,
@@ -40,4 +41,41 @@ impl Chaincert {
             revoked,
         }
     }
+}
+
+pub(crate) fn deposit_chaincert(
+    env: &Env,
+    chaincert_id: Bytes,
+    cid: Bytes,
+    contract_distributor: Address,
+    org_id: Bytes,
+    distribution_date: u64,
+    expiration_date: OptU64,
+) {
+    let chaincert = Chaincert::new(
+        cid,
+        contract_distributor,
+        org_id,
+        distribution_date,
+        expiration_date,
+        false,
+    );
+
+    let chaincerts = match env.storage().get(&CHAINCERT_KEY) {
+        Some(cc_map) => {
+            let mut cc_map: Map<Bytes, Chaincert> = cc_map.unwrap();
+            cc_map.set(chaincert_id, chaincert);
+            cc_map
+        }
+        None => {
+            let map: Map<Bytes, Chaincert> = map![env, (chaincert_id, chaincert)];
+            map
+        }
+    };
+
+    write_chaincerts(env, &chaincerts)
+}
+
+fn write_chaincerts(env: &Env, certs: &Map<Bytes, Chaincert>) {
+    env.storage().set(&CHAINCERT_KEY, certs)
 }

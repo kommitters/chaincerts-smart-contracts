@@ -9,4 +9,6 @@ pub enum DataKey {
     Owner,
     /// Access Control List
     Acl,
+    /// A map that stores a Chaincert by a given chaincert_id `Map<Bytes, Chaincert>`
+    Chaincerts,
 }

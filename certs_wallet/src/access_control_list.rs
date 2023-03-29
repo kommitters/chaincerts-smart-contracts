@@ -39,6 +39,23 @@ pub(crate) fn remove_organization(env: &Env, org_id: &Bytes) {
     }
 }
 
+pub(crate) fn check_acl(env: &Env, org_id: &Bytes) {
+    match env.storage().get(&ACL_KEY) {
+        Some(acl) => {
+            let access_list: Vec<Bytes> = acl.unwrap();
+            for org in access_list.iter() {
+                if org.unwrap() == org_id.clone() {
+                    return;
+                }
+            }
+            panic!("Not Authorized")
+        }
+        None => {
+            panic!("There are no organizations in the ACL")
+        }
+    }
+}
+
 fn remove_from_acl(org_id: &Bytes, access_list: &mut Vec<Bytes>) {
     for (index, org) in access_list.iter().enumerate() {
         if org.unwrap() == org_id.clone() {

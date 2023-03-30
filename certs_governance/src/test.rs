@@ -279,6 +279,48 @@ fn test_distribute_with_initial_receivers() {
 }
 
 #[test]
+fn test_revoke_chaincert() {
+    let e: Env = Default::default();
+    let receivers: Vec<Address> = create_random_receivers_address(&e);
+    let organization: Organization = Organization {
+        admin: Address::random(&e),
+        id_org: "12345".into_val(&e),
+    };
+
+    let distribution_date: u64 = 1679918400;
+    pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
+
+    let cert_goverance = create_cert_governance_contract_with_receivers(
+        &e,
+        &receivers,
+        &organization,
+        &true,
+        &Option::None,
+    );
+
+    let wallet_contract_id: Bytes = "wallet_contract_id".into_val(&e);
+    let receiver_address = receivers.get(0).unwrap().unwrap();
+
+    cert_goverance.distribute(
+        &organization.admin,
+        &receiver_address,
+        &wallet_contract_id,
+        &CID1.into_val(&e),
+        &distribution_date,
+    );
+
+    let mut receivers = cert_goverance.receivers();
+    let mut cert_data = receivers.get(receiver_address.clone()).unwrap().unwrap();
+    assert_eq!(cert_data.status, Status::Distribute);
+
+    cert_goverance.revoke(&organization.admin, &receiver_address, &wallet_contract_id);
+
+    receivers = cert_goverance.receivers();
+    cert_data = receivers.get(receiver_address).unwrap().unwrap();
+    assert_eq!(cert_data.status, Status::Revoked);
+}
+
+#[test]
 #[should_panic(expected = "Already initialized")]
 fn test_initialize_with_limit_contract_error() {
     let e: Env = Default::default();
@@ -336,7 +378,7 @@ fn test_distribute_admin_error() {
 
 #[test]
 #[should_panic(expected = "It is not possible to issue more Chaincerts")]
-fn test_distribution_limit_error() {
+fn test_distribute_limit_error() {
     let e: Env = Default::default();
     let receivers = create_random_receivers_address(&e);
     let organization: Organization = Organization {
@@ -407,4 +449,89 @@ fn test_distribute_status_error() {
         &CID1.into_val(&e),
         &distribution_date,
     );
+}
+
+#[test]
+#[should_panic(expected = "Does not have administrator permissions")]
+fn test_revoke_admin_error() {
+    let e: Env = Default::default();
+    let receivers: Vec<Address> = create_random_receivers_address(&e);
+    let organization: Organization = Organization {
+        admin: Address::random(&e),
+        id_org: "12345".into_val(&e),
+    };
+    let distribution_date: u64 = 1679918400;
+    pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
+    let cert_governance = create_cert_governance_contract_with_receivers(
+        &e,
+        &receivers,
+        &organization,
+        &true,
+        &Option::None,
+    );
+    let wallet_contract_id: Bytes = "wallet_contract_id".into_val(&e);
+    let receiver_address = receivers.get(0).unwrap().unwrap();
+    cert_governance.distribute(
+        &organization.admin,
+        &receiver_address,
+        &wallet_contract_id,
+        &CID1.into_val(&e),
+        &distribution_date,
+    );
+
+    cert_governance.revoke(&Address::random(&e), &receiver_address, &wallet_contract_id);
+}
+
+#[test]
+#[should_panic(expected = "Chaincert cannot be revoked")]
+fn test_revoke_status_unassigned_error() {
+    let e: Env = Default::default();
+    let receivers: Vec<Address> = create_random_receivers_address(&e);
+    let organization: Organization = Organization {
+        admin: Address::random(&e),
+        id_org: "12345".into_val(&e),
+    };
+    let cert_governance = create_cert_governance_contract_with_receivers(
+        &e,
+        &receivers,
+        &organization,
+        &true,
+        &Option::None,
+    );
+    let wallet_contract_id: Bytes = "wallet_contract_id".into_val(&e);
+    let receiver_address = receivers.get(0).unwrap().unwrap();
+
+    cert_governance.revoke(&organization.admin, &receiver_address, &wallet_contract_id);
+}
+
+#[test]
+#[should_panic(expected = "Chaincert cannot be revoked")]
+fn test_revoke_status_revoked_error() {
+    let e: Env = Default::default();
+    let receivers: Vec<Address> = create_random_receivers_address(&e);
+    let organization: Organization = Organization {
+        admin: Address::random(&e),
+        id_org: "12345".into_val(&e),
+    };
+    let distribution_date: u64 = 1679918400;
+    pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
+    let cert_governance = create_cert_governance_contract_with_receivers(
+        &e,
+        &receivers,
+        &organization,
+        &true,
+        &Option::None,
+    );
+    let wallet_contract_id: Bytes = "wallet_contract_id".into_val(&e);
+    let receiver_address = receivers.get(0).unwrap().unwrap();
+    cert_governance.distribute(
+        &organization.admin,
+        &receiver_address,
+        &wallet_contract_id,
+        &CID1.into_val(&e),
+        &distribution_date,
+    );
+
+    cert_governance.revoke(&organization.admin, &receiver_address, &wallet_contract_id);
+    cert_governance.revoke(&organization.admin, &receiver_address, &wallet_contract_id);
 }

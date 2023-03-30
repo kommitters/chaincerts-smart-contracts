@@ -1,3 +1,6 @@
+//! Module Receivers
+//!
+//! Module to create and read the contract receivers.
 use soroban_sdk::{map, Address, Bytes, Env, Map, Vec};
 use uuid::Uuid;
 

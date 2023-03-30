@@ -86,9 +86,17 @@ impl GovernanceTrait for CertGovernance {
         };
     }
 
-    #[cfg(not(tarpaulin_include))]
-    fn revoke(_e: Env, _admin: Address, _receiver: Address, _wallet_contract_id: Address) {}
-
+    fn revoke(e: Env, admin: Address, receiver: Address, _wallet_contract_id: Bytes) {
+        check_admin(&e, &admin);
+        admin.require_auth();
+        let mut receivers: Map<Address, CertData> = read_receivers(&e);
+        let mut cert_data: CertData = receivers.get(receiver.clone()).unwrap().unwrap();
+        check_receiver_status_for_revoke(&cert_data);
+        cert_data.status = Status::Revoked;
+        receivers.set(receiver, cert_data);
+        write_receivers(&e, receivers);
+        //TODO: revoke from wallet
+    }
     fn name(e: Env) -> Bytes {
         read_name(&e)
     }
@@ -148,10 +156,17 @@ fn check_amount(e: &Env) {
     }
 }
 
-/// Checks that the status of the CertData of the receiver to which it is going to be issued is Unassigned.
+/// Checks that the status of the CertData of the receiver to distribute is Unassigned.
 fn check_receiver_status_for_distribute(receiver_data: &CertData) {
     if receiver_data.status != Status::Unassigned {
         panic!("Chaincert has already been issued to the entered address")
+    }
+}
+
+/// Checks that the status of the CertData of the receiver to revoke is Distributed.
+fn check_receiver_status_for_revoke(receiver_data: &CertData) {
+    if receiver_data.status != Status::Distribute {
+        panic!("Chaincert cannot be revoked")
     }
 }
 

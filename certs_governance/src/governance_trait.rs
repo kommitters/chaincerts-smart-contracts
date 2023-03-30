@@ -38,7 +38,7 @@ pub trait GovernanceTrait {
     );
 
     /// Revoke a Chaincert from a receiver.
-    fn revoke(e: Env, admin: Address, receiver: Address, wallet_contract_id: Address);
+    fn revoke(e: Env, admin: Address, receiver: Address, wallet_contract_id: Bytes);
 
     /// Get the Chaincert name.
     fn name(e: Env) -> Bytes;

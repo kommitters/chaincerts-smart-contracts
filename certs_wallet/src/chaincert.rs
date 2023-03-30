@@ -12,7 +12,7 @@ const CHAINCERT_KEY: DataKey = DataKey::Chaincerts;
 pub struct Chaincert {
     pub cid: Bytes,
     /// Address of the governance contract that distributed the `Chaincert`
-    pub cont_dist: Address,
+    pub dist_cont: Address,
     /// The id of the organization that distributed the `Chaincert`
     pub org_id: Bytes,
     /// The distribution date in Unix Timestamp format
@@ -26,7 +26,7 @@ pub struct Chaincert {
 impl Chaincert {
     fn new(
         cid: Bytes,
-        cont_dist: Address,
+        dist_cont: Address,
         org_id: Bytes,
         dist_date: u64,
         exp_date: OptU64,
@@ -34,7 +34,7 @@ impl Chaincert {
     ) -> Chaincert {
         Chaincert {
             cid,
-            cont_dist,
+            dist_cont,
             org_id,
             dist_date,
             exp_date,
@@ -62,11 +62,11 @@ pub(crate) fn deposit_chaincert(
     );
 
     let chaincerts = match env.storage().get(&CHAINCERT_KEY) {
-        Some(cc_map) => {
-            let mut cc_map: Map<Bytes, Chaincert> = cc_map.unwrap();
-            if !cc_map.contains_key(chaincert_id.clone()) {
-                cc_map.set(chaincert_id, chaincert);
-                cc_map
+        Some(chaincert_map) => {
+            let mut chaincert_map: Map<Bytes, Chaincert> = chaincert_map.unwrap();
+            if !chaincert_map.contains_key(chaincert_id.clone()) {
+                chaincert_map.set(chaincert_id, chaincert);
+                chaincert_map
             } else {
                 panic!("The chaincert is already deposited in the wallet")
             }
@@ -78,6 +78,51 @@ pub(crate) fn deposit_chaincert(
     };
 
     write_chaincerts(env, &chaincerts)
+}
+
+pub(crate) fn revoke_chaincert(
+    env: &Env,
+    chaincert_id: &Bytes,
+    distributor_contract: &Address,
+    org_id: &Bytes,
+) {
+    match env.storage().get(&CHAINCERT_KEY) {
+        Some(chaincert_map) => {
+            let mut chaincert_map: Map<Bytes, Chaincert> = chaincert_map.unwrap();
+            remove_chaincert_from_map(
+                &mut chaincert_map,
+                chaincert_id,
+                distributor_contract,
+                org_id,
+            );
+            write_chaincerts(env, &chaincert_map);
+        }
+        None => {
+            panic!("This wallet doesn't own any `chaincert` for the moment")
+        }
+    };
+}
+
+fn remove_chaincert_from_map(
+    chaincert_map: &mut Map<Bytes, Chaincert>,
+    chaincert_id: &Bytes,
+    distributor_contract: &Address,
+    org_id: &Bytes,
+) {
+    match chaincert_map.get(chaincert_id.clone()) {
+        Some(chaincert) => {
+            let mut chaincert = chaincert.unwrap();
+            if chaincert.dist_cont == distributor_contract.clone()
+                && chaincert.org_id == org_id.clone()
+            {
+                chaincert.revoked = true;
+                chaincert_map.set(chaincert_id.clone(), chaincert);
+            } else {
+                panic!("Not Authorized");
+            }
+        }
+        None => panic!("The chaincert doesn't exist"),
+    }
 }
 
 fn write_chaincerts(env: &Env, certs: &Map<Bytes, Chaincert>) {

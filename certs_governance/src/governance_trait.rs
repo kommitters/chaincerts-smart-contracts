@@ -3,7 +3,7 @@
 //! Interface that defines the behavior of a Governance contract.
 use soroban_sdk::{Address, Bytes, Env, Map, Vec};
 
-use crate::storage_types::{CertData, Organization};
+use crate::storage_types::{CertData, Info, Organization};
 pub trait GovernanceTrait {
     /// Initialize the contract with a list of receivers.
     fn init_w_r(
@@ -63,4 +63,7 @@ pub trait GovernanceTrait {
 
     /// Get the organization id.
     fn org(e: Env) -> Bytes;
+
+    // Get all relevant contract data.
+    fn info(e: Env) -> Info;
 }

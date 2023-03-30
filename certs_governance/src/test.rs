@@ -1,6 +1,6 @@
 #![cfg(test)]
 extern crate std;
-use crate::storage_types::{CertData, Opt, Organization, Status};
+use crate::storage_types::{CertData, Info, Opt, Organization, Status};
 use crate::{contract::CertGovernance, CertGovernanceClient};
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{vec, Address, Bytes, Env, IntoVal, Vec};
@@ -101,6 +101,8 @@ fn test_initialize_contract_with_receivers() {
     assert_eq!(cert_governance.exp_time(), Option::Some(1680091200));
     assert_eq!(cert_governance.org(), "12345".into_val(&e));
     assert_eq!(cert_governance.dist_limit(), 3);
+    assert_eq!(cert_governance.supply(), 0);
+    assert_eq!(cert_governance.receivers().len(), 3);
 }
 
 #[test]
@@ -125,6 +127,53 @@ fn test_initialize_with_limit_contract() {
     assert_eq!(cert_governance.exp_time(), Option::None);
     assert_eq!(cert_governance.org(), "12345".into_val(&e));
     assert_eq!(cert_governance.dist_limit(), 6);
+    assert_eq!(cert_governance.supply(), 0);
+    assert_eq!(cert_governance.receivers().len(), 0);
+}
+
+#[test]
+fn test_get_contract_info() {
+    let e: Env = Default::default();
+    let organization: Organization = Organization {
+        admin: Address::random(&e),
+        id_org: "12345".into_val(&e),
+    };
+    let distribution_limit: u32 = 6;
+
+    let cert_governance = create_cert_governance_contract_with_limit(
+        &e,
+        &distribution_limit,
+        &organization,
+        &true,
+        &Option::None,
+    );
+
+    let cert_governance_2 = create_cert_governance_contract_with_limit(
+        &e,
+        &distribution_limit,
+        &organization,
+        &true,
+        &Option::Some(31556926),
+    );
+
+    let info = Info {
+        name: "ChaincertName".into_val(&e),
+        revocable: true,
+        exp_time: Opt::None,
+        dist_limit: 6,
+        supply: 0,
+    };
+
+    let info_2 = Info {
+        name: "ChaincertName".into_val(&e),
+        revocable: true,
+        exp_time: Opt::Some(31556926),
+        dist_limit: 6,
+        supply: 0,
+    };
+
+    assert_eq!(cert_governance.info(), info);
+    assert_eq!(cert_governance_2.info(), info_2);
 }
 
 #[test]

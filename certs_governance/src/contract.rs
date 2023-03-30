@@ -4,11 +4,11 @@
 use crate::governance_trait::GovernanceTrait;
 use crate::metadata::{
     create_receivers, read_distribution_limit, read_expiration_time, read_file_storage, read_name,
-    read_revocable, write_distribution_limit, write_expiration_time, write_file_storage,
-    write_name, write_receivers, write_revocable,
+    read_receivers, read_revocable, read_supply, write_distribution_limit, write_expiration_time,
+    write_file_storage, write_name, write_receivers, write_revocable, write_supply,
 };
 use crate::organization::{has_organization, read_organization_id, write_organization};
-use crate::storage_types::{CertData, Organization};
+use crate::storage_types::{CertData, Info, Opt, Organization};
 use soroban_sdk::{contractimpl, Address, Bytes, Env, Map, Vec};
 pub struct CertGovernance;
 
@@ -33,6 +33,7 @@ impl GovernanceTrait for CertGovernance {
         write_expiration_time(&e, expiration_time);
         write_distribution_limit(&e, receivers.len());
         create_receivers(&e, receivers);
+        write_supply(&e, 0);
     }
 
     fn init_w_l(
@@ -54,6 +55,7 @@ impl GovernanceTrait for CertGovernance {
         write_expiration_time(&e, expiration_time);
         write_distribution_limit(&e, distribution_limit);
         write_receivers(&e, Map::<Address, CertData>::new(&e));
+        write_supply(&e, 0);
     }
 
     #[cfg(not(tarpaulin_include))]
@@ -94,13 +96,25 @@ impl GovernanceTrait for CertGovernance {
         read_organization_id(&e)
     }
 
-    #[cfg(not(tarpaulin_include))]
-    fn supply(_e: Env) -> u32 {
-        0
+    fn supply(e: Env) -> u32 {
+        read_supply(&e)
     }
 
-    #[cfg(not(tarpaulin_include))]
     fn receivers(e: Env) -> Map<Address, CertData> {
-        Map::<Address, CertData>::new(&e)
+        read_receivers(&e)
+    }
+
+    fn info(e: Env) -> Info {
+        let exp_time = match read_expiration_time(&e) {
+            Some(value) => Opt::Some(value),
+            None => Opt::None,
+        };
+        Info {
+            name: read_name(&e),
+            revocable: read_revocable(&e),
+            exp_time,
+            dist_limit: read_distribution_limit(&e),
+            supply: read_supply(&e),
+        }
     }
 }

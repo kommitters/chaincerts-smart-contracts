@@ -54,6 +54,8 @@ fn test_successful_execution_of_wallet_capabilities() {
     test.wallet
         .add_org(&test.organizations.get_unchecked(1).unwrap());
 
+    assert_eq!(test.wallet.get_acl().len(), 2);
+
     test.wallet.deposit_cc(
         &test.chaincert_id,
         &test.cids.get_unchecked(0).unwrap(),
@@ -72,6 +74,8 @@ fn test_successful_execution_of_wallet_capabilities() {
         &OptU64::Some(1711662757),
     );
 
+    assert_eq!(test.wallet.get_ccs().len(), 2);
+
     test.wallet.revoke_cc(
         &test.chaincert_id,
         &test.distributor_contract,
@@ -80,6 +84,7 @@ fn test_successful_execution_of_wallet_capabilities() {
 
     test.wallet
         .rmv_org(&test.organizations.get_unchecked(0).unwrap());
+    assert_eq!(test.wallet.get_acl().len(), 1);
 }
 
 #[test]
@@ -234,4 +239,20 @@ fn test_revoke_chaincert_when_not_authorized_contract_or_organization() {
 
     test.wallet
         .revoke_cc(&test.chaincert_id, &test.distributor_contract, &org2);
+}
+
+#[test]
+#[should_panic(expected = "This wallet doesn't own any `chaincert` for the moment")]
+fn test_request_chaincerts_when_no_chaincerts_set() {
+    let test = ChaincertWalletTest::setup();
+
+    test.wallet.get_ccs();
+}
+
+#[test]
+#[should_panic(expected = "There are no organizations in the ACL")]
+fn test_request_acl_when_no_organizations_set() {
+    let test = ChaincertWalletTest::setup();
+
+    test.wallet.get_acl();
 }

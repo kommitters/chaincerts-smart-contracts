@@ -7,6 +7,15 @@ use super::storage_types::DataKey;
 
 const ACL_KEY: DataKey = DataKey::Acl;
 
+pub(crate) fn get_acl(env: &Env) -> Vec<Bytes> {
+    match env.storage().get(&ACL_KEY) {
+        Some(acl) => acl.unwrap(),
+        None => {
+            panic!("There are no organizations in the ACL")
+        }
+    }
+}
+
 pub(crate) fn add_organization(env: &Env, org_id: &Bytes) {
     let acl = match env.storage().get(&ACL_KEY) {
         Some(acl) => {

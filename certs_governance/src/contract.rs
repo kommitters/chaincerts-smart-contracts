@@ -3,12 +3,15 @@
 //! Module containing the main contract logic.
 use crate::governance_trait::GovernanceTrait;
 use crate::metadata::{
-    create_receivers, read_distribution_limit, read_expiration_time, read_file_storage, read_name,
-    read_receivers, read_revocable, read_supply, write_distribution_limit, write_expiration_time,
+    increment_supply, read_distribution_limit, read_expiration_time, read_file_storage, read_name,
+    read_revocable, read_supply, write_distribution_limit, write_expiration_time,
     write_file_storage, write_name, write_receivers, write_revocable, write_supply,
 };
-use crate::organization::{has_organization, read_organization_id, write_organization};
-use crate::storage_types::{CertData, Info, Opt, Organization};
+use crate::organization::{
+    check_admin, has_organization, read_organization_id, write_organization,
+};
+use crate::receivers::{add_receiver, create_receivers, read_receivers};
+use crate::storage_types::{CertData, Info, Opt, Organization, Status};
 use soroban_sdk::{contractimpl, Address, Bytes, Env, Map, Vec};
 pub struct CertGovernance;
 
@@ -58,16 +61,29 @@ impl GovernanceTrait for CertGovernance {
         write_supply(&e, 0);
     }
 
-    #[cfg(not(tarpaulin_include))]
     fn distribute(
         e: Env,
-        _admin: Address,
-        _receiver: Address,
+        admin: Address,
+        receiver: Address,
         _wallet_contract_id: Bytes,
         _cid: Bytes,
         distribution_date: u64,
     ) {
-        let _expiration_date = expiration_date(&e, distribution_date);
+        check_admin(&e, &admin);
+        admin.require_auth();
+        check_amount(&e);
+        let _expiration_date: Option<u64> = expiration_date(&e, distribution_date);
+        match read_receivers(&e).get(receiver.clone()) {
+            Some(_cert_data) => {
+                distribute_receiver(&e, &receiver, distribution_date);
+                //TODO: distribute to wallet
+            }
+            None => {
+                add_receiver(&e, &receiver);
+                distribute_receiver(&e, &receiver, distribution_date);
+                //TODO: distribute to wallet
+            }
+        };
     }
 
     #[cfg(not(tarpaulin_include))]
@@ -121,7 +137,32 @@ impl GovernanceTrait for CertGovernance {
 }
 
 /// Calculates the expiration date of a distributed Chaincert (using Unix time).
-#[cfg(not(tarpaulin_include))]
 fn expiration_date(e: &Env, distribution_date: u64) -> Option<u64> {
     read_expiration_time(e).map(|exp_time| distribution_date + exp_time)
+}
+
+/// Checks that no more chain certificates are issued than allowed by the distribution limit.
+fn check_amount(e: &Env) {
+    if read_supply(e) >= read_distribution_limit(e) {
+        panic!("It is not possible to issue more Chaincerts")
+    }
+}
+
+/// Checks that the status of the CertData of the receiver to which it is going to be issued is Unassigned.
+fn check_receiver_status_for_distribute(receiver_data: &CertData) {
+    if receiver_data.status != Status::Unassigned {
+        panic!("Chaincert has already been issued to the entered address")
+    }
+}
+
+/// Makes the necessary storage changes to distribute.
+fn distribute_receiver(e: &Env, address: &Address, dist_date: u64) {
+    let mut receivers: Map<Address, CertData> = read_receivers(e);
+    let mut cert_data: CertData = receivers.get(address.clone()).unwrap().unwrap();
+    check_receiver_status_for_distribute(&cert_data);
+    cert_data.status = Status::Distribute;
+    cert_data.dist_date = Opt::Some(dist_date);
+    receivers.set(address.clone(), cert_data);
+    write_receivers(e, receivers);
+    increment_supply(e);
 }

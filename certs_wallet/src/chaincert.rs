@@ -2,7 +2,7 @@
 //!
 //! Module responsible of managing `Chaincerts` information and defining its corresponding struct.
 use crate::{option::OptU64, storage_types::DataKey};
-use soroban_sdk::{contracttype, map, Address, Bytes, Env, Map};
+use soroban_sdk::{contracttype, map, Address, Bytes, Env, Map, Vec};
 
 const CHAINCERT_KEY: DataKey = DataKey::Chaincerts;
 
@@ -103,6 +103,10 @@ pub(crate) fn revoke_chaincert(
     };
 }
 
+pub(crate) fn get_chaincerts(env: &Env) -> Vec<Chaincert> {
+    read_chaincerts(env).values()
+}
+
 fn remove_chaincert_from_map(
     chaincert_map: &mut Map<Bytes, Chaincert>,
     chaincert_id: &Bytes,
@@ -122,6 +126,13 @@ fn remove_chaincert_from_map(
             }
         }
         None => panic!("The chaincert doesn't exist"),
+    }
+}
+
+fn read_chaincerts(env: &Env) -> Map<Bytes, Chaincert> {
+    match env.storage().get(&CHAINCERT_KEY) {
+        Some(cc) => cc.unwrap(),
+        None => panic!("This wallet doesn't own any `chaincert` for the moment"),
     }
 }
 

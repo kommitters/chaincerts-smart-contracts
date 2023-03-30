@@ -4,8 +4,9 @@ mod chaincert;
 mod option;
 mod owner;
 mod storage_types;
+use chaincert::Chaincert;
 use option::OptU64;
-use soroban_sdk::{contractimpl, Address, Bytes, Env};
+use soroban_sdk::{contractimpl, Address, Bytes, Env, Vec};
 
 pub struct Wallet;
 
@@ -57,6 +58,17 @@ impl Wallet {
     pub fn revoke_cc(env: Env, chaincert_id: Bytes, distributor_contract: Address, org_id: Bytes) {
         distributor_contract.require_auth();
         chaincert::revoke_chaincert(&env, &chaincert_id, &distributor_contract, &org_id);
+    }
+
+    /// Get the list of the `Chaincerts` stored in the wallet
+    pub fn get_ccs(env: Env) -> Vec<Chaincert> {
+        chaincert::get_chaincerts(&env)
+    }
+
+    /// Get the ACL stored in the wallet
+    pub fn get_acl(env: Env) -> Vec<Bytes> {
+        owner::read_owner(&env).require_auth();
+        access_control_list::get_acl(&env)
     }
 }
 

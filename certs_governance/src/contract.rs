@@ -60,13 +60,14 @@ impl GovernanceTrait for CertGovernance {
 
     #[cfg(not(tarpaulin_include))]
     fn distribute(
-        _e: Env,
+        e: Env,
         _admin: Address,
         _receiver: Address,
         _wallet_contract_id: Bytes,
         _cid: Bytes,
-        _distribution_date: u64,
+        distribution_date: u64,
     ) {
+        let _expiration_date = expiration_date(&e, distribution_date);
     }
 
     #[cfg(not(tarpaulin_include))]
@@ -117,4 +118,10 @@ impl GovernanceTrait for CertGovernance {
             supply: read_supply(&e),
         }
     }
+}
+
+/// Calculates the expiration date of a distributed Chaincert (using Unix time).
+#[cfg(not(tarpaulin_include))]
+fn expiration_date(e: &Env, distribution_date: u64) -> Option<u64> {
+    read_expiration_time(e).map(|exp_time| distribution_date + exp_time)
 }

@@ -12,7 +12,7 @@ const CHAINCERT_KEY: DataKey = DataKey::Chaincerts;
 pub struct Chaincert {
     pub cid: Bytes,
     /// Address of the governance contract that distributed the `Chaincert`
-    pub cont_dist: Address,
+    pub dist_cont: Address,
     /// The id of the organization that distributed the `Chaincert`
     pub org_id: Bytes,
     /// The distribution date in Unix Timestamp format
@@ -26,7 +26,7 @@ pub struct Chaincert {
 impl Chaincert {
     fn new(
         cid: Bytes,
-        cont_dist: Address,
+        dist_cont: Address,
         org_id: Bytes,
         dist_date: u64,
         exp_date: OptU64,
@@ -34,7 +34,7 @@ impl Chaincert {
     ) -> Chaincert {
         Chaincert {
             cid,
-            cont_dist,
+            dist_cont,
             org_id,
             dist_date,
             exp_date,
@@ -83,7 +83,7 @@ pub(crate) fn deposit_chaincert(
 pub(crate) fn revoke_chaincert(
     env: &Env,
     chaincert_id: &Bytes,
-    contract_distributor: &Address,
+    distributor_contract: &Address,
     org_id: &Bytes,
 ) {
     match env.storage().get(&CHAINCERT_KEY) {
@@ -92,7 +92,7 @@ pub(crate) fn revoke_chaincert(
             remove_chaincert_from_map(
                 &mut chaincert_map,
                 chaincert_id,
-                contract_distributor,
+                distributor_contract,
                 org_id,
             );
             write_chaincerts(env, &chaincert_map);
@@ -106,13 +106,13 @@ pub(crate) fn revoke_chaincert(
 fn remove_chaincert_from_map(
     chaincert_map: &mut Map<Bytes, Chaincert>,
     chaincert_id: &Bytes,
-    contract_distributor: &Address,
+    distributor_contract: &Address,
     org_id: &Bytes,
 ) {
     match chaincert_map.get(chaincert_id.clone()) {
         Some(chaincert) => {
             let mut chaincert = chaincert.unwrap();
-            if chaincert.cont_dist == contract_distributor.clone()
+            if chaincert.dist_cont == distributor_contract.clone()
                 && chaincert.org_id == org_id.clone()
             {
                 chaincert.revoked = true;

@@ -35,18 +35,18 @@ impl Wallet {
         env: Env,
         chaincert_id: Bytes,
         cid: Bytes,
-        contract_distributor: Address,
+        distributor_contract: Address,
         org_id: Bytes,
         distribution_date: u64,
         expiration_date: OptU64,
     ) {
         access_control_list::check_acl(&env, &org_id);
-        contract_distributor.require_auth();
+        distributor_contract.require_auth();
         chaincert::deposit_chaincert(
             &env,
             chaincert_id,
             cid,
-            contract_distributor,
+            distributor_contract,
             org_id,
             distribution_date,
             expiration_date,
@@ -54,9 +54,9 @@ impl Wallet {
     }
 
     /// Revoke a `Chaincert` from the wallet
-    pub fn revoke_cc(env: Env, chaincert_id: Bytes, contract_distributor: Address, org_id: Bytes) {
-        contract_distributor.require_auth();
-        chaincert::revoke_chaincert(&env, &chaincert_id, &contract_distributor, &org_id);
+    pub fn revoke_cc(env: Env, chaincert_id: Bytes, distributor_contract: Address, org_id: Bytes) {
+        distributor_contract.require_auth();
+        chaincert::revoke_chaincert(&env, &chaincert_id, &distributor_contract, &org_id);
     }
 }
 

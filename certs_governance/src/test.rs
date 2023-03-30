@@ -336,7 +336,7 @@ fn test_distribute_admin_error() {
 
 #[test]
 #[should_panic(expected = "It is not possible to issue more Chaincerts")]
-fn distribute_over_amount_error() {
+fn test_distribution_limit_error() {
     let e: Env = Default::default();
     let receivers = create_random_receivers_address(&e);
     let organization: Organization = Organization {
@@ -345,7 +345,7 @@ fn distribute_over_amount_error() {
     };
     let distribution_date: u64 = 1679918400;
     let distribution_limit = 1;
-    let chaincert = create_cert_governance_contract_with_limit(
+    let cert_governance = create_cert_governance_contract_with_limit(
         &e,
         &distribution_limit,
         &organization,
@@ -355,7 +355,7 @@ fn distribute_over_amount_error() {
     pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
     pub const CID2: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrED";
 
-    chaincert.distribute(
+    cert_governance.distribute(
         &organization.admin,
         &receivers.get(0).unwrap().unwrap(),
         &"wallet_contract_id".into_val(&e),
@@ -363,7 +363,7 @@ fn distribute_over_amount_error() {
         &distribution_date,
     );
 
-    chaincert.distribute(
+    cert_governance.distribute(
         &organization.admin,
         &receivers.get(1).unwrap().unwrap(),
         &"wallet_contract_id".into_val(&e),

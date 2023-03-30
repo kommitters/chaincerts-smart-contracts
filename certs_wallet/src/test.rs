@@ -90,7 +90,7 @@ fn test_initialize_an_already_initialized_wallet() {
 }
 
 #[test]
-#[should_panic(expected = "The organization is already on the ACL")]
+#[should_panic(expected = "The organization is already in the ACL")]
 fn test_when_adding_an_already_added_org() {
     let test = ChaincertWalletTest::setup();
 
@@ -182,7 +182,7 @@ fn test_deposit_chaincert_chaincert_is_already_in_the_wallet() {
 
 #[test]
 #[should_panic(expected = "This wallet doesn't own any `chaincert` for the moment")]
-fn test_revoke_chaincert_when_chaincert_not_found() {
+fn test_revoke_chaincert_when_no_chaincerts_in_wallet() {
     let test = ChaincertWalletTest::setup();
 
     test.wallet
@@ -196,7 +196,7 @@ fn test_revoke_chaincert_when_chaincert_not_found() {
 
 #[test]
 #[should_panic(expected = "The chaincert doesn't exist")]
-fn test_revoke_chaincert_when_no_chaincerts_in_wallet() {
+fn test_revoke_chaincert_when_chaincert_not_found() {
     let test = ChaincertWalletTest::setup();
     let org1 = test.organizations.get_unchecked(0).unwrap();
     let new_chaincert: Bytes = "CHAINCERT2".into_val(&test.env);

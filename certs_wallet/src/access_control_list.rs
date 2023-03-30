@@ -15,7 +15,7 @@ pub(crate) fn add_organization(env: &Env, org_id: &Bytes) {
                 access_list.push_front(org_id.clone());
                 access_list
             } else {
-                panic!("The organization is already on the ACL")
+                panic!("The organization is already in the ACL")
             }
         }
         None => {

@@ -62,11 +62,11 @@ pub(crate) fn deposit_chaincert(
     );
 
     let chaincerts = match env.storage().get(&CHAINCERT_KEY) {
-        Some(cc_map) => {
-            let mut cc_map: Map<Bytes, Chaincert> = cc_map.unwrap();
-            if !cc_map.contains_key(chaincert_id.clone()) {
-                cc_map.set(chaincert_id, chaincert);
-                cc_map
+        Some(chaincert_map) => {
+            let mut chaincert_map: Map<Bytes, Chaincert> = chaincert_map.unwrap();
+            if !chaincert_map.contains_key(chaincert_id.clone()) {
+                chaincert_map.set(chaincert_id, chaincert);
+                chaincert_map
             } else {
                 panic!("The chaincert is already deposited in the wallet")
             }
@@ -87,10 +87,15 @@ pub(crate) fn revoke_chaincert(
     org_id: &Bytes,
 ) {
     match env.storage().get(&CHAINCERT_KEY) {
-        Some(cc_map) => {
-            let mut cc_map: Map<Bytes, Chaincert> = cc_map.unwrap();
-            remove_chaincert_from_map(&mut cc_map, chaincert_id, contract_distributor, org_id);
-            write_chaincerts(env, &cc_map);
+        Some(chaincert_map) => {
+            let mut chaincert_map: Map<Bytes, Chaincert> = chaincert_map.unwrap();
+            remove_chaincert_from_map(
+                &mut chaincert_map,
+                chaincert_id,
+                contract_distributor,
+                org_id,
+            );
+            write_chaincerts(env, &chaincert_map);
         }
         None => {
             panic!("This wallet doesn't own any `chaincert` for the moment")
@@ -99,17 +104,19 @@ pub(crate) fn revoke_chaincert(
 }
 
 fn remove_chaincert_from_map(
-    cc_map: &mut Map<Bytes, Chaincert>,
+    chaincert_map: &mut Map<Bytes, Chaincert>,
     chaincert_id: &Bytes,
     contract_distributor: &Address,
     org_id: &Bytes,
 ) {
-    match cc_map.get(chaincert_id.clone()) {
-        Some(cc) => {
-            let mut cc = cc.unwrap();
-            if cc.cont_dist == contract_distributor.clone() && cc.org_id == org_id.clone() {
-                cc.revoked = true;
-                cc_map.set(chaincert_id.clone(), cc);
+    match chaincert_map.get(chaincert_id.clone()) {
+        Some(chaincert) => {
+            let mut chaincert = chaincert.unwrap();
+            if chaincert.cont_dist == contract_distributor.clone()
+                && chaincert.org_id == org_id.clone()
+            {
+                chaincert.revoked = true;
+                chaincert_map.set(chaincert_id.clone(), chaincert);
             } else {
                 panic!("Not Authorized");
             }

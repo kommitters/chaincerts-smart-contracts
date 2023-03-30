@@ -1,9 +1,8 @@
 //! Module MetaData
 //!
 //! Module for obtaining and modifying the metadata fields.
-use crate::storage_types::{CertData, DataKey, Opt, Status};
-use soroban_sdk::{map, Address, Bytes, Env, Map, Vec};
-use uuid::Uuid;
+use crate::storage_types::{CertData, DataKey};
+use soroban_sdk::{Address, Bytes, Env, Map};
 
 pub fn read_file_storage(e: &Env) -> Bytes {
     let key = DataKey::FStorage;
@@ -45,25 +44,6 @@ pub fn write_expiration_time(e: &Env, expiration_time: Option<u64>) {
     e.storage().set(&key, &expiration_time)
 }
 
-pub fn read_receivers(e: &Env) -> Map<Address, CertData> {
-    let key = DataKey::Receivers;
-    e.storage().get_unchecked(&key).unwrap()
-}
-
-pub fn create_receivers(e: &Env, receivers_address: Vec<Address>) {
-    let mut receivers: Map<Address, CertData> = map![e];
-    receivers_address.iter().for_each(|receiver| {
-        let address: Address = receiver.unwrap();
-        let bytes = address.to_raw().get_payload().to_be_bytes();
-        let uuid = Uuid::new_v5(&Uuid::NAMESPACE_DNS, &bytes);
-        let id_cert = Bytes::from_slice(e, uuid.as_bytes());
-        let chaincert_data = CertData::new(id_cert, Status::Unassigned, Opt::None);
-        receivers.set(address, chaincert_data);
-    });
-    let key = DataKey::Receivers;
-    e.storage().set(&key, &receivers)
-}
-
 pub fn write_receivers(e: &Env, receivers: Map<Address, CertData>) {
     let key = DataKey::Receivers;
     e.storage().set(&key, &receivers)
@@ -89,7 +69,6 @@ pub fn read_supply(e: &Env) -> u32 {
     e.storage().get_unchecked(&key).unwrap()
 }
 
-#[cfg(not(tarpaulin_include))]
-pub fn _increment_supply(e: &Env) {
+pub fn increment_supply(e: &Env) {
     write_supply(e, read_supply(e) + 1);
 }

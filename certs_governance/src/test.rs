@@ -204,6 +204,81 @@ fn test_initialize_contract_with_receivers_error() {
 }
 
 #[test]
+fn test_distribute_with_distribution_limit_contract() {
+    let e: Env = Default::default();
+    let organization: Organization = Organization {
+        admin: Address::random(&e),
+        id_org: "12345".into_val(&e),
+    };
+    let distribution_limit = 6;
+    let cert_governance = create_cert_governance_contract_with_limit(
+        &e,
+        &distribution_limit,
+        &organization,
+        &true,
+        &Option::None,
+    );
+
+    pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
+    let address_receiver_1 = Address::random(&e);
+    let distribution_date: u64 = 1679918400;
+    cert_governance.distribute(
+        &organization.admin,
+        &address_receiver_1,
+        &"wallet_contract_id".into_val(&e),
+        &CID1.into_val(&e),
+        &distribution_date,
+    );
+    let receivers = cert_governance.receivers();
+    let cert_data = receivers.get(address_receiver_1).unwrap().unwrap();
+
+    assert_eq!(cert_data.status, Status::Distribute);
+    assert_eq!(cert_governance.supply(), 1);
+    assert_eq!(receivers.len(), 1);
+}
+
+#[test]
+fn test_distribute_with_initial_receivers() {
+    let e: Env = Default::default();
+    let receivers = create_random_receivers_address(&e);
+    let organization: Organization = Organization {
+        admin: Address::random(&e),
+        id_org: "12345".into_val(&e),
+    };
+    let distribution_date: u64 = 1679918400;
+    pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
+
+    let cert_governance = create_cert_governance_contract_with_receivers(
+        &e,
+        &receivers,
+        &organization,
+        &true,
+        &Option::Some(31556926),
+    );
+
+    let address_receiver_1 = receivers.get(0).unwrap().unwrap();
+
+    let mut receivers = cert_governance.receivers();
+    let mut cert_data = receivers.get(address_receiver_1.clone()).unwrap().unwrap();
+    assert_eq!(cert_data.status, Status::Unassigned);
+
+    cert_governance.distribute(
+        &organization.admin,
+        &address_receiver_1,
+        &"wallet_contract_id".into_val(&e),
+        &CID1.into_val(&e),
+        &distribution_date,
+    );
+
+    receivers = cert_governance.receivers();
+    cert_data = receivers.get(address_receiver_1).unwrap().unwrap();
+
+    assert_eq!(cert_data.status, Status::Distribute);
+    assert_eq!(cert_governance.supply(), 1);
+    assert_eq!(receivers.len(), 3);
+}
+
+#[test]
 #[should_panic(expected = "Already initialized")]
 fn test_initialize_with_limit_contract_error() {
     let e: Env = Default::default();
@@ -228,4 +303,108 @@ fn test_initialize_with_limit_contract_error() {
         &6,
         &organization,
     )
+}
+
+#[test]
+#[should_panic(expected = "Does not have administrator permissions")]
+fn test_distribute_admin_error() {
+    pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
+    let e: Env = Default::default();
+    let admin = Address::random(&e);
+    let receivers = create_random_receivers_address(&e);
+    let organization: Organization = Organization {
+        admin: Address::random(&e),
+        id_org: "12345".into_val(&e),
+    };
+    let distribution_date: u64 = 1679918400;
+    let cert_governance = create_cert_governance_contract_with_receivers(
+        &e,
+        &receivers,
+        &organization,
+        &true,
+        &Option::None,
+    );
+
+    cert_governance.distribute(
+        &admin,
+        &receivers.get(0).unwrap().unwrap(),
+        &"wallet_contract_id".into_val(&e),
+        &CID1.into_val(&e),
+        &distribution_date,
+    );
+}
+
+#[test]
+#[should_panic(expected = "It is not possible to issue more Chaincerts")]
+fn test_distribution_limit_error() {
+    let e: Env = Default::default();
+    let receivers = create_random_receivers_address(&e);
+    let organization: Organization = Organization {
+        admin: Address::random(&e),
+        id_org: "12345".into_val(&e),
+    };
+    let distribution_date: u64 = 1679918400;
+    let distribution_limit = 1;
+    let cert_governance = create_cert_governance_contract_with_limit(
+        &e,
+        &distribution_limit,
+        &organization,
+        &true,
+        &Option::None,
+    );
+    pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
+    pub const CID2: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrED";
+
+    cert_governance.distribute(
+        &organization.admin,
+        &receivers.get(0).unwrap().unwrap(),
+        &"wallet_contract_id".into_val(&e),
+        &CID1.into_val(&e),
+        &distribution_date,
+    );
+
+    cert_governance.distribute(
+        &organization.admin,
+        &receivers.get(1).unwrap().unwrap(),
+        &"wallet_contract_id".into_val(&e),
+        &CID2.into_val(&e),
+        &distribution_date,
+    );
+}
+
+#[test]
+#[should_panic(expected = "Chaincert has already been issued to the entered address")]
+fn test_distribute_status_error() {
+    let e: Env = Default::default();
+    let receivers = create_random_receivers_address(&e);
+    let organization: Organization = Organization {
+        admin: Address::random(&e),
+        id_org: "12345".into_val(&e),
+    };
+    let distribution_date: u64 = 1679918400;
+    let distribution_limit = 3;
+    let cert_governance = create_cert_governance_contract_with_limit(
+        &e,
+        &distribution_limit,
+        &organization,
+        &true,
+        &Option::None,
+    );
+    pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
+
+    cert_governance.distribute(
+        &organization.admin,
+        &receivers.get(0).unwrap().unwrap(),
+        &"wallet_contract_id".into_val(&e),
+        &CID1.into_val(&e),
+        &distribution_date,
+    );
+
+    cert_governance.distribute(
+        &organization.admin,
+        &receivers.get(0).unwrap().unwrap(),
+        &"wallet_contract_id".into_val(&e),
+        &CID1.into_val(&e),
+        &distribution_date,
+    );
 }

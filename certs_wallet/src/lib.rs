@@ -4,6 +4,7 @@ mod chaincert;
 mod option;
 mod owner;
 mod storage_types;
+use option::OptU64;
 use soroban_sdk::{contractimpl, Address, Bytes, Env};
 
 pub struct Wallet;
@@ -27,6 +28,29 @@ impl Wallet {
     pub fn rmv_org(env: Env, org_id: Bytes) {
         owner::read_owner(&env).require_auth();
         access_control_list::remove_organization(&env, &org_id)
+    }
+
+    /// Deposit a `Chaincert` to the wallet
+    pub fn deposit_cc(
+        env: Env,
+        chaincert_id: Bytes,
+        cid: Bytes,
+        contract_distributor: Address,
+        org_id: Bytes,
+        distribution_date: u64,
+        expiration_date: OptU64,
+    ) {
+        access_control_list::check_acl(&env, &org_id);
+        contract_distributor.require_auth();
+        chaincert::deposit_chaincert(
+            &env,
+            chaincert_id,
+            cid,
+            contract_distributor,
+            org_id,
+            distribution_date,
+            expiration_date,
+        )
     }
 }
 

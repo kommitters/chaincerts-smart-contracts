@@ -35,5 +35,10 @@ jobs:
       - name: Code Tests and coverage
         uses: actions-rs/tarpaulin@v0.1
         with:
-          version: 0.18.0
-          args: --all-features --fail-under 100.0
+          version: 0.22.0
+          args: --all-features --fail-under 100.0 --out Lcov
+      - name: Upload to Coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: "./lcov.info"

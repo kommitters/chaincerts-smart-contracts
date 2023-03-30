@@ -47,14 +47,14 @@ pub(crate) fn deposit_chaincert(
     env: &Env,
     chaincert_id: Bytes,
     cid: Bytes,
-    contract_distributor: Address,
+    distributor_contract: Address,
     org_id: Bytes,
     distribution_date: u64,
     expiration_date: OptU64,
 ) {
     let chaincert = Chaincert::new(
         cid,
-        contract_distributor,
+        distributor_contract,
         org_id,
         distribution_date,
         expiration_date,

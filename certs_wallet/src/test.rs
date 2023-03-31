@@ -88,14 +88,14 @@ fn test_successful_execution_of_wallet_capabilities() {
 }
 
 #[test]
-#[should_panic(expected = "This wallet is already initialized")]
+#[should_panic(expected = "Status(ContractError(1))")]
 fn test_initialize_an_already_initialized_wallet() {
     let test = ChaincertWalletTest::setup();
     test.wallet.initialize(&test.owner);
 }
 
 #[test]
-#[should_panic(expected = "The organization is already in the ACL")]
+#[should_panic(expected = "Status(ContractError(4))")]
 fn test_when_adding_an_already_added_org() {
     let test = ChaincertWalletTest::setup();
 
@@ -106,7 +106,7 @@ fn test_when_adding_an_already_added_org() {
 }
 
 #[test]
-#[should_panic(expected = "There are no organizations in the ACL")]
+#[should_panic(expected = "Status(ContractError(6))")]
 fn test_remove_organization_when_not_organizations_already_set() {
     let test = ChaincertWalletTest::setup();
     test.wallet
@@ -114,7 +114,7 @@ fn test_remove_organization_when_not_organizations_already_set() {
 }
 
 #[test]
-#[should_panic(expected = "The organization doesn't exist in the ACL")]
+#[should_panic(expected = "Status(ContractError(8))")]
 fn test_remove_organization_when_organization_not_found() {
     let test = ChaincertWalletTest::setup();
     test.wallet
@@ -124,7 +124,7 @@ fn test_remove_organization_when_organization_not_found() {
 }
 
 #[test]
-#[should_panic(expected = "Not Authorized")]
+#[should_panic(expected = "Status(ContractError(2))")]
 fn test_deposit_chaincert_when_organization_is_not_in_the_acl() {
     let test = ChaincertWalletTest::setup();
 
@@ -142,7 +142,7 @@ fn test_deposit_chaincert_when_organization_is_not_in_the_acl() {
 }
 
 #[test]
-#[should_panic(expected = "There are no organizations in the ACL")]
+#[should_panic(expected = "Status(ContractError(6))")]
 fn test_deposit_chaincert_when_no_organizations_in_the_acl() {
     let test = ChaincertWalletTest::setup();
 
@@ -157,7 +157,7 @@ fn test_deposit_chaincert_when_no_organizations_in_the_acl() {
 }
 
 #[test]
-#[should_panic(expected = "The chaincert is already deposited in the wallet")]
+#[should_panic(expected = "Status(ContractError(9))")]
 fn test_deposit_chaincert_chaincert_is_already_in_the_wallet() {
     let test = ChaincertWalletTest::setup();
 
@@ -186,7 +186,7 @@ fn test_deposit_chaincert_chaincert_is_already_in_the_wallet() {
 }
 
 #[test]
-#[should_panic(expected = "This wallet doesn't own any `chaincert` for the moment")]
+#[should_panic(expected = "Status(ContractError(11))")]
 fn test_revoke_chaincert_when_no_chaincerts_in_wallet() {
     let test = ChaincertWalletTest::setup();
 
@@ -200,7 +200,7 @@ fn test_revoke_chaincert_when_no_chaincerts_in_wallet() {
 }
 
 #[test]
-#[should_panic(expected = "The chaincert doesn't exist")]
+#[should_panic(expected = "Status(ContractError(10))")]
 fn test_revoke_chaincert_when_chaincert_not_found() {
     let test = ChaincertWalletTest::setup();
     let org1 = test.organizations.get_unchecked(0).unwrap();
@@ -221,7 +221,7 @@ fn test_revoke_chaincert_when_chaincert_not_found() {
 }
 
 #[test]
-#[should_panic(expected = "Not Authorized")]
+#[should_panic(expected = "Status(ContractError(2))")]
 fn test_revoke_chaincert_when_not_authorized_contract_or_organization() {
     let test = ChaincertWalletTest::setup();
     let org1 = test.organizations.get_unchecked(0).unwrap();
@@ -242,7 +242,7 @@ fn test_revoke_chaincert_when_not_authorized_contract_or_organization() {
 }
 
 #[test]
-#[should_panic(expected = "This wallet doesn't own any `chaincert` for the moment")]
+#[should_panic(expected = "Status(ContractError(11))")]
 fn test_request_chaincerts_when_no_chaincerts_set() {
     let test = ChaincertWalletTest::setup();
 
@@ -250,7 +250,7 @@ fn test_request_chaincerts_when_no_chaincerts_set() {
 }
 
 #[test]
-#[should_panic(expected = "There are no organizations in the ACL")]
+#[should_panic(expected = "Status(ContractError(6))")]
 fn test_request_acl_when_no_organizations_set() {
     let test = ChaincertWalletTest::setup();
 

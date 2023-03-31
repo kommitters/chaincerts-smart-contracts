@@ -1,9 +1,20 @@
 #![cfg(test)]
 extern crate std;
-use crate::storage_types::{CertData, Info, Opt, Organization, Status};
+
+use crate::certs_wallet::{self, OptU64};
+use crate::storage_types::{CertData, Info, Organization, Status};
 use crate::{contract::CertGovernance, CertGovernanceClient};
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{vec, Address, Bytes, Env, IntoVal, Vec};
+
+const WASM: &[u8] = include_bytes!("../../target/wasm32-unknown-unknown/release/certs_wallet.wasm");
+
+fn create_wallet_contract(env: &Env, owner: &Address, org_id: &Bytes) -> certs_wallet::Client {
+    let wallet = certs_wallet::Client::new(env, &env.register_contract_wasm(None, WASM));
+    wallet.initialize(owner);
+    wallet.add_org(org_id);
+    wallet
+}
 
 fn create_cert_governance_contract_with_limit(
     e: &Env,
@@ -27,7 +38,7 @@ fn create_cert_governance_contract_with_limit(
 
 fn create_cert_governance_contract_with_receivers(
     e: &Env,
-    addess_receivers: &Vec<Address>,
+    address_receivers: &Vec<Address>,
     organization: &Organization,
     revocable: &bool,
     expiration_time: &Option<u64>,
@@ -40,7 +51,7 @@ fn create_cert_governance_contract_with_receivers(
         &"ChaincertName".into_val(e),
         revocable,
         expiration_time,
-        addess_receivers,
+        address_receivers,
         organization,
     );
     cert_governance
@@ -58,7 +69,7 @@ fn test_create_cert_data() {
     let e: Env = Default::default();
     let id_chaincert: Bytes = "12345".into_val(&e);
     let status = Status::Unassigned;
-    let distribution_date = Opt::Some(1711195200);
+    let distribution_date = OptU64::Some(1711195200);
     let cert_data = CertData::new(
         id_chaincert.clone(),
         status.clone(),
@@ -147,7 +158,7 @@ fn test_get_contract_info() {
     let info = Info {
         name: "ChaincertName".into_val(&e),
         revocable: true,
-        exp_time: Opt::None,
+        exp_time: OptU64::None,
         dist_limit: 6,
         supply: 0,
     };
@@ -155,7 +166,7 @@ fn test_get_contract_info() {
     let info_2 = Info {
         name: "ChaincertName".into_val(&e),
         revocable: true,
-        exp_time: Opt::Some(31556926),
+        exp_time: OptU64::Some(31556926),
         dist_limit: 6,
         supply: 0,
     };
@@ -167,6 +178,8 @@ fn test_get_contract_info() {
 #[test]
 fn test_distribute_with_distribution_limit_contract() {
     let e: Env = Default::default();
+    let address_receiver_1 = Address::random(&e);
+    let wallet = create_wallet_contract(&e, &address_receiver_1, &"12345".into_val(&e));
     let organization: Organization = Organization {
         admin: Address::random(&e),
         id_org: "12345".into_val(&e),
@@ -181,12 +194,12 @@ fn test_distribute_with_distribution_limit_contract() {
     );
 
     pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
-    let address_receiver_1 = Address::random(&e);
+
     let distribution_date: u64 = 1679918400;
     cert_governance.distribute(
         &organization.admin,
         &address_receiver_1,
-        &"wallet_contract_id".into_val(&e),
+        &wallet.contract_id,
         &CID1.into_val(&e),
         &distribution_date,
     );
@@ -196,12 +209,15 @@ fn test_distribute_with_distribution_limit_contract() {
     assert_eq!(cert_data.status, Status::Distribute);
     assert_eq!(cert_governance.supply(), 1);
     assert_eq!(receivers.len(), 1);
+    assert_eq!(wallet.get_ccs().len(), 1);
 }
 
 #[test]
 fn test_distribute_with_initial_receivers() {
     let e: Env = Default::default();
     let receivers = create_random_receivers_address(&e);
+    let address_receiver_1 = receivers.get(0).unwrap().unwrap();
+    let wallet = create_wallet_contract(&e, &address_receiver_1, &"12345".into_val(&e));
     let organization: Organization = Organization {
         admin: Address::random(&e),
         id_org: "12345".into_val(&e),
@@ -217,8 +233,6 @@ fn test_distribute_with_initial_receivers() {
         &Option::Some(31556926),
     );
 
-    let address_receiver_1 = receivers.get(0).unwrap().unwrap();
-
     let mut receivers = cert_governance.receivers();
     let mut cert_data = receivers.get(address_receiver_1.clone()).unwrap().unwrap();
     assert_eq!(cert_data.status, Status::Unassigned);
@@ -226,7 +240,7 @@ fn test_distribute_with_initial_receivers() {
     cert_governance.distribute(
         &organization.admin,
         &address_receiver_1,
-        &"wallet_contract_id".into_val(&e),
+        &wallet.contract_id,
         &CID1.into_val(&e),
         &distribution_date,
     );
@@ -237,12 +251,15 @@ fn test_distribute_with_initial_receivers() {
     assert_eq!(cert_data.status, Status::Distribute);
     assert_eq!(cert_governance.supply(), 1);
     assert_eq!(receivers.len(), 3);
+    assert_eq!(wallet.get_ccs().len(), 1);
 }
 
 #[test]
 fn test_revoke_chaincert() {
     let e: Env = Default::default();
     let receivers: Vec<Address> = create_random_receivers_address(&e);
+    let receiver_address = receivers.get(0).unwrap().unwrap();
+    let wallet = create_wallet_contract(&e, &receiver_address, &"12345".into_val(&e));
     let organization: Organization = Organization {
         admin: Address::random(&e),
         id_org: "12345".into_val(&e),
@@ -251,7 +268,7 @@ fn test_revoke_chaincert() {
     let distribution_date: u64 = 1679918400;
     pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
 
-    let cert_goverance = create_cert_governance_contract_with_receivers(
+    let cert_governance = create_cert_governance_contract_with_receivers(
         &e,
         &receivers,
         &organization,
@@ -259,24 +276,21 @@ fn test_revoke_chaincert() {
         &Option::None,
     );
 
-    let wallet_contract_id: Bytes = "wallet_contract_id".into_val(&e);
-    let receiver_address = receivers.get(0).unwrap().unwrap();
-
-    cert_goverance.distribute(
+    cert_governance.distribute(
         &organization.admin,
         &receiver_address,
-        &wallet_contract_id,
+        &wallet.contract_id,
         &CID1.into_val(&e),
         &distribution_date,
     );
 
-    let mut receivers = cert_goverance.receivers();
+    let mut receivers = cert_governance.receivers();
     let mut cert_data = receivers.get(receiver_address.clone()).unwrap().unwrap();
     assert_eq!(cert_data.status, Status::Distribute);
 
-    cert_goverance.revoke(&organization.admin, &receiver_address, &wallet_contract_id);
+    cert_governance.revoke(&organization.admin, &receiver_address, &wallet.contract_id);
 
-    receivers = cert_goverance.receivers();
+    receivers = cert_governance.receivers();
     cert_data = receivers.get(receiver_address).unwrap().unwrap();
     assert_eq!(cert_data.status, Status::Revoked);
 }
@@ -342,6 +356,8 @@ fn test_distribute_admin_error() {
     let e: Env = Default::default();
     let admin = Address::random(&e);
     let receivers = create_random_receivers_address(&e);
+    let receiver_address = receivers.get(0).unwrap().unwrap();
+    let wallet = create_wallet_contract(&e, &receiver_address, &"12345".into_val(&e));
     let organization: Organization = Organization {
         admin: Address::random(&e),
         id_org: "12345".into_val(&e),
@@ -357,8 +373,8 @@ fn test_distribute_admin_error() {
 
     cert_governance.distribute(
         &admin,
-        &receivers.get(0).unwrap().unwrap(),
-        &"wallet_contract_id".into_val(&e),
+        &receiver_address,
+        &wallet.contract_id,
         &CID1.into_val(&e),
         &distribution_date,
     );
@@ -369,6 +385,17 @@ fn test_distribute_admin_error() {
 fn test_distribute_limit_error() {
     let e: Env = Default::default();
     let receivers = create_random_receivers_address(&e);
+    let wallet1 = create_wallet_contract(
+        &e,
+        &receivers.get(0).unwrap().unwrap(),
+        &"12345".into_val(&e),
+    );
+    let wallet2 = create_wallet_contract(
+        &e,
+        &receivers.get(1).unwrap().unwrap(),
+        &"12345".into_val(&e),
+    );
+
     let organization: Organization = Organization {
         admin: Address::random(&e),
         id_org: "12345".into_val(&e),
@@ -388,7 +415,7 @@ fn test_distribute_limit_error() {
     cert_governance.distribute(
         &organization.admin,
         &receivers.get(0).unwrap().unwrap(),
-        &"wallet_contract_id".into_val(&e),
+        &wallet1.contract_id,
         &CID1.into_val(&e),
         &distribution_date,
     );
@@ -396,7 +423,7 @@ fn test_distribute_limit_error() {
     cert_governance.distribute(
         &organization.admin,
         &receivers.get(1).unwrap().unwrap(),
-        &"wallet_contract_id".into_val(&e),
+        &wallet2.contract_id,
         &CID2.into_val(&e),
         &distribution_date,
     );
@@ -407,6 +434,11 @@ fn test_distribute_limit_error() {
 fn test_distribute_status_error() {
     let e: Env = Default::default();
     let receivers = create_random_receivers_address(&e);
+    let wallet = create_wallet_contract(
+        &e,
+        &receivers.get(0).unwrap().unwrap(),
+        &"12345".into_val(&e),
+    );
     let organization: Organization = Organization {
         admin: Address::random(&e),
         id_org: "12345".into_val(&e),
@@ -425,7 +457,7 @@ fn test_distribute_status_error() {
     cert_governance.distribute(
         &organization.admin,
         &receivers.get(0).unwrap().unwrap(),
-        &"wallet_contract_id".into_val(&e),
+        &wallet.contract_id,
         &CID1.into_val(&e),
         &distribution_date,
     );
@@ -433,7 +465,7 @@ fn test_distribute_status_error() {
     cert_governance.distribute(
         &organization.admin,
         &receivers.get(0).unwrap().unwrap(),
-        &"wallet_contract_id".into_val(&e),
+        &wallet.contract_id,
         &CID1.into_val(&e),
         &distribution_date,
     );
@@ -444,6 +476,8 @@ fn test_distribute_status_error() {
 fn test_revoke_admin_error() {
     let e: Env = Default::default();
     let receivers: Vec<Address> = create_random_receivers_address(&e);
+    let receiver_address = receivers.get(0).unwrap().unwrap();
+    let wallet = create_wallet_contract(&e, &receiver_address, &"12345".into_val(&e));
     let organization: Organization = Organization {
         admin: Address::random(&e),
         id_org: "12345".into_val(&e),
@@ -457,17 +491,16 @@ fn test_revoke_admin_error() {
         &true,
         &Option::None,
     );
-    let wallet_contract_id: Bytes = "wallet_contract_id".into_val(&e);
-    let receiver_address = receivers.get(0).unwrap().unwrap();
+
     cert_governance.distribute(
         &organization.admin,
         &receiver_address,
-        &wallet_contract_id,
+        &wallet.contract_id,
         &CID1.into_val(&e),
         &distribution_date,
     );
 
-    cert_governance.revoke(&Address::random(&e), &receiver_address, &wallet_contract_id);
+    cert_governance.revoke(&Address::random(&e), &receiver_address, &wallet.contract_id);
 }
 
 #[test]
@@ -475,6 +508,8 @@ fn test_revoke_admin_error() {
 fn test_revoke_status_unassigned_error() {
     let e: Env = Default::default();
     let receivers: Vec<Address> = create_random_receivers_address(&e);
+    let receiver_address = receivers.get(0).unwrap().unwrap();
+    let wallet = create_wallet_contract(&e, &receiver_address, &"12345".into_val(&e));
     let organization: Organization = Organization {
         admin: Address::random(&e),
         id_org: "12345".into_val(&e),
@@ -486,10 +521,8 @@ fn test_revoke_status_unassigned_error() {
         &true,
         &Option::None,
     );
-    let wallet_contract_id: Bytes = "wallet_contract_id".into_val(&e);
-    let receiver_address = receivers.get(0).unwrap().unwrap();
 
-    cert_governance.revoke(&organization.admin, &receiver_address, &wallet_contract_id);
+    cert_governance.revoke(&organization.admin, &receiver_address, &wallet.contract_id);
 }
 
 #[test]
@@ -497,6 +530,8 @@ fn test_revoke_status_unassigned_error() {
 fn test_revoke_status_revoked_error() {
     let e: Env = Default::default();
     let receivers: Vec<Address> = create_random_receivers_address(&e);
+    let receiver_address = receivers.get(0).unwrap().unwrap();
+    let wallet = create_wallet_contract(&e, &receiver_address, &"12345".into_val(&e));
     let organization: Organization = Organization {
         admin: Address::random(&e),
         id_org: "12345".into_val(&e),
@@ -510,18 +545,16 @@ fn test_revoke_status_revoked_error() {
         &true,
         &Option::None,
     );
-    let wallet_contract_id: Bytes = "wallet_contract_id".into_val(&e);
-    let receiver_address = receivers.get(0).unwrap().unwrap();
     cert_governance.distribute(
         &organization.admin,
         &receiver_address,
-        &wallet_contract_id,
+        &wallet.contract_id,
         &CID1.into_val(&e),
         &distribution_date,
     );
 
-    cert_governance.revoke(&organization.admin, &receiver_address, &wallet_contract_id);
-    cert_governance.revoke(&organization.admin, &receiver_address, &wallet_contract_id);
+    cert_governance.revoke(&organization.admin, &receiver_address, &wallet.contract_id);
+    cert_governance.revoke(&organization.admin, &receiver_address, &wallet.contract_id);
 }
 
 #[test]

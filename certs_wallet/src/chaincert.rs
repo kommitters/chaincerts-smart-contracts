@@ -50,8 +50,13 @@ pub(crate) fn deposit_chaincert(
     distributor_contract: Address,
     org_id: Bytes,
     distribution_date: u64,
-    expiration_date: OptU64,
+    expiration_date: Option<u64>,
 ) {
+    let expiration_date = match expiration_date {
+        Some(date) => OptU64::Some(date),
+        None => OptU64::None,
+    };
+
     let chaincert = Chaincert::new(
         cid,
         distributor_contract,
@@ -76,7 +81,6 @@ pub(crate) fn deposit_chaincert(
             map
         }
     };
-
     write_chaincerts(env, &chaincerts)
 }
 

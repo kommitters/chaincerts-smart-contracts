@@ -6,5 +6,10 @@ mod metadata;
 mod organization;
 mod receivers;
 mod storage_types;
+mod certs_wallet {
+    soroban_sdk::contractimport!(
+        file = "../target/wasm32-unknown-unknown/release/certs_wallet.wasm"
+    );
+}
 mod test;
 pub use crate::contract::CertGovernanceClient;

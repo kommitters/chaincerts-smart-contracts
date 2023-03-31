@@ -4,7 +4,10 @@
 use soroban_sdk::{map, Address, Bytes, Env, Map, Vec};
 use uuid::Uuid;
 
-use crate::storage_types::{CertData, DataKey, Opt, Status};
+use crate::{
+    certs_wallet::OptU64,
+    storage_types::{CertData, DataKey, Status},
+};
 
 pub fn read_receivers(e: &Env) -> Map<Address, CertData> {
     let key = DataKey::Receivers;
@@ -16,7 +19,7 @@ pub fn create_receivers(e: &Env, receivers_address: Vec<Address>) {
     receivers_address.iter().for_each(|receiver| {
         let address: Address = receiver.unwrap();
         let id_cert = create_unique_id(e, &address);
-        let chaincert_data = CertData::new(id_cert, Status::Unassigned, Opt::None);
+        let chaincert_data = CertData::new(id_cert, Status::Unassigned, OptU64::None);
         receivers.set(address, chaincert_data);
     });
     let key = DataKey::Receivers;
@@ -26,7 +29,7 @@ pub fn create_receivers(e: &Env, receivers_address: Vec<Address>) {
 pub fn add_receiver(e: &Env, address: &Address) {
     let mut receivers = read_receivers(e);
     let id_cert = create_unique_id(e, address);
-    let cert_data = CertData::new(id_cert, Status::Unassigned, Opt::None);
+    let cert_data = CertData::new(id_cert, Status::Unassigned, OptU64::None);
     receivers.set(address.clone(), cert_data);
     let key = DataKey::Receivers;
     e.storage().set(&key, &receivers);

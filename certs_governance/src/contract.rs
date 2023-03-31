@@ -74,15 +74,11 @@ impl GovernanceTrait for CertGovernance {
         check_amount(&e);
         match read_receivers(&e).get(receiver.clone()) {
             Some(_) => {
-                let chaincert_id = distribute_receiver(&e, &receiver, distribution_date);
-
-                deposit(&e, wallet_contract_id, chaincert_id, cid, distribution_date);
+                distribute_receiver(&e, &receiver, distribution_date, wallet_contract_id, cid);
             }
             None => {
                 add_receiver(&e, &receiver);
-                let chaincert_id = distribute_receiver(&e, &receiver, distribution_date);
-
-                deposit(&e, wallet_contract_id, chaincert_id, cid, distribution_date);
+                distribute_receiver(&e, &receiver, distribution_date, wallet_contract_id, cid);
             }
         };
     }
@@ -94,7 +90,8 @@ impl GovernanceTrait for CertGovernance {
         let mut receivers: Map<Address, CertData> = read_receivers(&e);
         let mut cert_data: CertData = receivers.get(receiver.clone()).unwrap().unwrap();
         check_receiver_status_for_revoke(&e, &cert_data);
-        //TODO: revoke from wallet
+
+        revoke_from_wallet(&e, wallet_contract_id, &cert_data.id_cert);
         cert_data.status = Status::Revoked;
         receivers.set(receiver, cert_data);
         write_receivers(&e, receivers);
@@ -176,19 +173,33 @@ fn check_revocable(e: &Env) {
 }
 
 /// Makes the necessary storage changes to distribute.
-fn distribute_receiver(e: &Env, address: &Address, dist_date: u64) -> Bytes {
+fn distribute_receiver(
+    e: &Env,
+    address: &Address,
+    distribution_date: u64,
+    wallet_contract_id: BytesN<32>,
+    cid: Bytes,
+) {
     let mut receivers: Map<Address, CertData> = read_receivers(e);
     let mut cert_data: CertData = receivers.get(address.clone()).unwrap().unwrap();
     check_receiver_status_for_distribute(e, &cert_data);
+
+    deposit_to_wallet(
+        e,
+        wallet_contract_id,
+        cert_data.id_cert.clone(),
+        cid,
+        distribution_date,
+    );
+
     cert_data.status = Status::Distribute;
-    cert_data.dist_date = OptU64::Some(dist_date);
-    receivers.set(address.clone(), cert_data.clone());
+    cert_data.dist_date = OptU64::Some(distribution_date);
+    receivers.set(address.clone(), cert_data);
     write_receivers(e, receivers);
     increment_supply(e);
-    cert_data.id_cert
 }
 
-fn deposit(
+fn deposit_to_wallet(
     e: &Env,
     wallet_contract_id: BytesN<32>,
     chaincert_id: Bytes,
@@ -207,4 +218,11 @@ fn deposit(
         &distribution_date,
         &expiration_date,
     );
+}
+
+fn revoke_from_wallet(e: &Env, wallet_contract_id: BytesN<32>, chaincert_id: &Bytes) {
+    let wallet_client = certs_wallet::Client::new(e, &wallet_contract_id);
+    let distributor_contract = e.current_contract_address();
+    let org_id = read_organization_id(e);
+    wallet_client.revoke_cc(chaincert_id, &distributor_contract, &org_id);
 }

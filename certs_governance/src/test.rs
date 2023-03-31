@@ -293,6 +293,9 @@ fn test_revoke_chaincert() {
     receivers = cert_governance.receivers();
     cert_data = receivers.get(receiver_address).unwrap().unwrap();
     assert_eq!(cert_data.status, Status::Revoked);
+
+    let chaincert = wallet.get_ccs().get(0).unwrap().unwrap();
+    assert!(chaincert.revoked);
 }
 
 #[test]

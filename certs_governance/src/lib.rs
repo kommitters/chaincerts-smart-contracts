@@ -1,5 +1,6 @@
 #![no_std]
 mod contract;
+mod error;
 mod governance_trait;
 mod metadata;
 mod organization;

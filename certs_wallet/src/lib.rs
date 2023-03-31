@@ -1,6 +1,7 @@
 #![no_std]
 mod access_control_list;
 mod chaincert;
+mod error;
 mod option;
 mod owner;
 mod storage_types;

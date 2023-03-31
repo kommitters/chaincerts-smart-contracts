@@ -177,33 +177,6 @@ fn test_get_contract_info() {
 }
 
 #[test]
-#[should_panic(expected = "Already initialized")]
-fn test_initialize_contract_with_receivers_error() {
-    let e: Env = Default::default();
-    let receivers: Vec<Address> = create_random_receivers_address(&e);
-    let organization: Organization = Organization {
-        admin: Address::random(&e),
-        id_org: "12345".into_val(&e),
-    };
-    let cert_governance: CertGovernanceClient = create_cert_governance_contract_with_receivers(
-        &e,
-        &receivers,
-        &organization,
-        &true,
-        &Option::None,
-    );
-
-    cert_governance.init_w_r(
-        &"FileBase".into_val(&e),
-        &"ChaincertName".into_val(&e),
-        &false,
-        &Option::None,
-        &vec![&e],
-        &organization,
-    )
-}
-
-#[test]
 fn test_distribute_with_distribution_limit_contract() {
     let e: Env = Default::default();
     let organization: Organization = Organization {
@@ -321,7 +294,34 @@ fn test_revoke_chaincert() {
 }
 
 #[test]
-#[should_panic(expected = "Already initialized")]
+#[should_panic(expected = "Status(ContractError(1))")]
+fn test_initialize_contract_with_receivers_error() {
+    let e: Env = Default::default();
+    let receivers: Vec<Address> = create_random_receivers_address(&e);
+    let organization: Organization = Organization {
+        admin: Address::random(&e),
+        id_org: "12345".into_val(&e),
+    };
+    let cert_governance: CertGovernanceClient = create_cert_governance_contract_with_receivers(
+        &e,
+        &receivers,
+        &organization,
+        &true,
+        &Option::None,
+    );
+
+    cert_governance.init_w_r(
+        &"FileBase".into_val(&e),
+        &"ChaincertName".into_val(&e),
+        &false,
+        &Option::None,
+        &vec![&e],
+        &organization,
+    )
+}
+
+#[test]
+#[should_panic(expected = "Status(ContractError(1))")]
 fn test_initialize_with_limit_contract_error() {
     let e: Env = Default::default();
     let organization: Organization = Organization {
@@ -348,7 +348,7 @@ fn test_initialize_with_limit_contract_error() {
 }
 
 #[test]
-#[should_panic(expected = "Does not have administrator permissions")]
+#[should_panic(expected = "Status(ContractError(2))")]
 fn test_distribute_admin_error() {
     pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
     let e: Env = Default::default();
@@ -377,7 +377,7 @@ fn test_distribute_admin_error() {
 }
 
 #[test]
-#[should_panic(expected = "It is not possible to issue more Chaincerts")]
+#[should_panic(expected = "Status(ContractError(3))")]
 fn test_distribute_limit_error() {
     let e: Env = Default::default();
     let receivers = create_random_receivers_address(&e);
@@ -415,7 +415,7 @@ fn test_distribute_limit_error() {
 }
 
 #[test]
-#[should_panic(expected = "Chaincert has already been issued to the entered address")]
+#[should_panic(expected = "Status(ContractError(5))")]
 fn test_distribute_status_error() {
     let e: Env = Default::default();
     let receivers = create_random_receivers_address(&e);
@@ -452,7 +452,7 @@ fn test_distribute_status_error() {
 }
 
 #[test]
-#[should_panic(expected = "Does not have administrator permissions")]
+#[should_panic(expected = "Status(ContractError(2))")]
 fn test_revoke_admin_error() {
     let e: Env = Default::default();
     let receivers: Vec<Address> = create_random_receivers_address(&e);
@@ -483,7 +483,7 @@ fn test_revoke_admin_error() {
 }
 
 #[test]
-#[should_panic(expected = "Chaincert cannot be revoked")]
+#[should_panic(expected = "Status(ContractError(7))")]
 fn test_revoke_status_unassigned_error() {
     let e: Env = Default::default();
     let receivers: Vec<Address> = create_random_receivers_address(&e);
@@ -505,7 +505,7 @@ fn test_revoke_status_unassigned_error() {
 }
 
 #[test]
-#[should_panic(expected = "Chaincert cannot be revoked")]
+#[should_panic(expected = "Status(ContractError(7))")]
 fn test_revoke_status_revoked_error() {
     let e: Env = Default::default();
     let receivers: Vec<Address> = create_random_receivers_address(&e);

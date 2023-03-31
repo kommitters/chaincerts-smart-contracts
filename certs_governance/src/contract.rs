@@ -1,6 +1,7 @@
 //! Module Contract
 //!
 //! Module containing the main contract logic.
+use crate::error::ContractError;
 use crate::governance_trait::GovernanceTrait;
 use crate::metadata::{
     increment_supply, read_distribution_limit, read_expiration_time, read_file_storage, read_name,
@@ -12,7 +13,7 @@ use crate::organization::{
 };
 use crate::receivers::{add_receiver, create_receivers, read_receivers};
 use crate::storage_types::{CertData, Info, Opt, Organization, Status};
-use soroban_sdk::{contractimpl, Address, Bytes, Env, Map, Vec};
+use soroban_sdk::{contractimpl, panic_with_error, Address, Bytes, Env, Map, Vec};
 pub struct CertGovernance;
 
 #[contractimpl]
@@ -27,7 +28,7 @@ impl GovernanceTrait for CertGovernance {
         organization: Organization,
     ) {
         if has_organization(&e) {
-            panic!("Already initialized");
+            panic_with_error!(&e, ContractError::AlreadyInit);
         }
         write_organization(&e, organization);
         write_file_storage(&e, file_storage);
@@ -49,7 +50,7 @@ impl GovernanceTrait for CertGovernance {
         organization: Organization,
     ) {
         if has_organization(&e) {
-            panic!("Already initialized");
+            panic_with_error!(&e, ContractError::AlreadyInit);
         }
         write_organization(&e, organization);
         write_file_storage(&e, file_storage);
@@ -91,7 +92,7 @@ impl GovernanceTrait for CertGovernance {
         admin.require_auth();
         let mut receivers: Map<Address, CertData> = read_receivers(&e);
         let mut cert_data: CertData = receivers.get(receiver.clone()).unwrap().unwrap();
-        check_receiver_status_for_revoke(&cert_data);
+        check_receiver_status_for_revoke(&e, &cert_data);
         cert_data.status = Status::Revoked;
         receivers.set(receiver, cert_data);
         write_receivers(&e, receivers);
@@ -152,21 +153,21 @@ fn expiration_date(e: &Env, distribution_date: u64) -> Option<u64> {
 /// Checks that no more chain certificates are issued than allowed by the distribution limit.
 fn check_amount(e: &Env) {
     if read_supply(e) >= read_distribution_limit(e) {
-        panic!("It is not possible to issue more Chaincerts")
+        panic_with_error!(e, ContractError::LimitReached);
     }
 }
 
 /// Checks that the status of the CertData of the receiver to distribute is Unassigned.
-fn check_receiver_status_for_distribute(receiver_data: &CertData) {
+fn check_receiver_status_for_distribute(e: &Env, receiver_data: &CertData) {
     if receiver_data.status != Status::Unassigned {
-        panic!("Chaincert has already been issued to the entered address")
+        panic_with_error!(e, ContractError::AlreadyIssued);
     }
 }
 
 /// Checks that the status of the CertData of the receiver to revoke is Distributed.
-fn check_receiver_status_for_revoke(receiver_data: &CertData) {
+fn check_receiver_status_for_revoke(e: &Env, receiver_data: &CertData) {
     if receiver_data.status != Status::Distribute {
-        panic!("Chaincert cannot be revoked")
+        panic_with_error!(e, ContractError::NoRevocable);
     }
 }
 
@@ -174,7 +175,7 @@ fn check_receiver_status_for_revoke(receiver_data: &CertData) {
 fn distribute_receiver(e: &Env, address: &Address, dist_date: u64) {
     let mut receivers: Map<Address, CertData> = read_receivers(e);
     let mut cert_data: CertData = receivers.get(address.clone()).unwrap().unwrap();
-    check_receiver_status_for_distribute(&cert_data);
+    check_receiver_status_for_distribute(e, &cert_data);
     cert_data.status = Status::Distribute;
     cert_data.dist_date = Opt::Some(dist_date);
     receivers.set(address.clone(), cert_data);

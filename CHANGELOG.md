@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 (30.03.2023)
+## 0.2.0 (31.03.2023)
 
 - [Certs Governance Alpha version](https://github.com/kommitters/chaincerts_governance/milestone/1)
 - [Certs Wallet Alpha version](https://github.com/kommitters/chaincerts_governance/milestone/2)

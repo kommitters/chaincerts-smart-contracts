@@ -1,14 +1,9 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+#![no_std]
+mod contract;
+mod governance_trait;
+mod metadata;
+mod organization;
+mod receivers;
+mod storage_types;
+mod test;
+pub use crate::contract::CertGovernanceClient;

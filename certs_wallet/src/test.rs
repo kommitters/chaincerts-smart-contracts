@@ -1,6 +1,6 @@
 #![cfg(test)]
 
-use crate::{option::OptU64, Wallet, WalletClient};
+use crate::{Wallet, WalletClient};
 use soroban_sdk::{testutils::Address as _, vec, Address, Bytes, Env, IntoVal, Vec};
 
 fn create_wallet(e: &Env, owner: &Address) -> WalletClient {
@@ -62,7 +62,7 @@ fn test_successful_execution_of_wallet_capabilities() {
         &test.distributor_contract,
         &test.organizations.get_unchecked(0).unwrap(),
         &1680105831,
-        &OptU64::Some(1711662757),
+        &Option::<u64>::Some(1711662757),
     );
 
     test.wallet.deposit_cc(
@@ -71,7 +71,7 @@ fn test_successful_execution_of_wallet_capabilities() {
         &test.distributor_contract,
         &test.organizations.get_unchecked(0).unwrap(),
         &1680205831,
-        &OptU64::Some(1711662757),
+        &Option::<u64>::None,
     );
 
     assert_eq!(test.wallet.get_ccs().len(), 2);
@@ -137,7 +137,7 @@ fn test_deposit_chaincert_when_organization_is_not_in_the_acl() {
         &test.distributor_contract,
         &test.organizations.get_unchecked(1).unwrap(),
         &1680105831,
-        &OptU64::Some(1711662757),
+        &Option::<u64>::Some(1711662757),
     );
 }
 
@@ -152,7 +152,7 @@ fn test_deposit_chaincert_when_no_organizations_in_the_acl() {
         &test.distributor_contract,
         &test.organizations.get_unchecked(1).unwrap(),
         &1680105831,
-        &OptU64::Some(1711662757),
+        &Option::<u64>::Some(1711662757),
     );
 }
 
@@ -172,7 +172,7 @@ fn test_deposit_chaincert_chaincert_is_already_in_the_wallet() {
         &test.distributor_contract,
         &test.organizations.get_unchecked(0).unwrap(),
         &1680105831,
-        &OptU64::Some(1711662757),
+        &Option::<u64>::Some(1711662757),
     );
 
     test.wallet.deposit_cc(
@@ -181,7 +181,7 @@ fn test_deposit_chaincert_chaincert_is_already_in_the_wallet() {
         &test.distributor_contract,
         &test.organizations.get_unchecked(0).unwrap(),
         &1680105831,
-        &OptU64::Some(1711662757),
+        &Option::<u64>::Some(1711662757),
     );
 }
 
@@ -213,7 +213,7 @@ fn test_revoke_chaincert_when_chaincert_not_found() {
         &test.distributor_contract,
         &org1,
         &1680105831,
-        &OptU64::Some(1711662757),
+        &Option::<u64>::Some(1711662757),
     );
 
     test.wallet
@@ -234,7 +234,7 @@ fn test_revoke_chaincert_when_not_authorized_contract_or_organization() {
         &test.distributor_contract,
         &org1,
         &1680105831,
-        &OptU64::Some(1711662757),
+        &Option::<u64>::Some(1711662757),
     );
 
     test.wallet

@@ -6,5 +6,8 @@ mod metadata;
 mod organization;
 mod receivers;
 mod storage_types;
+mod certs_wallet {
+    soroban_sdk::contractimport!(file = "./certs_wallet.wasm");
+}
 mod test;
 pub use crate::contract::CertGovernanceClient;

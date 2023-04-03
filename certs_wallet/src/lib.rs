@@ -8,7 +8,6 @@ mod storage_types;
 
 use crate::error::ContractError;
 use chaincert::Chaincert;
-use option::OptU64;
 use soroban_sdk::{contractimpl, panic_with_error, Address, Bytes, Env, Vec};
 
 pub struct Wallet;
@@ -42,7 +41,7 @@ impl Wallet {
         distributor_contract: Address,
         org_id: Bytes,
         distribution_date: u64,
-        expiration_date: OptU64,
+        expiration_date: Option<u64>,
     ) {
         access_control_list::check_acl(&env, &org_id);
         distributor_contract.require_auth();

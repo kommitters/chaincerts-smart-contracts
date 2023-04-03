@@ -5,7 +5,7 @@ use crate::{
     error::ContractError,
     storage_types::{DataKey, Organization},
 };
-use soroban_sdk::{panic_with_error, Address, Env};
+use soroban_sdk::{panic_with_error, Address, Bytes, Env};
 
 pub fn has_organization(e: &Env) -> bool {
     let key = DataKey::Org;
@@ -15,6 +15,12 @@ pub fn has_organization(e: &Env) -> bool {
 pub fn write_organization(e: &Env, org: Organization) {
     let key = DataKey::Org;
     e.storage().set(&key, &org);
+}
+
+pub fn read_organization_id(e: &Env) -> Bytes {
+    let key = DataKey::Org;
+    let organization: Organization = e.storage().get_unchecked(&key).unwrap();
+    organization.id_org
 }
 
 fn read_organization_admin(e: &Env) -> Address {

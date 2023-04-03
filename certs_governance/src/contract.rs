@@ -9,7 +9,9 @@ use crate::metadata::{
     read_revocable, read_supply, write_distribution_limit, write_expiration_time,
     write_file_storage, write_name, write_receivers, write_revocable, write_supply,
 };
-use crate::organization::{check_admin, has_organization, write_organization};
+use crate::organization::{
+    check_admin, has_organization, read_organization_id, write_organization,
+};
 use crate::receivers::{add_receiver, create_receivers, read_receivers};
 use crate::storage_types::{CertData, Info, Organization, Status};
 use soroban_sdk::{contractimpl, panic_with_error, Address, Bytes, BytesN, Env, Map, Vec};
@@ -83,7 +85,7 @@ impl GovernanceTrait for CertGovernance {
         };
     }
 
-    fn revoke(e: Env, admin: Address, receiver: Address, wallet_contract_id: Bytes) {
+    fn revoke(e: Env, admin: Address, receiver: Address, wallet_contract_id: BytesN<32>) {
         check_revocable(&e);
         check_admin(&e, &admin);
         admin.require_auth();

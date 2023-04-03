@@ -563,6 +563,8 @@ fn test_revoke_status_revoked_error() {
 fn test_revoke_no_revocable_cert() {
     let e: Env = Default::default();
     let receivers: Vec<Address> = create_random_receivers_address(&e);
+    let receiver_address = receivers.get(0).unwrap().unwrap();
+    let wallet = create_wallet_contract(&e, &receiver_address, &"12345".into_val(&e));
     let organization: Organization = Organization {
         admin: Address::random(&e),
         id_org: "12345".into_val(&e),
@@ -574,8 +576,8 @@ fn test_revoke_no_revocable_cert() {
         &false,
         &Option::None,
     );
-    let wallet_contract_id: Bytes = "wallet_contract_id".into_val(&e);
+
     let receiver_address = receivers.get(0).unwrap().unwrap();
 
-    cert_governance.revoke(&organization.admin, &receiver_address, &wallet_contract_id);
+    cert_governance.revoke(&organization.admin, &receiver_address, &wallet.contract_id);
 }

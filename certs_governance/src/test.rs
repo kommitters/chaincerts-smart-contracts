@@ -70,16 +70,6 @@ fn test_create_cert_data() {
 }
 
 #[test]
-fn test_create_organization() {
-    let e: Env = Default::default();
-    let id_org: Bytes = "12345".into_val(&e);
-    let admin: Address = Address::random(&e);
-    let organization = Organization::new(id_org.clone(), admin.clone());
-    assert_eq!(organization.id_org, id_org);
-    assert_eq!(organization.admin, admin);
-}
-
-#[test]
 fn test_initialize_contract_with_receivers() {
     let e: Env = Default::default();
     let receivers: Vec<Address> = create_random_receivers_address(&e);
@@ -99,7 +89,6 @@ fn test_initialize_contract_with_receivers() {
     assert_eq!(cert_governance.name(), "ChaincertName".into_val(&e));
     assert!(cert_governance.revocable());
     assert_eq!(cert_governance.exp_time(), Option::Some(1680091200));
-    assert_eq!(cert_governance.org(), "12345".into_val(&e));
     assert_eq!(cert_governance.dist_limit(), 3);
     assert_eq!(cert_governance.supply(), 0);
     assert_eq!(cert_governance.receivers().len(), 3);
@@ -125,7 +114,6 @@ fn test_initialize_with_limit_contract() {
     assert_eq!(cert_governance.name(), "ChaincertName".into_val(&e));
     assert!(cert_governance.revocable());
     assert_eq!(cert_governance.exp_time(), Option::None);
-    assert_eq!(cert_governance.org(), "12345".into_val(&e));
     assert_eq!(cert_governance.dist_limit(), 6);
     assert_eq!(cert_governance.supply(), 0);
     assert_eq!(cert_governance.receivers().len(), 0);
@@ -533,5 +521,27 @@ fn test_revoke_status_revoked_error() {
     );
 
     cert_governance.revoke(&organization.admin, &receiver_address, &wallet_contract_id);
+    cert_governance.revoke(&organization.admin, &receiver_address, &wallet_contract_id);
+}
+
+#[test]
+#[should_panic(expected = "Status(ContractError(7))")]
+fn test_revoke_no_revocable_cert() {
+    let e: Env = Default::default();
+    let receivers: Vec<Address> = create_random_receivers_address(&e);
+    let organization: Organization = Organization {
+        admin: Address::random(&e),
+        id_org: "12345".into_val(&e),
+    };
+    let cert_governance = create_cert_governance_contract_with_receivers(
+        &e,
+        &receivers,
+        &organization,
+        &false,
+        &Option::None,
+    );
+    let wallet_contract_id: Bytes = "wallet_contract_id".into_val(&e);
+    let receiver_address = receivers.get(0).unwrap().unwrap();
+
     cert_governance.revoke(&organization.admin, &receiver_address, &wallet_contract_id);
 }

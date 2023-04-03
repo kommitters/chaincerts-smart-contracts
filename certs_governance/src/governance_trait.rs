@@ -61,9 +61,6 @@ pub trait GovernanceTrait {
     /// Get the receivers data in the contract.
     fn receivers(e: Env) -> Map<Address, CertData>;
 
-    /// Get the organization id.
-    fn org(e: Env) -> Bytes;
-
     // Get all relevant contract data.
     fn info(e: Env) -> Info;
 }

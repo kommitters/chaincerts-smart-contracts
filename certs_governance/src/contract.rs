@@ -8,9 +8,7 @@ use crate::metadata::{
     read_revocable, read_supply, write_distribution_limit, write_expiration_time,
     write_file_storage, write_name, write_receivers, write_revocable, write_supply,
 };
-use crate::organization::{
-    check_admin, has_organization, read_organization_id, write_organization,
-};
+use crate::organization::{check_admin, has_organization, write_organization};
 use crate::receivers::{add_receiver, create_receivers, read_receivers};
 use crate::storage_types::{CertData, Info, Opt, Organization, Status};
 use soroban_sdk::{contractimpl, panic_with_error, Address, Bytes, Env, Map, Vec};
@@ -88,16 +86,18 @@ impl GovernanceTrait for CertGovernance {
     }
 
     fn revoke(e: Env, admin: Address, receiver: Address, _wallet_contract_id: Bytes) {
+        check_revocable(&e);
         check_admin(&e, &admin);
         admin.require_auth();
         let mut receivers: Map<Address, CertData> = read_receivers(&e);
         let mut cert_data: CertData = receivers.get(receiver.clone()).unwrap().unwrap();
         check_receiver_status_for_revoke(&e, &cert_data);
+        //TODO: revoke from wallet
         cert_data.status = Status::Revoked;
         receivers.set(receiver, cert_data);
         write_receivers(&e, receivers);
-        //TODO: revoke from wallet
     }
+
     fn name(e: Env) -> Bytes {
         read_name(&e)
     }
@@ -116,10 +116,6 @@ impl GovernanceTrait for CertGovernance {
 
     fn f_storage(e: Env) -> Bytes {
         read_file_storage(&e)
-    }
-
-    fn org(e: Env) -> Bytes {
-        read_organization_id(&e)
     }
 
     fn supply(e: Env) -> u32 {
@@ -167,6 +163,12 @@ fn check_receiver_status_for_distribute(e: &Env, receiver_data: &CertData) {
 /// Checks that the status of the CertData of the receiver to revoke is Distributed.
 fn check_receiver_status_for_revoke(e: &Env, receiver_data: &CertData) {
     if receiver_data.status != Status::Distribute {
+        panic_with_error!(e, ContractError::NoRevocable);
+    }
+}
+
+fn check_revocable(e: &Env) {
+    if !read_revocable(e) {
         panic_with_error!(e, ContractError::NoRevocable);
     }
 }

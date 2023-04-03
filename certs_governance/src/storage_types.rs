@@ -10,12 +10,6 @@ pub struct Organization {
     pub admin: Address,
 }
 
-impl Organization {
-    pub fn new(id_org: Bytes, admin: Address) -> Organization {
-        Organization { id_org, admin }
-    }
-}
-
 #[contracttype]
 #[derive(Debug, Clone, PartialEq)]
 pub enum Opt {

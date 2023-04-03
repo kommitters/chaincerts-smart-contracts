@@ -33,8 +33,10 @@ pub fn add_receiver(e: &Env, address: &Address) {
 }
 
 fn create_unique_id(e: &Env, address: &Address) -> Bytes {
-    let bytes = address.to_raw().get_payload().to_be_bytes();
-    let uuid = Uuid::new_v5(&Uuid::NAMESPACE_DNS, &bytes);
+    let contract_address_bytes = e.current_contract_address().to_raw().get_payload();
+    let receiver_bytes = address.to_raw().get_payload();
+    let uniq_bytes = (contract_address_bytes + receiver_bytes).to_be_bytes();
+    let uuid = Uuid::new_v5(&Uuid::NAMESPACE_DNS, &uniq_bytes);
     let id_cert: Bytes = Bytes::from_slice(e, uuid.as_bytes());
     id_cert
 }

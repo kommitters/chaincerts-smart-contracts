@@ -83,7 +83,7 @@ impl GovernanceTrait for CertGovernance {
         };
     }
 
-    fn revoke(e: Env, admin: Address, receiver: Address, _wallet_contract_id: Bytes) {
+    fn revoke(e: Env, admin: Address, receiver: Address, wallet_contract_id: Bytes) {
         check_revocable(&e);
         check_admin(&e, &admin);
         admin.require_auth();
@@ -172,7 +172,7 @@ fn check_revocable(e: &Env) {
     }
 }
 
-/// Makes the necessary storage changes to distribute.
+/// Deposit a chaincert to a wallet and makes the necessary storage changes when successful.
 fn distribute_receiver(
     e: &Env,
     address: &Address,
@@ -199,6 +199,7 @@ fn distribute_receiver(
     increment_supply(e);
 }
 
+/// Invokes a wallet contract to make a chaincert deposit.
 fn deposit_to_wallet(
     e: &Env,
     wallet_contract_id: BytesN<32>,
@@ -220,6 +221,7 @@ fn deposit_to_wallet(
     );
 }
 
+/// Invokes a wallet contract to execute a chaincert revocation.
 fn revoke_from_wallet(e: &Env, wallet_contract_id: BytesN<32>, chaincert_id: &Bytes) {
     let wallet_client = certs_wallet::Client::new(e, &wallet_contract_id);
     let distributor_contract = e.current_contract_address();

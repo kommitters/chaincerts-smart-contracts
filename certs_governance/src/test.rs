@@ -1,6 +1,4 @@
 #![cfg(test)]
-extern crate std;
-
 use crate::certs_wallet::{self, OptU64};
 use crate::storage_types::{CertData, Info, Organization, Status};
 use crate::{contract::CertGovernance, CertGovernanceClient};

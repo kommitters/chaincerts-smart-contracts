@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0 (04.04.2023)
+
+- [Error handling](https://github.com/kommitters/chaincerts_governance/milestone/3)
+- [Contracts integration](https://github.com/kommitters/chaincerts_governance/issues/51)
+
 ## 0.2.0 (31.03.2023)
 
 - [Certs Governance Alpha version](https://github.com/kommitters/chaincerts_governance/milestone/1)

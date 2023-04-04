@@ -1,8 +1,8 @@
 //! Module Chaincert
 //!
 //! Module responsible of managing `Chaincerts` information and defining its corresponding struct.
-use crate::{option::OptU64, storage_types::DataKey};
-use soroban_sdk::{contracttype, map, Address, Bytes, Env, Map, Vec};
+use crate::{error::ContractError, option::OptU64, storage_types::DataKey};
+use soroban_sdk::{contracttype, map, panic_with_error, Address, Bytes, Env, Map, Vec};
 
 const CHAINCERT_KEY: DataKey = DataKey::Chaincerts;
 
@@ -50,8 +50,13 @@ pub(crate) fn deposit_chaincert(
     distributor_contract: Address,
     org_id: Bytes,
     distribution_date: u64,
-    expiration_date: OptU64,
+    expiration_date: Option<u64>,
 ) {
+    let expiration_date = match expiration_date {
+        Some(date) => OptU64::Some(date),
+        None => OptU64::None,
+    };
+
     let chaincert = Chaincert::new(
         cid,
         distributor_contract,
@@ -68,7 +73,7 @@ pub(crate) fn deposit_chaincert(
                 chaincert_map.set(chaincert_id, chaincert);
                 chaincert_map
             } else {
-                panic!("The chaincert is already deposited in the wallet")
+                panic_with_error!(env, ContractError::ChaincertAlreadyInWallet)
             }
         }
         None => {
@@ -76,7 +81,6 @@ pub(crate) fn deposit_chaincert(
             map
         }
     };
-
     write_chaincerts(env, &chaincerts)
 }
 
@@ -90,6 +94,7 @@ pub(crate) fn revoke_chaincert(
         Some(chaincert_map) => {
             let mut chaincert_map: Map<Bytes, Chaincert> = chaincert_map.unwrap();
             remove_chaincert_from_map(
+                env,
                 &mut chaincert_map,
                 chaincert_id,
                 distributor_contract,
@@ -98,7 +103,7 @@ pub(crate) fn revoke_chaincert(
             write_chaincerts(env, &chaincert_map);
         }
         None => {
-            panic!("This wallet doesn't own any `chaincert` for the moment")
+            panic_with_error!(env, ContractError::NoChaincerts)
         }
     };
 }
@@ -108,6 +113,7 @@ pub(crate) fn get_chaincerts(env: &Env) -> Vec<Chaincert> {
 }
 
 fn remove_chaincert_from_map(
+    env: &Env,
     chaincert_map: &mut Map<Bytes, Chaincert>,
     chaincert_id: &Bytes,
     distributor_contract: &Address,
@@ -122,17 +128,17 @@ fn remove_chaincert_from_map(
                 chaincert.revoked = true;
                 chaincert_map.set(chaincert_id.clone(), chaincert);
             } else {
-                panic!("Not Authorized");
+                panic_with_error!(env, ContractError::NotAuthorized);
             }
         }
-        None => panic!("The chaincert doesn't exist"),
+        None => panic_with_error!(env, ContractError::ChaincertNotFound),
     }
 }
 
 fn read_chaincerts(env: &Env) -> Map<Bytes, Chaincert> {
     match env.storage().get(&CHAINCERT_KEY) {
         Some(cc) => cc.unwrap(),
-        None => panic!("This wallet doesn't own any `chaincert` for the moment"),
+        None => panic_with_error!(env, ContractError::NoChaincerts),
     }
 }
 

@@ -1,12 +1,14 @@
 #![no_std]
 mod access_control_list;
 mod chaincert;
+mod error;
 mod option;
 mod owner;
 mod storage_types;
+
+use crate::error::ContractError;
 use chaincert::Chaincert;
-use option::OptU64;
-use soroban_sdk::{contractimpl, Address, Bytes, Env, Vec};
+use soroban_sdk::{contractimpl, panic_with_error, Address, Bytes, Env, Vec};
 
 pub struct Wallet;
 
@@ -14,7 +16,7 @@ pub struct Wallet;
 impl Wallet {
     pub fn initialize(env: Env, owner: Address) {
         if owner::has_owner(&env) {
-            panic!("This wallet is already initialized");
+            panic_with_error!(env, ContractError::AlreadyInit);
         }
         owner::write_owner(&env, &owner);
     }
@@ -39,7 +41,7 @@ impl Wallet {
         distributor_contract: Address,
         org_id: Bytes,
         distribution_date: u64,
-        expiration_date: OptU64,
+        expiration_date: Option<u64>,
     ) {
         access_control_list::check_acl(&env, &org_id);
         distributor_contract.require_auth();

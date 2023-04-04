@@ -1,7 +1,7 @@
 //! Module GovernanceTrait
 //!
 //! Interface that defines the behavior of a Governance contract.
-use soroban_sdk::{Address, Bytes, Env, Map, Vec};
+use soroban_sdk::{Address, Bytes, BytesN, Env, Map, Vec};
 
 use crate::storage_types::{CertData, Info, Organization};
 pub trait GovernanceTrait {
@@ -32,13 +32,13 @@ pub trait GovernanceTrait {
         e: Env,
         admin: Address,
         receiver: Address,
-        wallet_contract_id: Bytes,
+        wallet_contract_id: BytesN<32>,
         cid: Bytes,
         distribution_date: u64,
     );
 
     /// Revoke a Chaincert from a receiver.
-    fn revoke(e: Env, admin: Address, receiver: Address, wallet_contract_id: Bytes);
+    fn revoke(e: Env, admin: Address, receiver: Address, wallet_contract_id: BytesN<32>);
 
     /// Get the Chaincert name.
     fn name(e: Env) -> Bytes;
@@ -60,9 +60,6 @@ pub trait GovernanceTrait {
 
     /// Get the receivers data in the contract.
     fn receivers(e: Env) -> Map<Address, CertData>;
-
-    /// Get the organization id.
-    fn org(e: Env) -> Bytes;
 
     // Get all relevant contract data.
     fn info(e: Env) -> Info;

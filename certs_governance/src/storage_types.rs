@@ -7,7 +7,7 @@ use soroban_sdk::{contracttype, Address, Bytes};
 #[contracttype]
 #[derive(Clone, Debug, PartialEq)]
 pub struct Organization {
-    pub id_org: Bytes,
+    pub org_id: Bytes,
     pub admin: Address,
 }
 
@@ -22,15 +22,15 @@ pub enum Status {
 #[contracttype]
 #[derive(Clone, Debug, PartialEq)]
 pub struct CertData {
-    pub id_cert: Bytes,
+    pub cert_id: Bytes,
     pub status: Status,
     pub dist_date: OptU64,
 }
 
 impl CertData {
-    pub fn new(id_cert: Bytes, status: Status, dist_date: OptU64) -> CertData {
+    pub fn new(cert_id: Bytes, status: Status, dist_date: OptU64) -> CertData {
         CertData {
-            id_cert,
+            cert_id,
             status,
             dist_date,
         }

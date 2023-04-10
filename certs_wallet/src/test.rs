@@ -74,7 +74,7 @@ fn test_successful_execution_of_wallet_capabilities() {
         &Option::<u64>::None,
     );
 
-    assert_eq!(test.wallet.get_ccs().len(), 2);
+    assert_eq!(test.wallet.get_certs().len(), 2);
 
     test.wallet.revoke_cc(
         &test.chaincert_id,
@@ -246,7 +246,7 @@ fn test_revoke_chaincert_when_not_authorized_contract_or_organization() {
 fn test_request_chaincerts_when_no_chaincerts_set() {
     let test = ChaincertWalletTest::setup();
 
-    test.wallet.get_ccs();
+    test.wallet.get_certs();
 }
 
 #[test]

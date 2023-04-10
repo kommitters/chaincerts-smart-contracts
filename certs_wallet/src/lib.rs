@@ -63,7 +63,7 @@ impl Wallet {
     }
 
     /// Get the list of the `Chaincerts` stored in the wallet
-    pub fn get_ccs(env: Env) -> Vec<Chaincert> {
+    pub fn get_certs(env: Env) -> Vec<Chaincert> {
         chaincert::get_chaincerts(&env)
     }
 

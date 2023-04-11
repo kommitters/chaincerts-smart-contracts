@@ -88,7 +88,7 @@ impl GovernanceTrait for CertGovernance {
         };
     }
 
-    /// Revoke a Chaincert from a receiver.
+    /// Revoke a Chaincert from a holder.
     fn revoke(e: Env, admin: Address, holder: Address, wallet_contract_id: BytesN<32>) {
         check_revocable(&e);
         check_admin(&e, &admin);
@@ -97,7 +97,7 @@ impl GovernanceTrait for CertGovernance {
         let mut cert_data: CertData = receivers.get(holder.clone()).unwrap().unwrap();
         check_receiver_status_for_revoke(&e, &cert_data);
 
-        revoke_from_wallet(&e, wallet_contract_id, &cert_data.cert_id);
+        revoke_from_wallet(&e, wallet_contract_id, &cert_data.id);
         cert_data.status = Status::Revoked;
         receivers.set(holder, cert_data);
         write_receivers(&e, receivers);
@@ -114,12 +114,12 @@ impl GovernanceTrait for CertGovernance {
     }
 
     /// Get the Chaincert expiration time (Unix time).
-    fn exp_time(e: Env) -> Option<u64> {
+    fn expiration_time(e: Env) -> Option<u64> {
         read_expiration_time(&e)
     }
 
     /// Get the maximum number of Chaincerts that can be distributed by this contract.
-    fn dist_limit(e: Env) -> u32 {
+    fn distribution_limit(e: Env) -> u32 {
         read_distribution_limit(&e)
     }
 
@@ -129,7 +129,7 @@ impl GovernanceTrait for CertGovernance {
     }
 
     /// Get the type of decentralized storage service.
-    fn f_storage(e: Env) -> Bytes {
+    fn file_storage(e: Env) -> Bytes {
         read_file_storage(&e)
     }
 
@@ -140,15 +140,15 @@ impl GovernanceTrait for CertGovernance {
 
     /// Get all relevant contract data.
     fn info(e: Env) -> Info {
-        let exp_time = match read_expiration_time(&e) {
+        let expiration_time = match read_expiration_time(&e) {
             Some(value) => OptU64::Some(value),
             None => OptU64::None,
         };
         Info {
             name: read_name(&e),
             revocable: read_revocable(&e),
-            exp_time,
-            dist_limit: read_distribution_limit(&e),
+            expiration_time,
+            distribution_limit: read_distribution_limit(&e),
             supply: read_supply(&e),
         }
     }
@@ -201,13 +201,13 @@ fn distribute_receiver(
     deposit_to_wallet(
         e,
         wallet_contract_id,
-        cert_data.cert_id.clone(),
+        cert_data.id.clone(),
         cid,
         distribution_date,
     );
 
     cert_data.status = Status::Distribute;
-    cert_data.dist_date = OptU64::Some(distribution_date);
+    cert_data.distribution_date = OptU64::Some(distribution_date);
     receivers.set(address.clone(), cert_data);
     write_receivers(e, receivers);
     increment_supply(e);

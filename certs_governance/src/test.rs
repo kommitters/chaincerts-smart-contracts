@@ -10,7 +10,7 @@ const WASM: &[u8] = include_bytes!("../../target/wasm32-unknown-unknown/release/
 fn create_wallet_contract(env: &Env, owner: &Address, id: &Bytes) -> certs_wallet::Client {
     let wallet = certs_wallet::Client::new(env, &env.register_contract_wasm(None, WASM));
     wallet.initialize(owner);
-    wallet.add_org(id);
+    wallet.add_organization(id);
     wallet
 }
 
@@ -207,7 +207,7 @@ fn test_distribute_with_distribution_limit_contract() {
     assert_eq!(cert_data.status, Status::Distribute);
     assert_eq!(cert_governance.supply(), 1);
     assert_eq!(receivers.len(), 1);
-    assert_eq!(wallet.get_certs().len(), 1);
+    assert_eq!(wallet.get_chaincerts().len(), 1);
 }
 
 #[test]
@@ -249,7 +249,7 @@ fn test_distribute_with_initial_receivers() {
     assert_eq!(cert_data.status, Status::Distribute);
     assert_eq!(cert_governance.supply(), 1);
     assert_eq!(receivers.len(), 3);
-    assert_eq!(wallet.get_certs().len(), 1);
+    assert_eq!(wallet.get_chaincerts().len(), 1);
 }
 
 #[test]
@@ -292,7 +292,7 @@ fn test_revoke_chaincert() {
     cert_data = receivers.get(receiver_address).unwrap().unwrap();
     assert_eq!(cert_data.status, Status::Revoked);
 
-    let chaincert = wallet.get_certs().get(0).unwrap().unwrap();
+    let chaincert = wallet.get_chaincerts().get(0).unwrap().unwrap();
     assert!(chaincert.revoked);
 }
 

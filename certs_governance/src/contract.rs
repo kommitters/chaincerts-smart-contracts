@@ -225,7 +225,7 @@ fn deposit_to_wallet(
     let distributor_contract = e.current_contract_address();
     let expiration_date: Option<u64> = expiration_date(e, distribution_date);
     let org_id = read_organization_id(e);
-    wallet_client.deposit_cc(
+    wallet_client.deposit_chaincert(
         &chaincert_id,
         &cid,
         &distributor_contract,
@@ -240,5 +240,5 @@ fn revoke_from_wallet(e: &Env, wallet_contract_id: BytesN<32>, chaincert_id: &By
     let wallet_client = certs_wallet::Client::new(e, &wallet_contract_id);
     let distributor_contract = e.current_contract_address();
     let org_id = read_organization_id(e);
-    wallet_client.revoke_cc(chaincert_id, &distributor_contract, &org_id);
+    wallet_client.revoke_chaincert(chaincert_id, &distributor_contract, &org_id);
 }

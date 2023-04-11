@@ -7,9 +7,9 @@ use crate::error::ContractError;
 
 use super::storage_types::DataKey;
 
-const ACL_KEY: DataKey = DataKey::Acl;
+const ACL_KEY: DataKey = DataKey::AccessControlList;
 
-pub(crate) fn get_acl(env: &Env) -> Vec<Bytes> {
+pub(crate) fn get_access_control_list(env: &Env) -> Vec<Bytes> {
     match env.storage().get(&ACL_KEY) {
         Some(acl) => acl.unwrap(),
         None => {
@@ -22,7 +22,7 @@ pub(crate) fn add_organization(env: &Env, org_id: &Bytes) {
     let acl = match env.storage().get(&ACL_KEY) {
         Some(acl) => {
             let mut access_list: Vec<Bytes> = acl.unwrap();
-            if !is_organization_in_acl(org_id, &access_list) {
+            if !is_organization_in_access_control_list(org_id, &access_list) {
                 access_list.push_front(org_id.clone());
                 access_list
             } else {
@@ -41,7 +41,7 @@ pub(crate) fn remove_organization(env: &Env, org_id: &Bytes) {
     match env.storage().get(&ACL_KEY) {
         Some(acl) => {
             let mut access_list: Vec<Bytes> = acl.unwrap();
-            remove_from_acl(env, org_id, &mut access_list);
+            remove_from_access_control_list(env, org_id, &mut access_list);
             env.storage().set(&ACL_KEY, &access_list)
         }
         None => {
@@ -50,7 +50,7 @@ pub(crate) fn remove_organization(env: &Env, org_id: &Bytes) {
     }
 }
 
-pub(crate) fn check_acl(env: &Env, org_id: &Bytes) {
+pub(crate) fn check_access_control_list(env: &Env, org_id: &Bytes) {
     match env.storage().get(&ACL_KEY) {
         Some(acl) => {
             let access_list: Vec<Bytes> = acl.unwrap();
@@ -67,7 +67,7 @@ pub(crate) fn check_acl(env: &Env, org_id: &Bytes) {
     }
 }
 
-fn remove_from_acl(env: &Env, org_id: &Bytes, access_list: &mut Vec<Bytes>) {
+fn remove_from_access_control_list(env: &Env, org_id: &Bytes, access_list: &mut Vec<Bytes>) {
     for (index, org) in access_list.iter().enumerate() {
         if org.unwrap() == org_id.clone() {
             access_list.remove(index as u32).unwrap();
@@ -77,7 +77,7 @@ fn remove_from_acl(env: &Env, org_id: &Bytes, access_list: &mut Vec<Bytes>) {
     panic_with_error!(env, ContractError::OrganizationNotFound)
 }
 
-fn is_organization_in_acl(org_id: &Bytes, access_list: &Vec<Bytes>) -> bool {
+fn is_organization_in_access_control_list(org_id: &Bytes, access_list: &Vec<Bytes>) -> bool {
     for org in access_list.iter() {
         if org.unwrap() == org_id.clone() {
             return true;

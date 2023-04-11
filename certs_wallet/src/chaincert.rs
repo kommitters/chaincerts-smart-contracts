@@ -12,13 +12,13 @@ const CHAINCERT_KEY: DataKey = DataKey::Chaincerts;
 pub struct Chaincert {
     pub cid: Bytes,
     /// Address of the governance contract that distributed the `Chaincert`
-    pub dist_cont: Address,
+    pub distributor_contract: Address,
     /// The id of the organization that distributed the `Chaincert`
     pub org_id: Bytes,
     /// The distribution date in Unix Timestamp format
-    pub dist_date: u64,
+    pub distribution_date: u64,
     /// The expiration date in Unix Timestamp format
-    pub exp_date: OptU64,
+    pub expiration_date: OptU64,
     /// A logical indicator that lets know if a `Chaincert` is revoked or not
     pub revoked: bool,
 }
@@ -26,18 +26,18 @@ pub struct Chaincert {
 impl Chaincert {
     fn new(
         cid: Bytes,
-        dist_cont: Address,
+        distributor_contract: Address,
         org_id: Bytes,
-        dist_date: u64,
-        exp_date: OptU64,
+        distribution_date: u64,
+        expiration_date: OptU64,
         revoked: bool,
     ) -> Chaincert {
         Chaincert {
             cid,
-            dist_cont,
+            distributor_contract,
             org_id,
-            dist_date,
-            exp_date,
+            distribution_date,
+            expiration_date,
             revoked,
         }
     }
@@ -122,7 +122,7 @@ fn remove_chaincert_from_map(
     match chaincert_map.get(chaincert_id.clone()) {
         Some(chaincert) => {
             let mut chaincert = chaincert.unwrap();
-            if chaincert.dist_cont == distributor_contract.clone()
+            if chaincert.distributor_contract == distributor_contract.clone()
                 && chaincert.org_id == org_id.clone()
             {
                 chaincert.revoked = true;

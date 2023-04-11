@@ -44,7 +44,7 @@ pub trait GovernanceTrait {
     fn name(e: Env) -> Bytes;
 
     /// Get if the Chaincert can be revoked or not.
-    fn revocable(e: Env) -> bool;
+    fn is_revocable(e: Env) -> bool;
 
     /// Get the Chaincert expiration time (Unix time).
     fn expiration_time(e: Env) -> Option<u64>;

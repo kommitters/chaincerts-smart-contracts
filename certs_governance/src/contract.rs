@@ -109,7 +109,7 @@ impl GovernanceTrait for CertGovernance {
     }
 
     /// Get if the Chaincert can be revoked or not.
-    fn revocable(e: Env) -> bool {
+    fn is_revocable(e: Env) -> bool {
         read_revocable(&e)
     }
 

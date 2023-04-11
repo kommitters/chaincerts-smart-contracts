@@ -96,7 +96,7 @@ fn test_initialize_contract_with_receivers() {
     );
     assert_eq!(cert_governance.file_storage(), "FileBase".into_val(&e));
     assert_eq!(cert_governance.name(), "ChaincertName".into_val(&e));
-    assert!(cert_governance.revocable());
+    assert!(cert_governance.is_revocable());
     assert_eq!(cert_governance.expiration_time(), Option::Some(1680091200));
     assert_eq!(cert_governance.distribution_limit(), 3);
     assert_eq!(cert_governance.supply(), 0);
@@ -121,7 +121,7 @@ fn test_initialize_with_limit_contract() {
     );
     assert_eq!(cert_governance.file_storage(), "FileBase".into_val(&e));
     assert_eq!(cert_governance.name(), "ChaincertName".into_val(&e));
-    assert!(cert_governance.revocable());
+    assert!(cert_governance.is_revocable());
     assert_eq!(cert_governance.expiration_time(), Option::None);
     assert_eq!(cert_governance.distribution_limit(), 6);
     assert_eq!(cert_governance.supply(), 0);

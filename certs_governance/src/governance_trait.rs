@@ -44,19 +44,19 @@ pub trait GovernanceTrait {
     fn name(e: Env) -> Bytes;
 
     /// Get if the Chaincert can be revoked or not.
-    fn revocable(e: Env) -> bool;
+    fn is_revocable(e: Env) -> bool;
 
     /// Get the Chaincert expiration time (Unix time).
-    fn exp_time(e: Env) -> Option<u64>;
+    fn expiration_time(e: Env) -> Option<u64>;
 
     /// Get the maximum number of Chaincerts that can be distributed by this contract.
-    fn dist_limit(e: Env) -> u32;
+    fn distribution_limit(e: Env) -> u32;
 
     /// Get number of Chaincerts that have been distributed.
     fn supply(e: Env) -> u32;
 
     /// Get the type of decentralized storage service.
-    fn f_storage(e: Env) -> Bytes;
+    fn file_storage(e: Env) -> Bytes;
 
     /// Get the receivers data in the contract.
     fn receivers(e: Env) -> Map<Address, CertData>;

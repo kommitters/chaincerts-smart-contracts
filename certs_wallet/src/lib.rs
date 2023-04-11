@@ -22,19 +22,19 @@ impl Wallet {
     }
 
     /// Add organizations to the ACL
-    pub fn add_org(env: Env, org_id: Bytes) {
+    pub fn add_organization(env: Env, org_id: Bytes) {
         owner::read_owner(&env).require_auth();
         access_control_list::add_organization(&env, &org_id)
     }
 
     /// Remove organizations from the ACL
-    pub fn rmv_org(env: Env, org_id: Bytes) {
+    pub fn remove_organization(env: Env, org_id: Bytes) {
         owner::read_owner(&env).require_auth();
         access_control_list::remove_organization(&env, &org_id)
     }
 
     /// Deposit a `Chaincert` to the wallet
-    pub fn deposit_cc(
+    pub fn deposit_chaincert(
         env: Env,
         chaincert_id: Bytes,
         cid: Bytes,
@@ -43,7 +43,7 @@ impl Wallet {
         distribution_date: u64,
         expiration_date: Option<u64>,
     ) {
-        access_control_list::check_acl(&env, &org_id);
+        access_control_list::check_access_control_list(&env, &org_id);
         distributor_contract.require_auth();
         chaincert::deposit_chaincert(
             &env,
@@ -57,20 +57,25 @@ impl Wallet {
     }
 
     /// Revoke a `Chaincert` from the wallet
-    pub fn revoke_cc(env: Env, chaincert_id: Bytes, distributor_contract: Address, org_id: Bytes) {
+    pub fn revoke_chaincert(
+        env: Env,
+        chaincert_id: Bytes,
+        distributor_contract: Address,
+        org_id: Bytes,
+    ) {
         distributor_contract.require_auth();
         chaincert::revoke_chaincert(&env, &chaincert_id, &distributor_contract, &org_id);
     }
 
     /// Get the list of the `Chaincerts` stored in the wallet
-    pub fn get_ccs(env: Env) -> Vec<Chaincert> {
+    pub fn get_chaincerts(env: Env) -> Vec<Chaincert> {
         chaincert::get_chaincerts(&env)
     }
 
     /// Get the ACL stored in the wallet
-    pub fn get_acl(env: Env) -> Vec<Bytes> {
+    pub fn get_access_control_list(env: Env) -> Vec<Bytes> {
         owner::read_owner(&env).require_auth();
-        access_control_list::get_acl(&env)
+        access_control_list::get_access_control_list(&env)
     }
 }
 

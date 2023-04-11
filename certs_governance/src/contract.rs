@@ -19,6 +19,7 @@ pub struct CertGovernance;
 
 #[contractimpl]
 impl GovernanceTrait for CertGovernance {
+    /// Initialize the contract with a list of receivers.
     fn init_w_r(
         e: Env,
         file_storage: Bytes,
@@ -41,6 +42,7 @@ impl GovernanceTrait for CertGovernance {
         write_supply(&e, 0);
     }
 
+    /// Initialize the contract with the limit of Chaincerts that can be distributed.
     fn init_w_l(
         e: Env,
         file_storage: Bytes,
@@ -63,6 +65,7 @@ impl GovernanceTrait for CertGovernance {
         write_supply(&e, 0);
     }
 
+    /// Distribute a Chaincert to a receiver.
     fn distribute(
         e: Env,
         admin: Address,
@@ -85,58 +88,67 @@ impl GovernanceTrait for CertGovernance {
         };
     }
 
-    fn revoke(e: Env, admin: Address, receiver: Address, wallet_contract_id: BytesN<32>) {
+    /// Revoke a Chaincert from a holder.
+    fn revoke(e: Env, admin: Address, holder: Address, wallet_contract_id: BytesN<32>) {
         check_revocable(&e);
         check_admin(&e, &admin);
         admin.require_auth();
         let mut receivers: Map<Address, CertData> = read_receivers(&e);
-        let mut cert_data: CertData = receivers.get(receiver.clone()).unwrap().unwrap();
+        let mut cert_data: CertData = receivers.get(holder.clone()).unwrap().unwrap();
         check_receiver_status_for_revoke(&e, &cert_data);
 
-        revoke_from_wallet(&e, wallet_contract_id, &cert_data.id_cert);
+        revoke_from_wallet(&e, wallet_contract_id, &cert_data.id);
         cert_data.status = Status::Revoked;
-        receivers.set(receiver, cert_data);
+        receivers.set(holder, cert_data);
         write_receivers(&e, receivers);
     }
 
+    /// Get the Chaincert name.
     fn name(e: Env) -> Bytes {
         read_name(&e)
     }
 
-    fn revocable(e: Env) -> bool {
+    /// Get if the Chaincert can be revoked or not.
+    fn is_revocable(e: Env) -> bool {
         read_revocable(&e)
     }
 
-    fn exp_time(e: Env) -> Option<u64> {
+    /// Get the Chaincert expiration time (Unix time).
+    fn expiration_time(e: Env) -> Option<u64> {
         read_expiration_time(&e)
     }
 
-    fn dist_limit(e: Env) -> u32 {
+    /// Get the maximum number of Chaincerts that can be distributed by this contract.
+    fn distribution_limit(e: Env) -> u32 {
         read_distribution_limit(&e)
     }
 
-    fn f_storage(e: Env) -> Bytes {
-        read_file_storage(&e)
-    }
-
+    /// Get number of Chaincerts that have been distributed.
     fn supply(e: Env) -> u32 {
         read_supply(&e)
     }
 
+    /// Get the type of decentralized storage service.
+    fn file_storage(e: Env) -> Bytes {
+        read_file_storage(&e)
+    }
+
+    /// Get the receivers data in the contract.
     fn receivers(e: Env) -> Map<Address, CertData> {
         read_receivers(&e)
     }
 
+    /// Get all relevant contract data.
     fn info(e: Env) -> Info {
-        let exp_time = match read_expiration_time(&e) {
+        let expiration_time = match read_expiration_time(&e) {
             Some(value) => OptU64::Some(value),
             None => OptU64::None,
         };
         Info {
             name: read_name(&e),
             revocable: read_revocable(&e),
-            exp_time,
-            dist_limit: read_distribution_limit(&e),
+            expiration_time,
+            distribution_limit: read_distribution_limit(&e),
             supply: read_supply(&e),
         }
     }
@@ -189,13 +201,13 @@ fn distribute_receiver(
     deposit_to_wallet(
         e,
         wallet_contract_id,
-        cert_data.id_cert.clone(),
+        cert_data.id.clone(),
         cid,
         distribution_date,
     );
 
     cert_data.status = Status::Distribute;
-    cert_data.dist_date = OptU64::Some(distribution_date);
+    cert_data.distribution_date = OptU64::Some(distribution_date);
     receivers.set(address.clone(), cert_data);
     write_receivers(e, receivers);
     increment_supply(e);
@@ -213,7 +225,7 @@ fn deposit_to_wallet(
     let distributor_contract = e.current_contract_address();
     let expiration_date: Option<u64> = expiration_date(e, distribution_date);
     let org_id = read_organization_id(e);
-    wallet_client.deposit_cc(
+    wallet_client.deposit_chaincert(
         &chaincert_id,
         &cid,
         &distributor_contract,
@@ -228,5 +240,5 @@ fn revoke_from_wallet(e: &Env, wallet_contract_id: BytesN<32>, chaincert_id: &By
     let wallet_client = certs_wallet::Client::new(e, &wallet_contract_id);
     let distributor_contract = e.current_contract_address();
     let org_id = read_organization_id(e);
-    wallet_client.revoke_cc(chaincert_id, &distributor_contract, &org_id);
+    wallet_client.revoke_chaincert(chaincert_id, &distributor_contract, &org_id);
 }

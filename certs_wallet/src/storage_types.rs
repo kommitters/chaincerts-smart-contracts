@@ -8,7 +8,7 @@ use soroban_sdk::contracttype;
 pub enum DataKey {
     Owner,
     /// Access Control List
-    Acl,
+    AccessControlList,
     /// A map that stores the Chaincerts, identified by a chaincert_id `Map<Bytes, Chaincert>`
     Chaincerts,
 }

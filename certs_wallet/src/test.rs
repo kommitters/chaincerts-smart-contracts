@@ -50,13 +50,13 @@ fn test_successful_execution_of_wallet_capabilities() {
     let new_chiancert_id = "CHAINCERT2".into_val(&test.env);
 
     test.wallet
-        .add_org(&test.organizations.get_unchecked(0).unwrap());
+        .add_organization(&test.organizations.get_unchecked(0).unwrap());
     test.wallet
-        .add_org(&test.organizations.get_unchecked(1).unwrap());
+        .add_organization(&test.organizations.get_unchecked(1).unwrap());
 
-    assert_eq!(test.wallet.get_acl().len(), 2);
+    assert_eq!(test.wallet.get_access_control_list().len(), 2);
 
-    test.wallet.deposit_cc(
+    test.wallet.deposit_chaincert(
         &test.chaincert_id,
         &test.cids.get_unchecked(0).unwrap(),
         &test.distributor_contract,
@@ -65,7 +65,7 @@ fn test_successful_execution_of_wallet_capabilities() {
         &Option::<u64>::Some(1711662757),
     );
 
-    test.wallet.deposit_cc(
+    test.wallet.deposit_chaincert(
         &new_chiancert_id,
         &test.cids.get_unchecked(0).unwrap(),
         &test.distributor_contract,
@@ -74,17 +74,17 @@ fn test_successful_execution_of_wallet_capabilities() {
         &Option::<u64>::None,
     );
 
-    assert_eq!(test.wallet.get_ccs().len(), 2);
+    assert_eq!(test.wallet.get_chaincerts().len(), 2);
 
-    test.wallet.revoke_cc(
+    test.wallet.revoke_chaincert(
         &test.chaincert_id,
         &test.distributor_contract,
         &test.organizations.get_unchecked(0).unwrap(),
     );
 
     test.wallet
-        .rmv_org(&test.organizations.get_unchecked(0).unwrap());
-    assert_eq!(test.wallet.get_acl().len(), 1);
+        .remove_organization(&test.organizations.get_unchecked(0).unwrap());
+    assert_eq!(test.wallet.get_access_control_list().len(), 1);
 }
 
 #[test]
@@ -100,9 +100,9 @@ fn test_when_adding_an_already_added_org() {
     let test = ChaincertWalletTest::setup();
 
     test.wallet
-        .add_org(&test.organizations.get_unchecked(0).unwrap());
+        .add_organization(&test.organizations.get_unchecked(0).unwrap());
     test.wallet
-        .add_org(&test.organizations.get_unchecked(0).unwrap());
+        .add_organization(&test.organizations.get_unchecked(0).unwrap());
 }
 
 #[test]
@@ -110,7 +110,7 @@ fn test_when_adding_an_already_added_org() {
 fn test_remove_organization_when_not_organizations_already_set() {
     let test = ChaincertWalletTest::setup();
     test.wallet
-        .rmv_org(&test.organizations.get_unchecked(0).unwrap());
+        .remove_organization(&test.organizations.get_unchecked(0).unwrap());
 }
 
 #[test]
@@ -118,9 +118,9 @@ fn test_remove_organization_when_not_organizations_already_set() {
 fn test_remove_organization_when_organization_not_found() {
     let test = ChaincertWalletTest::setup();
     test.wallet
-        .add_org(&test.organizations.get_unchecked(0).unwrap());
+        .add_organization(&test.organizations.get_unchecked(0).unwrap());
     test.wallet
-        .rmv_org(&test.organizations.get_unchecked(1).unwrap());
+        .remove_organization(&test.organizations.get_unchecked(1).unwrap());
 }
 
 #[test]
@@ -129,9 +129,9 @@ fn test_deposit_chaincert_when_organization_is_not_in_the_acl() {
     let test = ChaincertWalletTest::setup();
 
     test.wallet
-        .add_org(&test.organizations.get_unchecked(0).unwrap());
+        .add_organization(&test.organizations.get_unchecked(0).unwrap());
 
-    test.wallet.deposit_cc(
+    test.wallet.deposit_chaincert(
         &test.chaincert_id,
         &test.cids.get(0).unwrap().unwrap(),
         &test.distributor_contract,
@@ -146,7 +146,7 @@ fn test_deposit_chaincert_when_organization_is_not_in_the_acl() {
 fn test_deposit_chaincert_when_no_organizations_in_the_acl() {
     let test = ChaincertWalletTest::setup();
 
-    test.wallet.deposit_cc(
+    test.wallet.deposit_chaincert(
         &test.chaincert_id,
         &test.cids.get(0).unwrap().unwrap(),
         &test.distributor_contract,
@@ -162,11 +162,11 @@ fn test_deposit_chaincert_chaincert_is_already_in_the_wallet() {
     let test = ChaincertWalletTest::setup();
 
     test.wallet
-        .add_org(&test.organizations.get_unchecked(0).unwrap());
+        .add_organization(&test.organizations.get_unchecked(0).unwrap());
     test.wallet
-        .add_org(&test.organizations.get_unchecked(1).unwrap());
+        .add_organization(&test.organizations.get_unchecked(1).unwrap());
 
-    test.wallet.deposit_cc(
+    test.wallet.deposit_chaincert(
         &test.chaincert_id,
         &test.cids.get_unchecked(0).unwrap(),
         &test.distributor_contract,
@@ -175,7 +175,7 @@ fn test_deposit_chaincert_chaincert_is_already_in_the_wallet() {
         &Option::<u64>::Some(1711662757),
     );
 
-    test.wallet.deposit_cc(
+    test.wallet.deposit_chaincert(
         &test.chaincert_id,
         &test.cids.get_unchecked(0).unwrap(),
         &test.distributor_contract,
@@ -191,8 +191,8 @@ fn test_revoke_chaincert_when_no_chaincerts_in_wallet() {
     let test = ChaincertWalletTest::setup();
 
     test.wallet
-        .add_org(&test.organizations.get_unchecked(0).unwrap());
-    test.wallet.revoke_cc(
+        .add_organization(&test.organizations.get_unchecked(0).unwrap());
+    test.wallet.revoke_chaincert(
         &test.chaincert_id,
         &test.distributor_contract,
         &test.organizations.get_unchecked(0).unwrap(),
@@ -206,8 +206,8 @@ fn test_revoke_chaincert_when_chaincert_not_found() {
     let org1 = test.organizations.get_unchecked(0).unwrap();
     let new_chaincert: Bytes = "CHAINCERT2".into_val(&test.env);
 
-    test.wallet.add_org(&org1);
-    test.wallet.deposit_cc(
+    test.wallet.add_organization(&org1);
+    test.wallet.deposit_chaincert(
         &test.chaincert_id,
         &test.cids.get(0).unwrap().unwrap(),
         &test.distributor_contract,
@@ -217,7 +217,7 @@ fn test_revoke_chaincert_when_chaincert_not_found() {
     );
 
     test.wallet
-        .revoke_cc(&new_chaincert, &test.distributor_contract, &org1);
+        .revoke_chaincert(&new_chaincert, &test.distributor_contract, &org1);
 }
 
 #[test]
@@ -227,8 +227,8 @@ fn test_revoke_chaincert_when_not_authorized_contract_or_organization() {
     let org1 = test.organizations.get_unchecked(0).unwrap();
     let org2 = test.organizations.get_unchecked(1).unwrap();
 
-    test.wallet.add_org(&org1);
-    test.wallet.deposit_cc(
+    test.wallet.add_organization(&org1);
+    test.wallet.deposit_chaincert(
         &test.chaincert_id,
         &test.cids.get(0).unwrap().unwrap(),
         &test.distributor_contract,
@@ -238,7 +238,7 @@ fn test_revoke_chaincert_when_not_authorized_contract_or_organization() {
     );
 
     test.wallet
-        .revoke_cc(&test.chaincert_id, &test.distributor_contract, &org2);
+        .revoke_chaincert(&test.chaincert_id, &test.distributor_contract, &org2);
 }
 
 #[test]
@@ -246,7 +246,7 @@ fn test_revoke_chaincert_when_not_authorized_contract_or_organization() {
 fn test_request_chaincerts_when_no_chaincerts_set() {
     let test = ChaincertWalletTest::setup();
 
-    test.wallet.get_ccs();
+    test.wallet.get_chaincerts();
 }
 
 #[test]
@@ -254,5 +254,5 @@ fn test_request_chaincerts_when_no_chaincerts_set() {
 fn test_request_acl_when_no_organizations_set() {
     let test = ChaincertWalletTest::setup();
 
-    test.wallet.get_acl();
+    test.wallet.get_access_control_list();
 }

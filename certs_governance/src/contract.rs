@@ -13,20 +13,21 @@ use crate::organization::{
     check_admin, has_organization, read_organization_id, write_organization,
 };
 use crate::receivers::{add_receiver, create_receivers, read_receivers};
-use crate::storage_types::{CertData, Info, Organization, Status};
+use crate::storage_types::{CertData, GovernanceRules, Info, Organization, Status};
 use soroban_sdk::{contractimpl, panic_with_error, Address, Bytes, BytesN, Env, Map, Vec};
 pub struct CertGovernance;
 
 #[contractimpl]
 impl GovernanceTrait for CertGovernance {
-    /// Initialize the contract with a list of receivers.
-    fn init_w_r(
+    /// Initialize the contract a list of receivers or with the limit of Chaincerts that can be distributed.
+    fn initialize(
         e: Env,
         file_storage: Bytes,
         name: Bytes,
-        revocable: bool,
-        expiration_time: Option<u64>,
-        receivers: Vec<Address>,
+        receivers: Option<Vec<Address>>,
+        distribution_limit: Option<u32>,
+        governance_rules: (bool, OptU64), // (revocable, expiration_time)
+        // governance_rules: GovernanceRules,
         organization: Organization,
     ) {
         if has_organization(&e) {
@@ -35,34 +36,23 @@ impl GovernanceTrait for CertGovernance {
         write_organization(&e, organization);
         write_file_storage(&e, file_storage);
         write_name(&e, name);
-        write_revocable(&e, revocable);
-        write_expiration_time(&e, expiration_time);
-        write_distribution_limit(&e, receivers.len());
-        create_receivers(&e, receivers);
+        write_revocable(&e, governance_rules.0);
+        write_expiration_time(&e, governance_rules.1);
         write_supply(&e, 0);
-    }
-
-    /// Initialize the contract with the limit of Chaincerts that can be distributed.
-    fn init_w_l(
-        e: Env,
-        file_storage: Bytes,
-        name: Bytes,
-        revocable: bool,
-        expiration_time: Option<u64>,
-        distribution_limit: u32,
-        organization: Organization,
-    ) {
-        if has_organization(&e) {
-            panic_with_error!(&e, ContractError::AlreadyInit);
-        }
-        write_organization(&e, organization);
-        write_file_storage(&e, file_storage);
-        write_name(&e, name);
-        write_revocable(&e, revocable);
-        write_expiration_time(&e, expiration_time);
-        write_distribution_limit(&e, distribution_limit);
-        write_receivers(&e, Map::<Address, CertData>::new(&e));
-        write_supply(&e, 0);
+        match receivers {
+            Some(receivers) => {
+                write_distribution_limit(&e, receivers.len());
+                create_receivers(&e, receivers);
+            }
+            None => {
+                if let Some(distribution_limit) = distribution_limit {
+                    write_distribution_limit(&e, distribution_limit);
+                } else {
+                    write_distribution_limit(&e, 10);
+                }
+                write_receivers(&e, Map::<Address, CertData>::new(&e));
+            }
+        };
     }
 
     /// Distribute a Chaincert to a receiver.
@@ -114,7 +104,7 @@ impl GovernanceTrait for CertGovernance {
     }
 
     /// Get the Chaincert expiration time (Unix time).
-    fn expiration_time(e: Env) -> Option<u64> {
+    fn expiration_time(e: Env) -> OptU64 {
         read_expiration_time(&e)
     }
 
@@ -140,14 +130,10 @@ impl GovernanceTrait for CertGovernance {
 
     /// Get all relevant contract data.
     fn info(e: Env) -> Info {
-        let expiration_time = match read_expiration_time(&e) {
-            Some(value) => OptU64::Some(value),
-            None => OptU64::None,
-        };
         Info {
             name: read_name(&e),
             revocable: read_revocable(&e),
-            expiration_time,
+            expiration_time: read_expiration_time(&e),
             distribution_limit: read_distribution_limit(&e),
             supply: read_supply(&e),
         }
@@ -155,8 +141,12 @@ impl GovernanceTrait for CertGovernance {
 }
 
 /// Calculates the expiration date of a distributed Chaincert (using Unix time).
-fn expiration_date(e: &Env, distribution_date: u64) -> Option<u64> {
-    read_expiration_time(e).map(|exp_time| distribution_date + exp_time)
+fn expiration_date(e: &Env, distribution_date: u64) -> OptU64 {
+    let expiration_time = match read_expiration_time(&e) {
+        OptU64::Some(value) => OptU64::Some(distribution_date + value),
+        OptU64::None => OptU64::None,
+    };
+    expiration_time
 }
 
 /// Checks that no more chain certificates are issued than allowed by the distribution limit.
@@ -223,7 +213,7 @@ fn deposit_to_wallet(
 ) {
     let wallet_client = certs_wallet::Client::new(e, &wallet_contract_id);
     let distributor_contract = e.current_contract_address();
-    let expiration_date: Option<u64> = expiration_date(e, distribution_date);
+    let expiration_date: OptU64 = expiration_date(e, distribution_date);
     let org_id = read_organization_id(e);
     wallet_client.deposit_chaincert(
         &chaincert_id,

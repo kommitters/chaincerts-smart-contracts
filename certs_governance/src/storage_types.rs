@@ -39,6 +39,13 @@ impl CertData {
 
 #[contracttype]
 #[derive(Clone, Debug, PartialEq)]
+pub struct GovernanceRules {
+    pub revocable: bool,
+    pub expiration_time: OptU64,
+}
+
+#[contracttype]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Info {
     pub name: Bytes,
     pub revocable: bool,
@@ -53,7 +60,7 @@ pub enum DataKey {
     FileStorage,       // Bytes
     Name,              // Bytes
     Revocable,         // bool
-    ExpirationTime,    // Option <u64>
+    ExpirationTime,    // Option <u64> --
     Receivers,         // Map <Address, CertData>
     Organization,      // Organization
     DistributionLimit, // u32

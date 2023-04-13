@@ -1,8 +1,8 @@
 //! Module MetaData
 //!
 //! Module for obtaining and modifying the metadata fields.
-use crate::storage_types::{CertData, DataKey};
-use soroban_sdk::{Address, Bytes, Env, Map};
+use crate::{storage_types::{CertData, DataKey}, certs_wallet::OptU64};
+use soroban_sdk::{Address, Bytes, Env, Map, vec, Vec};
 
 pub fn read_file_storage(e: &Env) -> Bytes {
     let key = DataKey::FileStorage;
@@ -34,12 +34,12 @@ pub fn write_revocable(e: &Env, revocable: bool) {
     e.storage().set(&key, &revocable)
 }
 
-pub fn read_expiration_time(e: &Env) -> Option<u64> {
+pub fn read_expiration_time(e: &Env) -> OptU64 {
     let key = DataKey::ExpirationTime;
     e.storage().get_unchecked(&key).unwrap()
 }
 
-pub fn write_expiration_time(e: &Env, expiration_time: Option<u64>) {
+pub fn write_expiration_time(e: &Env, expiration_time: OptU64) {
     let key = DataKey::ExpirationTime;
     e.storage().set(&key, &expiration_time)
 }

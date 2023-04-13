@@ -1,7 +1,7 @@
 //! Module Chaincert
 //!
 //! Module responsible of managing `Chaincerts` information and defining its corresponding struct.
-use crate::{error::ContractError, option::OptU64, storage_types::DataKey};
+use crate::{error::ContractError, option::OptionU64, storage_types::DataKey};
 use soroban_sdk::{contracttype, map, panic_with_error, Address, Bytes, Env, Map, Vec};
 
 const CHAINCERT_KEY: DataKey = DataKey::Chaincerts;
@@ -18,7 +18,7 @@ pub struct Chaincert {
     /// The distribution date in Unix Timestamp format
     pub distribution_date: u64,
     /// The expiration date in Unix Timestamp format
-    pub expiration_date: OptU64,
+    pub expiration_date: OptionU64,
     /// A logical indicator that lets know if a `Chaincert` is revoked or not
     pub revoked: bool,
 }
@@ -29,7 +29,7 @@ impl Chaincert {
         distributor_contract: Address,
         org_id: Bytes,
         distribution_date: u64,
-        expiration_date: OptU64,
+        expiration_date: OptionU64,
         revoked: bool,
     ) -> Chaincert {
         Chaincert {
@@ -50,13 +50,8 @@ pub(crate) fn deposit_chaincert(
     distributor_contract: Address,
     org_id: Bytes,
     distribution_date: u64,
-    expiration_date: Option<u64>,
+    expiration_date: OptionU64,
 ) {
-    let expiration_date = match expiration_date {
-        Some(date) => OptU64::Some(date),
-        None => OptU64::None,
-    };
-
     let chaincert = Chaincert::new(
         cid,
         distributor_contract,

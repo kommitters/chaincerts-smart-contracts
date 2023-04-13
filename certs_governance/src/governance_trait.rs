@@ -3,27 +3,19 @@
 //! Interface that defines the behavior of a Governance contract.
 use soroban_sdk::{Address, Bytes, BytesN, Env, Map, Vec};
 
-use crate::storage_types::{CertData, Info, Organization};
+use crate::{
+    certs_wallet::OptionU64,
+    storage_types::{CertData, Info, Organization},
+};
 pub trait GovernanceTrait {
-    /// Initialize the contract with a list of receivers.
-    fn init_w_r(
+    /// Initialize the contract a list of receivers or with the limit of Chaincerts that can be distributed.
+    fn initialize(
         e: Env,
         file_storage: Bytes,
         name: Bytes,
-        revocable: bool,
-        expiration_time: Option<u64>,
-        receivers: Vec<Address>,
-        organization: Organization,
-    );
-
-    /// Initialize the contract with the limit of Chaincerts that can be distributed.
-    fn init_w_l(
-        e: Env,
-        file_storage: Bytes,
-        name: Bytes,
-        revocable: bool,
-        expiration_time: Option<u64>,
-        distribution_limit: u32,
+        receivers: Option<Vec<Address>>,
+        distribution_limit: Option<u32>,
+        governance_rules: (bool, OptionU64),
         organization: Organization,
     );
 
@@ -47,7 +39,7 @@ pub trait GovernanceTrait {
     fn is_revocable(e: Env) -> bool;
 
     /// Get the Chaincert expiration time (Unix time).
-    fn expiration_time(e: Env) -> Option<u64>;
+    fn expiration_time(e: Env) -> OptionU64;
 
     /// Get the maximum number of Chaincerts that can be distributed by this contract.
     fn distribution_limit(e: Env) -> u32;

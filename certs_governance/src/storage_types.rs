@@ -1,7 +1,7 @@
 //! Module Storage Types
 //!
 //! Module where the DataKey of the contract and some necessary structs are defined.
-use crate::certs_wallet::OptU64;
+use crate::certs_wallet::OptionU64;
 use soroban_sdk::{contracttype, Address, Bytes};
 
 #[contracttype]
@@ -24,11 +24,11 @@ pub enum Status {
 pub struct CertData {
     pub id: Bytes,
     pub status: Status,
-    pub distribution_date: OptU64,
+    pub distribution_date: OptionU64,
 }
 
 impl CertData {
-    pub fn new(id: Bytes, status: Status, distribution_date: OptU64) -> CertData {
+    pub fn new(id: Bytes, status: Status, distribution_date: OptionU64) -> CertData {
         CertData {
             id,
             status,
@@ -39,17 +39,10 @@ impl CertData {
 
 #[contracttype]
 #[derive(Clone, Debug, PartialEq)]
-pub struct GovernanceRules {
-    pub revocable: bool,
-    pub expiration_time: OptU64,
-}
-
-#[contracttype]
-#[derive(Clone, Debug, PartialEq)]
 pub struct Info {
     pub name: Bytes,
     pub revocable: bool,
-    pub expiration_time: OptU64,
+    pub expiration_time: OptionU64,
     pub distribution_limit: u32,
     pub supply: u32,
 }
@@ -60,7 +53,7 @@ pub enum DataKey {
     FileStorage,       // Bytes
     Name,              // Bytes
     Revocable,         // bool
-    ExpirationTime,    // Option <u64> --
+    ExpirationTime,    // OptionU64
     Receivers,         // Map <Address, CertData>
     Organization,      // Organization
     DistributionLimit, // u32

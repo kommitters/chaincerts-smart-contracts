@@ -1,7 +1,7 @@
 //! Module Contract
 //!
 //! Module containing the main contract logic.
-use crate::certs_wallet::{self, OptU64};
+use crate::certs_wallet::{self, OptionU64};
 use crate::error::ContractError;
 use crate::governance_trait::GovernanceTrait;
 use crate::metadata::{
@@ -13,7 +13,7 @@ use crate::organization::{
     check_admin, has_organization, read_organization_id, write_organization,
 };
 use crate::receivers::{add_receiver, create_receivers, read_receivers};
-use crate::storage_types::{CertData, GovernanceRules, Info, Organization, Status};
+use crate::storage_types::{CertData, Info, Organization, Status};
 use soroban_sdk::{contractimpl, panic_with_error, Address, Bytes, BytesN, Env, Map, Vec};
 pub struct CertGovernance;
 
@@ -26,8 +26,7 @@ impl GovernanceTrait for CertGovernance {
         name: Bytes,
         receivers: Option<Vec<Address>>,
         distribution_limit: Option<u32>,
-        governance_rules: (bool, OptU64), // (revocable, expiration_time)
-        // governance_rules: GovernanceRules,
+        governance_rules: (bool, OptionU64), // (revocable, expiration_time)
         organization: Organization,
     ) {
         if has_organization(&e) {
@@ -103,8 +102,8 @@ impl GovernanceTrait for CertGovernance {
         read_revocable(&e)
     }
 
-    /// Get the Chaincert expiration time (Unix time).
-    fn expiration_time(e: Env) -> OptU64 {
+    /// Get the Chaincert expiration time (Epoch time).
+    fn expiration_time(e: Env) -> OptionU64 {
         read_expiration_time(&e)
     }
 
@@ -140,13 +139,12 @@ impl GovernanceTrait for CertGovernance {
     }
 }
 
-/// Calculates the expiration date of a distributed Chaincert (using Unix time).
-fn expiration_date(e: &Env, distribution_date: u64) -> OptU64 {
-    let expiration_time = match read_expiration_time(&e) {
-        OptU64::Some(value) => OptU64::Some(distribution_date + value),
-        OptU64::None => OptU64::None,
-    };
-    expiration_time
+/// Calculates the expiration date of a distributed Chaincert (using Epoch Unix Timestamp, and Epoch time).
+fn expiration_date(e: &Env, distribution_date: u64) -> OptionU64 {
+    match read_expiration_time(e) {
+        OptionU64::Some(value) => OptionU64::Some(distribution_date + value),
+        OptionU64::None => OptionU64::None,
+    }
 }
 
 /// Checks that no more chain certificates are issued than allowed by the distribution limit.
@@ -197,7 +195,7 @@ fn distribute_receiver(
     );
 
     cert_data.status = Status::Distribute;
-    cert_data.distribution_date = OptU64::Some(distribution_date);
+    cert_data.distribution_date = OptionU64::Some(distribution_date);
     receivers.set(address.clone(), cert_data);
     write_receivers(e, receivers);
     increment_supply(e);
@@ -213,7 +211,7 @@ fn deposit_to_wallet(
 ) {
     let wallet_client = certs_wallet::Client::new(e, &wallet_contract_id);
     let distributor_contract = e.current_contract_address();
-    let expiration_date: OptU64 = expiration_date(e, distribution_date);
+    let expiration_date: OptionU64 = expiration_date(e, distribution_date);
     let org_id = read_organization_id(e);
     wallet_client.deposit_chaincert(
         &chaincert_id,

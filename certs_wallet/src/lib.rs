@@ -5,11 +5,10 @@ mod error;
 mod option;
 mod owner;
 mod storage_types;
-
 use crate::error::ContractError;
 use chaincert::Chaincert;
+use option::OptionU64;
 use soroban_sdk::{contractimpl, panic_with_error, Address, Bytes, Env, Vec};
-use option::OptU64;
 
 pub struct Wallet;
 
@@ -42,7 +41,7 @@ impl Wallet {
         distributor_contract: Address,
         org_id: Bytes,
         distribution_date: u64,
-        expiration_date: OptU64,
+        expiration_date: OptionU64,
     ) {
         access_control_list::check_access_control_list(&env, &org_id);
         distributor_contract.require_auth();

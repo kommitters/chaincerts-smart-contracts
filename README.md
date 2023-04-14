@@ -16,11 +16,22 @@ This repository contains two smart contracts:
   The `cert_wallet` contract stores the Chaincerts of a specific user, and each user must have their own `cert_wallet`. This contract allows users to view their Chaincerts, add organizations authorized to issue certificates to them, and execute distribution and revocation actions on their certificates. Only functions that can be executed by the `cert_governance` contract can modify certificates in a `cert_wallet`.
 
 ## System overview
-The following image shows the communication of each contract with the Stellar network and the interaction between them.
+The following image explains how the smart contracts handle the certificates governance process.
 ![Flow of the system](how_it_works.png)
 
+## Contracts workflow
+1. We need an account to be used for deploying the contracts, it can be created on the Stellar laboratory using the Friendbot tool.
+2. There are 2 important aspects on this process, the wallet contract which allows users to hold and manage their certificates, and the governance contract, allowing organzations to issue, verify and distribute certificates to the user wallets.
+3. Both contracts require to be initialized, in order to add the basic configuration to them.
+4. Wallets must include the organizations on their access control list,to authorize them for distributing certificates to the wallet.
+5. When a wallet authorizes an organization, it can proceed to distribute the certificates using the governance contract.
+	a. Organizations can also revoke certificates, when revocability is allowed by the governance contract.
+	b. Certificates can also be expirable, if an expiration_time is provided during the contract initialization.
+	c. Only the organization who distributed a certificate, is allowed to revoke it.
+
+
 ## Pre-requirements
-To be able to work with the contracts, you first need some programs or dependencies, for this you can read the following guide: [Soroban setup](https://soroban.stellar.org/docs/getting-started/setup).
+To be able to work with the contracts, you'll need to install Rust and Soroban, this process is explained on the [Soroban setup](https://soroban.stellar.org/docs/getting-started/setup).
 
 ## Setup
 ``` 
@@ -34,49 +45,19 @@ cargo build
 
 ## Testing
 To test the contract run `cargo test -- --show-output` or ` cargo test -- --nocapture`
-
-## Contracts workflow
-1. The first thing we need to start is to have the public and private keys of Stellar laboratory. We can generate them by accessing the following URL on [Futurenet](https://laboratory.stellar.org/#account-creator?network=futurenet) and using the Friendbot tool.
-2. Once we have the public and private keys, we can [deploy](#deploy_certs_wallet) the `certs_wallet` contract, taking into account that `receiver-secret-key` is the private key we generated in Stellar Laboratory.
-3. If the deployment is successful, it will generate a `wallet_contract_id` that we must save to continue interacting with our contract. After this, we can [initialize](#initialize_certs_wallet) our `certs_wallet`, where once again, our `receiver-secret-key` corresponds to the private key we generated in the first step, our `wallet_contract_id` corresponds to the ID generated during deployment in the previous step, and our `receiver-public-key` corresponds to the public key generated in the first step.
-4. Now that we have initialized our `certs_wallet`, we can receive certificates from an organization. However, to do this we must first create one by [deploy](#deploy_certs_governance) the `certs_governance` contract. We also need to generate the public and private keys in the Stellar Laboratory.
-5. After deploying the `certs_governance` contract, we can [initialize](#initialize_certs_governance) and create our certificate according to our own governance rules.
-6. Now that we have both contracts deployed and initialized, we can send a certificate from the `certs_governance` contract to the `certs_wallet` contract. However, there is one small detail we need to take care of: we need to add the organization we just created to our `Access Control List` (a list that allows organizations to deliver certificates to us). [Add organization](#add_organization).
-7. Now that we have added our organization to the `Access Control List`, we can safely and securely [distribute](#distribute) certificates from the `certs_governance` contract to the `certs_wallet` in a controlled manner.
-8. If a certificate has been marked as revocable in the `governance_rules`, we can easily and securely [revoke](#revoke) it.
-
-While this is a basic flow of the contracts, there are [other functions](#other_functions) that can provide us with more information.
-
 ## Contracts deployment and usage
+
 All this steps require the [Pre-requirements](#pre-requirements) and [Setup](#setup) 
 
 1. Build both contracts with `cargo build --target wasm32-unknown-unknown --release`
-2. Deploy `certs_wallet` contract
-<a name="deploy_certs_wallet"></a>
-```
-soroban contract deploy \
-    --source-account <receiver-secret-key> \
-    --rpc-url https://rpc-futurenet.stellar.org:443 \
-    --network-passphrase 'Test SDF Future Network ; October 2022' \
-    --wasm target/wasm32-unknown-unknown/release/certs_wallet.wasm
+2. Create the deployer account [Futurenet](https://laboratory.stellar.org/#account-creator?network=futurenet)
 
-sucess
-sucess
-<wallet_contract_id>
-```
-3. Initialize `certs_wallet` contract
-<a name="initialize_certs_wallet"></a>
-```
-soroban contract invoke \
-    --source-account <receiver-secret-key> \
-    --rpc-url https://rpc-futurenet.stellar.org:443 \
-    --network-passphrase 'Test SDF Future Network ; October 2022' \
-    --id <wallet_contract_id> \
-    -- initialize \
-    --owner <receiver-public-key>
-```
-4. Deploy `certs_governance` contract
-<a name="deploy_certs_governance"></a>
+| Name | Key |
+| --- | --- |
+| Org Public Key | GARAH5FN5QFOVECBFSZHRXK3EBEXMZVZCJZAXMRWBZTEZN2KWDKDWQWB |
+| Org Secret Key | SAHQNAPK4KI5HOSQJZPQICNYRQZZTHLBG3ESAU6I5KTQRPZTGA5WGE3N |
+
+3. Deploy certs_governance contract
 ```
 soroban contract deploy \
     --source-account <org-secret-key> \
@@ -87,10 +68,9 @@ sucess
 sucess
 <governance_contract_id>
 ```
-<a name="initialize_certs_governance"></a>
-5. Initialize `certs_governance` contract, to initialize this contract we can do it by sending the addresses of the receivers that will receive the contract or by sending the number of certificates that can distribute this contract, in case both values enter `null` it is initialized with a distribution limit of 10.
+4. Initialize certs_governance contract, to initialize this contract we can do it by sending the addresses of the receivers that will receive the contract or by sending the number of certificates that can distribute this contract, in case both values enter null it is initialized with a distribution limit of 10.
 
-`initialize with distribution_limit`
+**initialize with distribution_limit and expiration_date**
 
 ```
 soroban contract invoke \
@@ -107,7 +87,7 @@ soroban contract invoke \
     --organization '{"id": "6f726731" , "admin": "<org-public-key>"}'
 ```
 
-`Initialize with receivers`
+**Initialize with receivers and expiration_date**
 
 ```
 soroban contract invoke \
@@ -124,7 +104,7 @@ soroban contract invoke \
     --organization '{"id": "6f726731" , "admin": "<org-public-key>"}'
 ```
 
-`Initialize without expiration_date in governance_rules`
+**Initialize without expiration_date**
 
 ```
 soroban contract invoke \
@@ -140,11 +120,37 @@ soroban contract invoke \
     --governance_rules '{ "vec": [{ "bool": true }, { "vec": [{ "symbol": "None" }] }] }' \
     --organization '{"id": "6f726731" , "admin": "<org-public-key>"}'
 ```
-
 > **Note** The `governance_rules` field is a tuple with two fields. The first field is a `bool` value that indicates whether the contract is `revocable` or not. The second field is `expiration_time`, a field of type `OptionU64` that represents the duration of validity of the issued certificate. Time is managed in `Epoch Unix Timestamps` format. For this example, we will use the value of `31556926`, which equals one year. This means that the certificate will only be valid for one year after distribution. For more information on this date format, please visit the following website: https://www.unixtimestamp.com/
+5. Create user account with stellar laboratory [Futurenet](https://laboratory.stellar.org/#account-creator?network=futurenet)
 
-6. Add the organization to the `certs_wallet` in order to receive certificates.
-<a name="add_organization"></a>
+| Name | Key |
+| --- | --- |
+| Receiver Public Key | GARAH5FN5QFOVECBFSZHRXK3EBEXMZVZCJZAXMRWBZTEZN2KWDKDWQWD |
+| Receiver Secret Key | SAHQNAPK4KI5HOSQJZPQICNYRQZZTHLBG3ESAU6I5KTQRPZTGA5WGE3Q |
+
+6. Deploy certs_wallet contract
+```
+soroban contract deploy \
+    --source-account <receiver-secret-key> \
+    --rpc-url https://rpc-futurenet.stellar.org:443 \
+    --network-passphrase 'Test SDF Future Network ; October 2022' \
+    --wasm target/wasm32-unknown-unknown/release/certs_wallet.wasm
+
+sucess
+sucess
+<wallet_contract_id>
+```
+7. Initialize certs_wallet contract
+```
+soroban contract invoke \
+    --source-account <receiver-secret-key> \
+    --rpc-url https://rpc-futurenet.stellar.org:443 \
+    --network-passphrase 'Test SDF Future Network ; October 2022' \
+    --id <wallet_contract_id> \
+    -- initialize \
+    --owner <receiver-public-key>
+```
+8. Include the organization on the wallet Access Control List.
 ```
 soroban contract invoke \
     --source-account <receiver-secret-key> \
@@ -154,8 +160,25 @@ soroban contract invoke \
     -- add_organization \
     --org_id 6f726731
 ```
-7. The organization has already been added to the `Access Control List` of the wallet, then we can distribute a certificate from the `certs_governance`.
-<a name="distribute"></a>
+9. Verify organization was succesfully included.
+```
+soroban contract invoke \
+    --source-account SA6BUT3AQCI757TGKZDZYFOX6ABNNR4SOSB3IS6POZ4D7EUOPOBEFB4C \
+    --rpc-url https://rpc-futurenet.stellar.org:443 \
+    --network-passphrase 'Test SDF Future Network ; October 2022' \
+    --id b38c29ee40c874afebd34b6b82b9d2107ef87045d475db8b074e2e02c8d49f77 \
+    -- get_access_control_list
+```
+10. Verify there aren't chaincerts on the wallet.
+```
+soroban contract invoke \
+    --source-account SA6BUT3AQCI757TGKZDZYFOX6ABNNR4SOSB3IS6POZ4D7EUOPOBEFB4C \
+    --rpc-url https://rpc-futurenet.stellar.org:443 \
+    --network-passphrase 'Test SDF Future Network ; October 2022' \
+    --id b38c29ee40c874afebd34b6b82b9d2107ef87045d475db8b074e2e02c8d49f77 \
+    -- get_chaincerts
+```
+11. The organization has already been added to the Access Control List of the wallet, then we can distribute a certificate from the certs_governance.
 ```
 soroban contract invoke \
     --source-account SC54VFEAE3MXFJ2QYR5TCJDZYIYADAJFUPGZIDIEOFTAYQRMOVLRHM6U \
@@ -169,8 +192,16 @@ soroban contract invoke \
     --cid 516d647479665459625653334b3969597142506a58786e346d624237614276456a59477a59576e7a52634d724543\
     --distribution_date 1681414979
 ```
-8. If at the moment of initializing the `certs_governance` contract in the `governance_rules` field we mark as `true`, we can revoke the certificate.
-<a name="revoke"></a>
+12. Verify the wallet now contain a certificate.
+```
+soroban contract invoke \
+    --source-account SA6BUT3AQCI757TGKZDZYFOX6ABNNR4SOSB3IS6POZ4D7EUOPOBEFB4C \
+    --rpc-url https://rpc-futurenet.stellar.org:443 \
+    --network-passphrase 'Test SDF Future Network ; October 2022' \
+    --id b38c29ee40c874afebd34b6b82b9d2107ef87045d475db8b074e2e02c8d49f77 \
+    -- get_chaincerts
+```
+13. Revoke the certificate using the Governance contract.
 ```
   soroban contract invoke \
     --source-account <org-secret-key> \
@@ -182,9 +213,17 @@ soroban contract invoke \
     --holder <receiver-public-key> \
     --wallet_contract_id <wallet_contract_id>
 ```
+14. Verify certificate is marked as revoked on the wallet.
+```
+soroban contract invoke \
+    --source-account SA6BUT3AQCI757TGKZDZYFOX6ABNNR4SOSB3IS6POZ4D7EUOPOBEFB4C \
+    --rpc-url https://rpc-futurenet.stellar.org:443 \
+    --network-passphrase 'Test SDF Future Network ; October 2022' \
+    --id b38c29ee40c874afebd34b6b82b9d2107ef87045d475db8b074e2e02c8d49f77 \
+    -- get_chaincerts
+```
 
-<a name="other_functions"></a>
-# Other functions
+# Additional Functions:
 
 ## Certs Governane
 1. This function returns the name of the certificate
@@ -205,7 +244,7 @@ soroban contract invoke \
     --id <governance_contract_id> \
     -- is_revocable
 ```
-3. This function returns the expiration time of the certificate after its distribution.
+3. This function returns the expiration time used to calculate the expiration_date.
 ```
 soroban contract invoke \
     --source-account <org-secret-key> \
@@ -214,7 +253,7 @@ soroban contract invoke \
     --id <governance_contract_id> \
     -- expiration_time
 ```
-4. This function returns the number of certificates we can distribute.
+4. This function returns the number of certificates the contract allows to distribute.
 ```
 soroban contract invoke \
     --source-account <org-secret-key> \
@@ -223,7 +262,7 @@ soroban contract invoke \
     --id <governance_contract_id> \
     -- distribution_limit
 ```
-6. This function returns the number of certificates we have distributed.
+6. This function returns the number of certificates already distributed.
 ```
 soroban contract invoke \
     --source-account <org-secret-key> \
@@ -232,7 +271,7 @@ soroban contract invoke \
     --id <governance_contract_id> \
     -- supply
 ```
-7. This function return then name of decentralized storage service
+7. This function return then name of decentralized storage service used for storing the certificates data.
 ```
 soroban contract invoke \
     --source-account <org-secret-key> \
@@ -241,7 +280,7 @@ soroban contract invoke \
     --id <governance_contract_id> \
     -- file_storage
 ```
-8. This function returns the receivers that we have stored in the contract.
+8. This function returns the receivers stored in the contract.
 ```
 soroban contract invoke \
     --source-account <org-secret-key> \
@@ -250,7 +289,7 @@ soroban contract invoke \
     --id <governance_contract_id> \
     -- receivers
 ```
-9. This function returns information related to the certificate.
+9. This function returns the contract information provided during the initialization.
 ```
 soroban contract invoke \
     --source-account <org-secret-key> \
@@ -261,7 +300,7 @@ soroban contract invoke \
 ```
 
 ## Certs wallet
-1. This function allows us to remove an organization from the `Access Control List`.
+This function allows us to remove an organization from the Access Control List.
 ```
 soroban contract invoke \
     --source-account SA6BUT3AQCI757TGKZDZYFOX6ABNNR4SOSB3IS6POZ4D7EUOPOBEFB4C \
@@ -271,25 +310,6 @@ soroban contract invoke \
     -- remove_organization \
     --org_id 6f726731
 ```
-2. This function returns all the chaincerts that have been sent to us.
-```
-soroban contract invoke \
-    --source-account SA6BUT3AQCI757TGKZDZYFOX6ABNNR4SOSB3IS6POZ4D7EUOPOBEFB4C \
-    --rpc-url https://rpc-futurenet.stellar.org:443 \
-    --network-passphrase 'Test SDF Future Network ; October 2022' \
-    --id b38c29ee40c874afebd34b6b82b9d2107ef87045d475db8b074e2e02c8d49f77 \
-    -- get_chaincerts
-```
-3. This function returns the organizations we have in the `Access Control List`.
-```
-soroban contract invoke \
-    --source-account SA6BUT3AQCI757TGKZDZYFOX6ABNNR4SOSB3IS6POZ4D7EUOPOBEFB4C \
-    --rpc-url https://rpc-futurenet.stellar.org:443 \
-    --network-passphrase 'Test SDF Future Network ; October 2022' \
-    --id b38c29ee40c874afebd34b6b82b9d2107ef87045d475db8b074e2e02c8d49f77 \
-    -- get_access_control_list
-```
-
 
 # Types of errors in the contract
 For ease of error handling, it was decided to use error codes. The meaning of each of these codes will be explained below.

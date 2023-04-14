@@ -1,16 +1,19 @@
 //! Module MetaData
 //!
 //! Module for obtaining and modifying the metadata fields.
-use crate::storage_types::{CertData, DataKey};
+use crate::{
+    certs_wallet::OptionU64,
+    storage_types::{CertData, DataKey},
+};
 use soroban_sdk::{Address, Bytes, Env, Map};
 
 pub fn read_file_storage(e: &Env) -> Bytes {
-    let key = DataKey::FStorage;
+    let key = DataKey::FileStorage;
     e.storage().get_unchecked(&key).unwrap()
 }
 
 pub fn write_file_storage(e: &Env, file_storage: Bytes) {
-    let key = DataKey::FStorage;
+    let key = DataKey::FileStorage;
     e.storage().set(&key, &file_storage);
 }
 
@@ -34,13 +37,13 @@ pub fn write_revocable(e: &Env, revocable: bool) {
     e.storage().set(&key, &revocable)
 }
 
-pub fn read_expiration_time(e: &Env) -> Option<u64> {
-    let key = DataKey::ExpTime;
+pub fn read_expiration_time(e: &Env) -> OptionU64 {
+    let key = DataKey::ExpirationTime;
     e.storage().get_unchecked(&key).unwrap()
 }
 
-pub fn write_expiration_time(e: &Env, expiration_time: Option<u64>) {
-    let key = DataKey::ExpTime;
+pub fn write_expiration_time(e: &Env, expiration_time: OptionU64) {
+    let key = DataKey::ExpirationTime;
     e.storage().set(&key, &expiration_time)
 }
 
@@ -50,12 +53,12 @@ pub fn write_receivers(e: &Env, receivers: Map<Address, CertData>) {
 }
 
 pub fn read_distribution_limit(e: &Env) -> u32 {
-    let key = DataKey::DistLimit;
+    let key = DataKey::DistributionLimit;
     e.storage().get_unchecked(&key).unwrap()
 }
 
 pub fn write_distribution_limit(e: &Env, distribution_limit: u32) {
-    let key = DataKey::DistLimit;
+    let key = DataKey::DistributionLimit;
     e.storage().set(&key, &distribution_limit)
 }
 

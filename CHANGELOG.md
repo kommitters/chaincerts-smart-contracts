@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0 (14.04.2023)
+
+- [Refactor](https://github.com/kommitters/chaincerts_governance/milestone/4)
+
 ## 0.3.0 (04.04.2023)
 
 - [Error handling](https://github.com/kommitters/chaincerts_governance/milestone/3)

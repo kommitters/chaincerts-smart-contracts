@@ -1,13 +1,13 @@
 //! Module Storage Types
 //!
 //! Module where the DataKey of the contract and some necessary structs are defined.
-use crate::certs_wallet::OptU64;
+use crate::certs_wallet::OptionU64;
 use soroban_sdk::{contracttype, Address, Bytes};
 
 #[contracttype]
 #[derive(Clone, Debug, PartialEq)]
 pub struct Organization {
-    pub id_org: Bytes,
+    pub id: Bytes,
     pub admin: Address,
 }
 
@@ -22,17 +22,17 @@ pub enum Status {
 #[contracttype]
 #[derive(Clone, Debug, PartialEq)]
 pub struct CertData {
-    pub id_cert: Bytes,
+    pub id: Bytes,
     pub status: Status,
-    pub dist_date: OptU64,
+    pub distribution_date: OptionU64,
 }
 
 impl CertData {
-    pub fn new(id_cert: Bytes, status: Status, dist_date: OptU64) -> CertData {
+    pub fn new(id: Bytes, status: Status, distribution_date: OptionU64) -> CertData {
         CertData {
-            id_cert,
+            id,
             status,
-            dist_date,
+            distribution_date,
         }
     }
 }
@@ -42,20 +42,20 @@ impl CertData {
 pub struct Info {
     pub name: Bytes,
     pub revocable: bool,
-    pub exp_time: OptU64,
-    pub dist_limit: u32,
+    pub expiration_time: OptionU64,
+    pub distribution_limit: u32,
     pub supply: u32,
 }
 
 #[derive(Clone, Debug)]
 #[contracttype]
 pub enum DataKey {
-    FStorage,  // Bytes
-    Name,      // Bytes
-    Revocable, // bool
-    ExpTime,   // Option <u64>
-    Receivers, // Map <Address, CertData>
-    Org,       // Organization
-    DistLimit, // u32
-    Supply,    // u32
+    FileStorage,       // Bytes
+    Name,              // Bytes
+    Revocable,         // bool
+    ExpirationTime,    // OptionU64
+    Receivers,         // Map <Address, CertData>
+    Organization,      // Organization
+    DistributionLimit, // u32
+    Supply,            // u32
 }

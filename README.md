@@ -17,7 +17,7 @@ This repository contains two smart contracts:
 
 ## System overview
 The following image explains how the smart contracts handle the certificates governance process.
-![Flow of the system](how_it_works.png)
+![Flow of the system](https://user-images.githubusercontent.com/89233604/232091954-1aff8267-4f0d-4f01-8c40-775fa91cd397.png)
 
 ## Contracts workflow
 1. We need an account to be used for deploying the contracts, it can be created on the Stellar laboratory using the Friendbot tool.

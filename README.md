@@ -51,12 +51,6 @@ All this steps require the [Pre-requirements](#pre-requirements) and [Setup](#se
 
 1. Build both contracts with `cargo build --target wasm32-unknown-unknown --release`
 2. Create the deployer account [Futurenet](https://laboratory.stellar.org/#account-creator?network=futurenet)
-
-| Name | Key |
-| --- | --- |
-| Org Public Key | GARAH5FN5QFOVECBFSZHRXK3EBEXMZVZCJZAXMRWBZTEZN2KWDKDWQWB |
-| Org Secret Key | SAHQNAPK4KI5HOSQJZPQICNYRQZZTHLBG3ESAU6I5KTQRPZTGA5WGE3N |
-
 3. Deploy certs_governance contract
 ```
 soroban contract deploy \
@@ -122,12 +116,6 @@ soroban contract invoke \
 ```
 > **Note** The `governance_rules` field is a tuple with two fields. The first field is a `bool` value that indicates whether the contract is `revocable` or not. The second field is `expiration_time`, a field of type `OptionU64` that represents the duration of validity of the issued certificate. Time is managed in `Epoch Unix Timestamps` format. For this example, we will use the value of `31556926`, which equals one year. This means that the certificate will only be valid for one year after distribution. For more information on this date format, please visit the following website: https://www.unixtimestamp.com/
 5. Create user account with stellar laboratory [Futurenet](https://laboratory.stellar.org/#account-creator?network=futurenet)
-
-| Name | Key |
-| --- | --- |
-| Receiver Public Key | GARAH5FN5QFOVECBFSZHRXK3EBEXMZVZCJZAXMRWBZTEZN2KWDKDWQWD |
-| Receiver Secret Key | SAHQNAPK4KI5HOSQJZPQICNYRQZZTHLBG3ESAU6I5KTQRPZTGA5WGE3Q |
-
 6. Deploy certs_wallet contract
 ```
 soroban contract deploy \

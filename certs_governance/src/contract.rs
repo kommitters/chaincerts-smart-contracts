@@ -38,20 +38,8 @@ impl GovernanceTrait for CertGovernance {
         write_revocable(&e, governance_rules.0);
         write_expiration_time(&e, governance_rules.1);
         write_supply(&e, 0);
-        match receivers {
-            Some(receivers) => {
-                write_distribution_limit(&e, receivers.len());
-                create_receivers(&e, receivers);
-            }
-            None => {
-                if let Some(distribution_limit) = distribution_limit {
-                    write_distribution_limit(&e, distribution_limit);
-                } else {
-                    write_distribution_limit(&e, 10);
-                }
-                write_receivers(&e, Map::<Address, CertData>::new(&e));
-            }
-        };
+
+        define_limit_and_receivers(e, receivers, distribution_limit);
     }
 
     /// Distribute a Chaincert to a receiver.
@@ -66,15 +54,8 @@ impl GovernanceTrait for CertGovernance {
         check_admin(&e, &admin);
         admin.require_auth();
         check_amount(&e);
-        match read_receivers(&e).get(receiver.clone()) {
-            Some(_) => {
-                distribute_receiver(&e, &receiver, distribution_date, wallet_contract_id, cid);
-            }
-            None => {
-                add_receiver(&e, &receiver);
-                distribute_receiver(&e, &receiver, distribution_date, wallet_contract_id, cid);
-            }
-        };
+
+        apply_distribution(e, receiver, wallet_contract_id, cid, distribution_date);
     }
 
     /// Revoke a Chaincert from a holder.
@@ -137,6 +118,47 @@ impl GovernanceTrait for CertGovernance {
             supply: read_supply(&e),
         }
     }
+}
+
+/// Defines receivers and distribution_limit depending on the received ones.
+fn apply_distribution(
+    e: Env,
+    receiver: Address,
+    wallet_contract_id: BytesN<32>,
+    cid: Bytes,
+    distribution_date: u64,
+) {
+    match read_receivers(&e).get(receiver.clone()) {
+        Some(_) => {
+            distribute_receiver(&e, &receiver, distribution_date, wallet_contract_id, cid);
+        }
+        None => {
+            add_receiver(&e, &receiver);
+            distribute_receiver(&e, &receiver, distribution_date, wallet_contract_id, cid);
+        }
+    };
+}
+
+/// Defines receivers and distribution_limit depending on the received ones.
+fn define_limit_and_receivers(
+    e: Env,
+    receivers: Option<Vec<Address>>,
+    distribution_limit: Option<u32>,
+) {
+    match receivers {
+        Some(receivers) => {
+            write_distribution_limit(&e, receivers.len());
+            create_receivers(&e, receivers);
+        }
+        None => {
+            if let Some(distribution_limit) = distribution_limit {
+                write_distribution_limit(&e, distribution_limit);
+            } else {
+                write_distribution_limit(&e, 10);
+            }
+            write_receivers(&e, Map::<Address, CertData>::new(&e));
+        }
+    };
 }
 
 /// Calculates the expiration date of a distributed Chaincert (using Epoch Unix Timestamp, and Epoch time).

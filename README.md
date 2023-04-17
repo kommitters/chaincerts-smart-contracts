@@ -17,13 +17,13 @@ This repository contains two smart contracts:
 
 ## System overview
 The following image illustrates how the smart contracts manage the certificate governance process.
-![Flow of the system](https://user-images.githubusercontent.com/89233604/232091954-1aff8267-4f0d-4f01-8c40-775fa91cd397.png)
+![Workflow](https://user-images.githubusercontent.com/32212593/232539606-6999b76c-f005-4771-83f2-323622dfaded.jpeg)
 
 ## Contracts workflow
 1. In order to deploy the contracts, we require an account that can be created on the Stellar laboratory using the Friendbot tool.
-2. Two critical aspects are involved in this process: the wallet contract, which enables users to hold and manage their certificates, and the governance contract, which allows organizations to issue, verify, and distribute certificates to user wallets.
+2. Two key aspects are involved in this process: the **wallet contract**, which enables users to hold and manage their certificates, and the **governance contract**, which allows organizations to issue, verify, and distribute certificates to user wallets.
 3. Both contracts need to be initialized to add the fundamental configuration to them.
-4. To enable organizations to distribute certificates to the wallet, wallets must include these organizations on their access control list for authorization purposes.
+4. To enable organizations to distribute certificates to the wallet, wallets must include these organizations on their **Access Control List** for authorization purposes.
 5. Once a wallet authorizes an organization, it can proceed with certificate distribution using the governance contract.
     * Organizations can revoke certificates as well, provided that revocability is allowed by the governance contract.
 	* Certificates can be set to expire if an **expiration_time** is specified during the contract initialization.
@@ -49,7 +49,7 @@ To test the contract run `cargo test -- --show-output`
 
 All this steps require the [Pre-requirements](#pre-requirements) and [Setup](#setup) 
 
-1. Build both contracts with `cargo build --target wasm32-unknown-unknown --release`
+1. Build both contracts (Wallet & Governance) with `cargo build --target wasm32-unknown-unknown --release`
 2. Create the deployer account with the [Friendbot](https://laboratory.stellar.org/#account-creator?network=futurenet)
 3. Deploy **certs_governance** contract
     ```

@@ -121,7 +121,13 @@ impl GovernanceTrait for CertGovernance {
 }
 
 /// Defines receivers and distribution_limit depending on the received ones.
-fn apply_distribution(e: Env, receiver: Address, wallet_contract_id: BytesN<32>, cid: Bytes, distribution_date: u64) {
+fn apply_distribution(
+    e: Env,
+    receiver: Address,
+    wallet_contract_id: BytesN<32>,
+    cid: Bytes,
+    distribution_date: u64,
+) {
     match read_receivers(&e).get(receiver.clone()) {
         Some(_) => {
             distribute_receiver(&e, &receiver, distribution_date, wallet_contract_id, cid);
@@ -134,7 +140,11 @@ fn apply_distribution(e: Env, receiver: Address, wallet_contract_id: BytesN<32>,
 }
 
 /// Defines receivers and distribution_limit depending on the received ones.
-fn define_limit_and_receivers(e: Env, receivers: Option<Vec<Address>>, distribution_limit: Option<u32>) {
+fn define_limit_and_receivers(
+    e: Env,
+    receivers: Option<Vec<Address>>,
+    distribution_limit: Option<u32>,
+) {
     match receivers {
         Some(receivers) => {
             write_distribution_limit(&e, receivers.len());

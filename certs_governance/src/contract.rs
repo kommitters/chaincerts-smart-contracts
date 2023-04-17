@@ -54,15 +54,8 @@ impl GovernanceTrait for CertGovernance {
         check_admin(&e, &admin);
         admin.require_auth();
         check_amount(&e);
-        match read_receivers(&e).get(receiver.clone()) {
-            Some(_) => {
-                distribute_receiver(&e, &receiver, distribution_date, wallet_contract_id, cid);
-            }
-            None => {
-                add_receiver(&e, &receiver);
-                distribute_receiver(&e, &receiver, distribution_date, wallet_contract_id, cid);
-            }
-        };
+
+        apply_distribution(e, receiver, wallet_contract_id, cid, distribution_date);
     }
 
     /// Revoke a Chaincert from a holder.
@@ -125,6 +118,19 @@ impl GovernanceTrait for CertGovernance {
             supply: read_supply(&e),
         }
     }
+}
+
+/// Defines receivers and distribution_limit depending on the received ones.
+fn apply_distribution(e: Env, receiver: Address, wallet_contract_id: BytesN<32>, cid: Bytes, distribution_date: u64) {
+    match read_receivers(&e).get(receiver.clone()) {
+        Some(_) => {
+            distribute_receiver(&e, &receiver, distribution_date, wallet_contract_id, cid);
+        }
+        None => {
+            add_receiver(&e, &receiver);
+            distribute_receiver(&e, &receiver, distribution_date, wallet_contract_id, cid);
+        }
+    };
 }
 
 /// Defines receivers and distribution_limit depending on the received ones.

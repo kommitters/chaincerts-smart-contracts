@@ -38,20 +38,8 @@ impl GovernanceTrait for CertGovernance {
         write_revocable(&e, governance_rules.0);
         write_expiration_time(&e, governance_rules.1);
         write_supply(&e, 0);
-        match receivers {
-            Some(receivers) => {
-                write_distribution_limit(&e, receivers.len());
-                create_receivers(&e, receivers);
-            }
-            None => {
-                if let Some(distribution_limit) = distribution_limit {
-                    write_distribution_limit(&e, distribution_limit);
-                } else {
-                    write_distribution_limit(&e, 10);
-                }
-                write_receivers(&e, Map::<Address, CertData>::new(&e));
-            }
-        };
+
+        define_limit_and_receivers(e, receivers, distribution_limit);
     }
 
     /// Distribute a Chaincert to a receiver.
@@ -137,6 +125,24 @@ impl GovernanceTrait for CertGovernance {
             supply: read_supply(&e),
         }
     }
+}
+
+/// Defines receivers and distribution_limit depending on the received ones.
+fn define_limit_and_receivers(e: Env, receivers: Option<Vec<Address>>, distribution_limit: Option<u32>) {
+    match receivers {
+        Some(receivers) => {
+            write_distribution_limit(&e, receivers.len());
+            create_receivers(&e, receivers);
+        }
+        None => {
+            if let Some(distribution_limit) = distribution_limit {
+                write_distribution_limit(&e, distribution_limit);
+            } else {
+                write_distribution_limit(&e, 10);
+            }
+            write_receivers(&e, Map::<Address, CertData>::new(&e));
+        }
+    };
 }
 
 /// Calculates the expiration date of a distributed Chaincert (using Epoch Unix Timestamp, and Epoch time).

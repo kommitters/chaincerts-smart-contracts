@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1 (18.04.2023)
+
+- [Functions refactor and readme improves](https://github.com/kommitters/chaincerts_governance/issues/70)
+
 ## 0.4.0 (14.04.2023)
 
 - [Refactor](https://github.com/kommitters/chaincerts_governance/milestone/4)

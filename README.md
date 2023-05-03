@@ -48,6 +48,37 @@ cargo build
 cargo test -- --show-output
 ```
 
+### Deployment
+1. Build the smart contracts:
+```
+cargo build --target wasm32-unknown-unknown --release
+```
+
+2. Deploy using the Soroban CLI:
+```
+soroban contract deploy \
+    --source-account SOURCE_ACCOUNT_SECRET_KEY \
+    --rpc-url https://rpc-futurenet.stellar.org:443 \
+    --network-passphrase 'Test SDF Future Network ; October 2022' \
+    --wasm target/wasm32-unknown-unknown/release/cert_issuance.wasm
+SUCCESS
+SUCCESS
+
+ISSUANCE_CONTRACT_ID
+```
+
+```
+soroban contract deploy \
+    --source-account SOURCE_ACCOUNT_SECRET_KEY \
+    --rpc-url https://rpc-futurenet.stellar.org:443 \
+    --network-passphrase 'Test SDF Future Network ; October 2022' \
+    --wasm target/wasm32-unknown-unknown/release/cert_wallet.wasm
+SUCCESS
+SUCCESS
+
+WALLET_CONTRACT_ID
+```
+
 ## Changelog
 
 Features and bug fixes are listed in the [CHANGELOG][changelog] file.

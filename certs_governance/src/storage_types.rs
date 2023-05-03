@@ -54,7 +54,7 @@ pub enum DataKey {
     Name,              // Bytes
     Revocable,         // bool
     ExpirationTime,    // OptionU64
-    Receivers,         // Map <Address, CertData>
+    Recipients,         // Map <Address, CertData>
     Organization,      // Organization
     DistributionLimit, // u32
     Supply,            // u32

@@ -11,7 +11,7 @@ const CHAINCERT_KEY: DataKey = DataKey::Chaincerts;
 /// The `Chaincert` information stored in the wallet
 pub struct Chaincert {
     pub cid: Bytes,
-    /// Address of the governance contract that distributed the `Chaincert`
+    /// Address of the issuance contract that distributed the `Chaincert`
     pub distributor_contract: Address,
     /// The id of the organization that distributed the `Chaincert`
     pub org_id: Bytes,

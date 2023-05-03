@@ -3,7 +3,7 @@
 //! Module containing the main contract logic.
 use crate::certs_wallet::{self, OptionU64};
 use crate::error::ContractError;
-use crate::governance_trait::GovernanceTrait;
+use crate::issuance_trait::IssuanceTrait;
 use crate::metadata::{
     increment_supply, read_distribution_limit, read_expiration_time, read_file_storage, read_name,
     read_revocable, read_supply, write_distribution_limit, write_expiration_time,
@@ -15,10 +15,10 @@ use crate::organization::{
 use crate::recipients::{add_recipient, create_recipients, read_recipients};
 use crate::storage_types::{CertData, Info, Organization, Status};
 use soroban_sdk::{contractimpl, panic_with_error, Address, Bytes, BytesN, Env, Map, Vec};
-pub struct CertGovernance;
+pub struct CertIssuance;
 
 #[contractimpl]
-impl GovernanceTrait for CertGovernance {
+impl IssuanceTrait for CertIssuance {
     /// Initialize the contract a list of recipients or with the limit of Chaincerts that can be distributed.
     fn initialize(
         e: Env,

@@ -1,7 +1,7 @@
 #![cfg(test)]
 use crate::certs_wallet::{self, OptionU64};
 use crate::storage_types::{CertData, Info, Organization, Status};
-use crate::{contract::CertGovernance, CertGovernanceClient};
+use crate::{contract::CertIssuance, CertIssuanceClient};
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{vec, Address, Bytes, Env, IntoVal, Vec};
 
@@ -20,9 +20,9 @@ fn create_cert_governance_contract_with_limit(
     address_recipients: &Option<Vec<Address>>,
     organization: &Organization,
     governance_rules: &(bool, OptionU64),
-) -> CertGovernanceClient {
+) -> CertIssuanceClient {
     let cert_governance =
-        CertGovernanceClient::new(e, &e.register_contract(None, CertGovernance {}));
+        CertIssuanceClient::new(e, &e.register_contract(None, CertIssuance {}));
     cert_governance.initialize(
         &("FileBase").into_val(e),
         &"ChaincertName".into_val(e),
@@ -40,9 +40,9 @@ fn create_cert_governance_contract_with_recipients(
     address_recipients: &Option<Vec<Address>>,
     organization: &Organization,
     governance_rules: &(bool, OptionU64),
-) -> CertGovernanceClient {
+) -> CertIssuanceClient {
     let cert_governance =
-        CertGovernanceClient::new(e, &e.register_contract(None, CertGovernance {}));
+        CertIssuanceClient::new(e, &e.register_contract(None, CertIssuance {}));
 
     cert_governance.initialize(
         &"FileBase".into_val(e),
@@ -88,7 +88,7 @@ fn test_initialize_contract_with_recipients() {
     };
     let governance_rules = (true, OptionU64::Some(1680091200));
 
-    let cert_governance: CertGovernanceClient = create_cert_governance_contract_with_recipients(
+    let cert_governance: CertIssuanceClient = create_cert_governance_contract_with_recipients(
         &e,
         &Option::None,
         &recipients,
@@ -356,7 +356,7 @@ fn test_initialize_contract_with_recipients_error() {
 
     let governance_rules = (true, OptionU64::None);
 
-    let cert_governance: CertGovernanceClient = create_cert_governance_contract_with_recipients(
+    let cert_governance: CertIssuanceClient = create_cert_governance_contract_with_recipients(
         &e,
         &Option::None,
         &recipients,

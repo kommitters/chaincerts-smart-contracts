@@ -1,13 +1,13 @@
-//! Module GovernanceTrait
+//! Module IssuanceTrait
 //!
-//! Interface that defines the behavior of a Governance contract.
+//! Interface that defines the behavior of a Issuance contract.
 use soroban_sdk::{Address, Bytes, BytesN, Env, Map, Vec};
 
 use crate::{
     certs_wallet::OptionU64,
     storage_types::{CertData, Info, Organization},
 };
-pub trait GovernanceTrait {
+pub trait IssuanceTrait {
     /// Initialize the contract a list of recipients or with the limit of Chaincerts that can be distributed.
     fn initialize(
         e: Env,
@@ -15,7 +15,7 @@ pub trait GovernanceTrait {
         name: Bytes,
         recipients: Option<Vec<Address>>,
         distribution_limit: Option<u32>,
-        governance_rules: (bool, OptionU64),
+        distribution_rules: (bool, OptionU64),
         organization: Organization,
     );
 

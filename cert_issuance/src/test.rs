@@ -21,8 +21,7 @@ fn create_cert_issuance_contract_with_limit(
     organization: &Organization,
     administration_rules: &(bool, OptionU64),
 ) -> CertIssuanceClient {
-    let cert_issuance =
-        CertIssuanceClient::new(e, &e.register_contract(None, CertIssuance {}));
+    let cert_issuance = CertIssuanceClient::new(e, &e.register_contract(None, CertIssuance {}));
     cert_issuance.initialize(
         &("FileBase").into_val(e),
         &"ChaincertName".into_val(e),
@@ -41,8 +40,7 @@ fn create_cert_issuance_contract_with_recipients(
     organization: &Organization,
     administration_rules: &(bool, OptionU64),
 ) -> CertIssuanceClient {
-    let cert_issuance =
-        CertIssuanceClient::new(e, &e.register_contract(None, CertIssuance {}));
+    let cert_issuance = CertIssuanceClient::new(e, &e.register_contract(None, CertIssuance {}));
 
     cert_issuance.initialize(
         &"FileBase".into_val(e),
@@ -98,10 +96,7 @@ fn test_initialize_contract_with_recipients() {
     assert_eq!(cert_issuance.file_storage(), "FileBase".into_val(&e));
     assert_eq!(cert_issuance.name(), "ChaincertName".into_val(&e));
     assert!(cert_issuance.is_revocable());
-    assert_eq!(
-        cert_issuance.expiration_time(),
-        OptionU64::Some(1680091200)
-    );
+    assert_eq!(cert_issuance.expiration_time(), OptionU64::Some(1680091200));
     assert_eq!(cert_issuance.distribution_limit(), 3);
     assert_eq!(cert_issuance.supply(), 0);
     assert_eq!(cert_issuance.recipients().len(), 3);
@@ -273,7 +268,10 @@ fn test_distribute_with_initial_recipients() {
     );
 
     let mut recipients = cert_issuance.recipients();
-    let mut cert_data = recipients.get(address_recipient_1.clone()).unwrap().unwrap();
+    let mut cert_data = recipients
+        .get(address_recipient_1.clone())
+        .unwrap()
+        .unwrap();
     assert_eq!(cert_data.status, Status::Unassigned);
 
     cert_issuance.distribute(
@@ -610,7 +608,11 @@ fn test_revoke_admin_error() {
         &distribution_date,
     );
 
-    cert_issuance.revoke(&Address::random(&e), &recipient_address, &wallet.contract_id);
+    cert_issuance.revoke(
+        &Address::random(&e),
+        &recipient_address,
+        &wallet.contract_id,
+    );
 }
 
 #[test]

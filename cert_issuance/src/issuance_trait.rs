@@ -1,36 +1,36 @@
-//! Module GovernanceTrait
+//! Module IssuanceTrait
 //!
-//! Interface that defines the behavior of a Governance contract.
+//! Interface that defines the behavior of a Issuance contract.
 use soroban_sdk::{Address, Bytes, BytesN, Env, Map, Vec};
 
 use crate::{
-    certs_wallet::OptionU64,
+    cert_wallet::OptionU64,
     storage_types::{CertData, Info, Organization},
 };
-pub trait GovernanceTrait {
-    /// Initialize the contract a list of receivers or with the limit of Chaincerts that can be distributed.
+pub trait IssuanceTrait {
+    /// Initialize the contract a list of recipients or with the limit of Chaincerts that can be distributed.
     fn initialize(
         e: Env,
         file_storage: Bytes,
         name: Bytes,
-        receivers: Option<Vec<Address>>,
+        recipients: Option<Vec<Address>>,
         distribution_limit: Option<u32>,
-        governance_rules: (bool, OptionU64),
+        administration_rules: (bool, OptionU64),
         organization: Organization,
     );
 
-    /// Distribute a Chaincert to a receiver.
+    /// Distribute a Chaincert to a recipient.
     fn distribute(
         e: Env,
         admin: Address,
-        receiver: Address,
+        recipient: Address,
         wallet_contract_id: BytesN<32>,
         cid: Bytes,
         distribution_date: u64,
     );
 
-    /// Revoke a Chaincert from a receiver.
-    fn revoke(e: Env, admin: Address, receiver: Address, wallet_contract_id: BytesN<32>);
+    /// Revoke a Chaincert from a recipient.
+    fn revoke(e: Env, admin: Address, recipient: Address, wallet_contract_id: BytesN<32>);
 
     /// Get the Chaincert name.
     fn name(e: Env) -> Bytes;
@@ -50,8 +50,8 @@ pub trait GovernanceTrait {
     /// Get the type of decentralized storage service.
     fn file_storage(e: Env) -> Bytes;
 
-    /// Get the receivers data in the contract.
-    fn receivers(e: Env) -> Map<Address, CertData>;
+    /// Get the recipients data in the contract.
+    fn recipients(e: Env) -> Map<Address, CertData>;
 
     // Get all relevant contract data.
     fn info(e: Env) -> Info;

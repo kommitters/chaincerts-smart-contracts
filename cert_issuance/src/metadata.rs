@@ -2,7 +2,7 @@
 //!
 //! Module for obtaining and modifying the metadata fields.
 use crate::{
-    certs_wallet::OptionU64,
+    cert_wallet::OptionU64,
     storage_types::{CertData, DataKey},
 };
 use soroban_sdk::{Address, Bytes, Env, Map};
@@ -47,9 +47,9 @@ pub fn write_expiration_time(e: &Env, expiration_time: OptionU64) {
     e.storage().set(&key, &expiration_time)
 }
 
-pub fn write_receivers(e: &Env, receivers: Map<Address, CertData>) {
-    let key = DataKey::Receivers;
-    e.storage().set(&key, &receivers)
+pub fn write_recipients(e: &Env, recipients: Map<Address, CertData>) {
+    let key = DataKey::Recipients;
+    e.storage().set(&key, &recipients)
 }
 
 pub fn read_distribution_limit(e: &Env) -> u32 {

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.0 (04.05.2023)
+
+- [Update project terminology](https://github.com/kommitters/chaincerts-smart-contracts/issues/74)
+
 ## 0.4.1 (18.04.2023)
 
 - [Functions refactor and readme improves](https://github.com/kommitters/chaincerts_governance/issues/70)

@@ -1,7 +1,7 @@
 //! Module Storage Types
 //!
 //! Module where the DataKey of the contract and some necessary structs are defined.
-use crate::certs_wallet::OptionU64;
+use crate::cert_wallet::OptionU64;
 use soroban_sdk::{contracttype, Address, Bytes};
 
 #[contracttype]
@@ -54,7 +54,7 @@ pub enum DataKey {
     Name,              // Bytes
     Revocable,         // bool
     ExpirationTime,    // OptionU64
-    Receivers,         // Map <Address, CertData>
+    Recipients,        // Map <Address, CertData>
     Organization,      // Organization
     DistributionLimit, // u32
     Supply,            // u32

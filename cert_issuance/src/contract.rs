@@ -1,32 +1,32 @@
 //! Module Contract
 //!
 //! Module containing the main contract logic.
-use crate::certs_wallet::{self, OptionU64};
+use crate::cert_wallet::{self, OptionU64};
 use crate::error::ContractError;
-use crate::governance_trait::GovernanceTrait;
+use crate::issuance_trait::IssuanceTrait;
 use crate::metadata::{
     increment_supply, read_distribution_limit, read_expiration_time, read_file_storage, read_name,
     read_revocable, read_supply, write_distribution_limit, write_expiration_time,
-    write_file_storage, write_name, write_receivers, write_revocable, write_supply,
+    write_file_storage, write_name, write_recipients, write_revocable, write_supply,
 };
 use crate::organization::{
     check_admin, has_organization, read_organization_id, write_organization,
 };
-use crate::receivers::{add_receiver, create_receivers, read_receivers};
+use crate::recipients::{add_recipient, create_recipients, read_recipients};
 use crate::storage_types::{CertData, Info, Organization, Status};
 use soroban_sdk::{contractimpl, panic_with_error, Address, Bytes, BytesN, Env, Map, Vec};
-pub struct CertGovernance;
+pub struct CertIssuance;
 
 #[contractimpl]
-impl GovernanceTrait for CertGovernance {
-    /// Initialize the contract a list of receivers or with the limit of Chaincerts that can be distributed.
+impl IssuanceTrait for CertIssuance {
+    /// Initialize the contract a list of recipients or with the limit of Chaincerts that can be distributed.
     fn initialize(
         e: Env,
         file_storage: Bytes,
         name: Bytes,
-        receivers: Option<Vec<Address>>,
+        recipients: Option<Vec<Address>>,
         distribution_limit: Option<u32>,
-        governance_rules: (bool, OptionU64), // (revocable, expiration_time)
+        administration_rules: (bool, OptionU64), // (revocable, expiration_time)
         organization: Organization,
     ) {
         if has_organization(&e) {
@@ -35,18 +35,18 @@ impl GovernanceTrait for CertGovernance {
         write_organization(&e, organization);
         write_file_storage(&e, file_storage);
         write_name(&e, name);
-        write_revocable(&e, governance_rules.0);
-        write_expiration_time(&e, governance_rules.1);
+        write_revocable(&e, administration_rules.0);
+        write_expiration_time(&e, administration_rules.1);
         write_supply(&e, 0);
 
-        define_limit_and_receivers(e, receivers, distribution_limit);
+        define_limit_and_recipients(e, recipients, distribution_limit);
     }
 
-    /// Distribute a Chaincert to a receiver.
+    /// Distribute a Chaincert to a recipient.
     fn distribute(
         e: Env,
         admin: Address,
-        receiver: Address,
+        recipient: Address,
         wallet_contract_id: BytesN<32>,
         cid: Bytes,
         distribution_date: u64,
@@ -55,7 +55,7 @@ impl GovernanceTrait for CertGovernance {
         admin.require_auth();
         check_amount(&e);
 
-        apply_distribution(e, receiver, wallet_contract_id, cid, distribution_date);
+        apply_distribution(e, recipient, wallet_contract_id, cid, distribution_date);
     }
 
     /// Revoke a Chaincert from a holder.
@@ -63,14 +63,14 @@ impl GovernanceTrait for CertGovernance {
         check_revocable(&e);
         check_admin(&e, &admin);
         admin.require_auth();
-        let mut receivers: Map<Address, CertData> = read_receivers(&e);
-        let mut cert_data: CertData = receivers.get(holder.clone()).unwrap().unwrap();
-        check_receiver_status_for_revoke(&e, &cert_data);
+        let mut recipients: Map<Address, CertData> = read_recipients(&e);
+        let mut cert_data: CertData = recipients.get(holder.clone()).unwrap().unwrap();
+        check_recipient_status_for_revoke(&e, &cert_data);
 
         revoke_from_wallet(&e, wallet_contract_id, &cert_data.id);
         cert_data.status = Status::Revoked;
-        receivers.set(holder, cert_data);
-        write_receivers(&e, receivers);
+        recipients.set(holder, cert_data);
+        write_recipients(&e, recipients);
     }
 
     /// Get the Chaincert name.
@@ -103,9 +103,9 @@ impl GovernanceTrait for CertGovernance {
         read_file_storage(&e)
     }
 
-    /// Get the receivers data in the contract.
-    fn receivers(e: Env) -> Map<Address, CertData> {
-        read_receivers(&e)
+    /// Get the recipients data in the contract.
+    fn recipients(e: Env) -> Map<Address, CertData> {
+        read_recipients(&e)
     }
 
     /// Get all relevant contract data.
@@ -120,35 +120,35 @@ impl GovernanceTrait for CertGovernance {
     }
 }
 
-/// Defines receivers and distribution_limit depending on the received ones.
+/// Defines recipients and distribution_limit depending on the received ones.
 fn apply_distribution(
     e: Env,
-    receiver: Address,
+    recipient: Address,
     wallet_contract_id: BytesN<32>,
     cid: Bytes,
     distribution_date: u64,
 ) {
-    match read_receivers(&e).get(receiver.clone()) {
+    match read_recipients(&e).get(recipient.clone()) {
         Some(_) => {
-            distribute_receiver(&e, &receiver, distribution_date, wallet_contract_id, cid);
+            distribute_to_recipient(&e, &recipient, distribution_date, wallet_contract_id, cid);
         }
         None => {
-            add_receiver(&e, &receiver);
-            distribute_receiver(&e, &receiver, distribution_date, wallet_contract_id, cid);
+            add_recipient(&e, &recipient);
+            distribute_to_recipient(&e, &recipient, distribution_date, wallet_contract_id, cid);
         }
     };
 }
 
-/// Defines receivers and distribution_limit depending on the received ones.
-fn define_limit_and_receivers(
+/// Defines recipients and distribution_limit depending on the received ones.
+fn define_limit_and_recipients(
     e: Env,
-    receivers: Option<Vec<Address>>,
+    recipients: Option<Vec<Address>>,
     distribution_limit: Option<u32>,
 ) {
-    match receivers {
-        Some(receivers) => {
-            write_distribution_limit(&e, receivers.len());
-            create_receivers(&e, receivers);
+    match recipients {
+        Some(recipients) => {
+            write_distribution_limit(&e, recipients.len());
+            create_recipients(&e, recipients);
         }
         None => {
             if let Some(distribution_limit) = distribution_limit {
@@ -156,7 +156,7 @@ fn define_limit_and_receivers(
             } else {
                 write_distribution_limit(&e, 10);
             }
-            write_receivers(&e, Map::<Address, CertData>::new(&e));
+            write_recipients(&e, Map::<Address, CertData>::new(&e));
         }
     };
 }
@@ -176,16 +176,16 @@ fn check_amount(e: &Env) {
     }
 }
 
-/// Checks that the status of the CertData of the receiver to distribute is Unassigned.
-fn check_receiver_status_for_distribute(e: &Env, receiver_data: &CertData) {
-    if receiver_data.status != Status::Unassigned {
+/// Checks that the status of the CertData of the recipient_data to distribute is Unassigned.
+fn check_recipient_status_for_distribute(e: &Env, recipient_data: &CertData) {
+    if recipient_data.status != Status::Unassigned {
         panic_with_error!(e, ContractError::AlreadyIssued);
     }
 }
 
-/// Checks that the status of the CertData of the receiver to revoke is Distributed.
-fn check_receiver_status_for_revoke(e: &Env, receiver_data: &CertData) {
-    if receiver_data.status != Status::Distribute {
+/// Checks that the status of the CertData of the recipient_data to revoke is Distributed.
+fn check_recipient_status_for_revoke(e: &Env, recipient_data: &CertData) {
+    if recipient_data.status != Status::Distribute {
         panic_with_error!(e, ContractError::NoRevocable);
     }
 }
@@ -197,16 +197,16 @@ fn check_revocable(e: &Env) {
 }
 
 /// Deposit a chaincert to a wallet and makes the necessary storage changes when successful.
-fn distribute_receiver(
+fn distribute_to_recipient(
     e: &Env,
     address: &Address,
     distribution_date: u64,
     wallet_contract_id: BytesN<32>,
     cid: Bytes,
 ) {
-    let mut receivers: Map<Address, CertData> = read_receivers(e);
-    let mut cert_data: CertData = receivers.get(address.clone()).unwrap().unwrap();
-    check_receiver_status_for_distribute(e, &cert_data);
+    let mut recipients: Map<Address, CertData> = read_recipients(e);
+    let mut cert_data: CertData = recipients.get(address.clone()).unwrap().unwrap();
+    check_recipient_status_for_distribute(e, &cert_data);
 
     deposit_to_wallet(
         e,
@@ -218,8 +218,8 @@ fn distribute_receiver(
 
     cert_data.status = Status::Distribute;
     cert_data.distribution_date = OptionU64::Some(distribution_date);
-    receivers.set(address.clone(), cert_data);
-    write_receivers(e, receivers);
+    recipients.set(address.clone(), cert_data);
+    write_recipients(e, recipients);
     increment_supply(e);
 }
 
@@ -231,7 +231,7 @@ fn deposit_to_wallet(
     cid: Bytes,
     distribution_date: u64,
 ) {
-    let wallet_client = certs_wallet::Client::new(e, &wallet_contract_id);
+    let wallet_client = cert_wallet::Client::new(e, &wallet_contract_id);
     let distributor_contract = e.current_contract_address();
     let expiration_date: OptionU64 = expiration_date(e, distribution_date);
     let org_id = read_organization_id(e);
@@ -247,7 +247,7 @@ fn deposit_to_wallet(
 
 /// Invokes a wallet contract to execute a chaincert revocation.
 fn revoke_from_wallet(e: &Env, wallet_contract_id: BytesN<32>, chaincert_id: &Bytes) {
-    let wallet_client = certs_wallet::Client::new(e, &wallet_contract_id);
+    let wallet_client = cert_wallet::Client::new(e, &wallet_contract_id);
     let distributor_contract = e.current_contract_address();
     let org_id = read_organization_id(e);
     wallet_client.revoke_chaincert(chaincert_id, &distributor_contract, &org_id);

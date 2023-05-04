@@ -5,7 +5,7 @@ use soroban_sdk::{map, Address, Bytes, Env, Map, Vec};
 use uuid::Uuid;
 
 use crate::{
-    certs_wallet::OptionU64,
+    cert_wallet::OptionU64,
     storage_types::{CertData, DataKey, Status},
 };
 

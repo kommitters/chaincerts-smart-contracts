@@ -2,7 +2,7 @@
 //!
 //! Module for obtaining and modifying the metadata fields.
 use crate::{
-    certs_wallet::OptionU64,
+    cert_wallet::OptionU64,
     storage_types::{CertData, DataKey},
 };
 use soroban_sdk::{Address, Bytes, Env, Map};

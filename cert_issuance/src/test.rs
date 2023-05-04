@@ -1,5 +1,5 @@
 #![cfg(test)]
-use crate::certs_wallet::{self, OptionU64};
+use crate::cert_wallet::{self, OptionU64};
 use crate::storage_types::{CertData, Info, Organization, Status};
 use crate::{contract::CertIssuance, CertIssuanceClient};
 use soroban_sdk::testutils::Address as _;
@@ -7,8 +7,8 @@ use soroban_sdk::{vec, Address, Bytes, Env, IntoVal, Vec};
 
 const WASM: &[u8] = include_bytes!("../../target/wasm32-unknown-unknown/release/cert_wallet.wasm");
 
-fn create_wallet_contract(env: &Env, owner: &Address, id: &Bytes) -> certs_wallet::Client {
-    let wallet = certs_wallet::Client::new(env, &env.register_contract_wasm(None, WASM));
+fn create_wallet_contract(env: &Env, owner: &Address, id: &Bytes) -> cert_wallet::Client {
+    let wallet = cert_wallet::Client::new(env, &env.register_contract_wasm(None, WASM));
     wallet.initialize(owner);
     wallet.add_organization(id);
     wallet

@@ -1,7 +1,7 @@
 //! Module Contract
 //!
 //! Module containing the main contract logic.
-use crate::certs_wallet::{self, OptionU64};
+use crate::cert_wallet::{self, OptionU64};
 use crate::error::ContractError;
 use crate::issuance_trait::IssuanceTrait;
 use crate::metadata::{
@@ -231,7 +231,7 @@ fn deposit_to_wallet(
     cid: Bytes,
     distribution_date: u64,
 ) {
-    let wallet_client = certs_wallet::Client::new(e, &wallet_contract_id);
+    let wallet_client = cert_wallet::Client::new(e, &wallet_contract_id);
     let distributor_contract = e.current_contract_address();
     let expiration_date: OptionU64 = expiration_date(e, distribution_date);
     let org_id = read_organization_id(e);
@@ -247,7 +247,7 @@ fn deposit_to_wallet(
 
 /// Invokes a wallet contract to execute a chaincert revocation.
 fn revoke_from_wallet(e: &Env, wallet_contract_id: BytesN<32>, chaincert_id: &Bytes) {
-    let wallet_client = certs_wallet::Client::new(e, &wallet_contract_id);
+    let wallet_client = cert_wallet::Client::new(e, &wallet_contract_id);
     let distributor_contract = e.current_contract_address();
     let org_id = read_organization_id(e);
     wallet_client.revoke_chaincert(chaincert_id, &distributor_contract, &org_id);

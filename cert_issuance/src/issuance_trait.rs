@@ -4,7 +4,7 @@
 use soroban_sdk::{Address, Bytes, BytesN, Env, Map, Vec};
 
 use crate::{
-    certs_wallet::OptionU64,
+    cert_wallet::OptionU64,
     storage_types::{CertData, Info, Organization},
 };
 pub trait IssuanceTrait {

@@ -19,7 +19,7 @@ fn create_cert_issuance_contract_with_limit(
     limit: &Option<u32>,
     address_recipients: &Option<Vec<Address>>,
     organization: &Organization,
-    governance_rules: &(bool, OptionU64),
+    administration_rules: &(bool, OptionU64),
 ) -> CertIssuanceClient {
     let cert_issuance =
         CertIssuanceClient::new(e, &e.register_contract(None, CertIssuance {}));
@@ -28,7 +28,7 @@ fn create_cert_issuance_contract_with_limit(
         &"ChaincertName".into_val(e),
         address_recipients,
         limit,
-        governance_rules,
+        administration_rules,
         organization,
     );
     cert_issuance
@@ -39,7 +39,7 @@ fn create_cert_issuance_contract_with_recipients(
     limit: &Option<u32>,
     address_recipients: &Option<Vec<Address>>,
     organization: &Organization,
-    governance_rules: &(bool, OptionU64),
+    administration_rules: &(bool, OptionU64),
 ) -> CertIssuanceClient {
     let cert_issuance =
         CertIssuanceClient::new(e, &e.register_contract(None, CertIssuance {}));
@@ -49,7 +49,7 @@ fn create_cert_issuance_contract_with_recipients(
         &"ChaincertName".into_val(e),
         address_recipients,
         limit,
-        governance_rules,
+        administration_rules,
         organization,
     );
     cert_issuance
@@ -86,14 +86,14 @@ fn test_initialize_contract_with_recipients() {
         admin: Address::random(&e),
         id: "12345".into_val(&e),
     };
-    let governance_rules = (true, OptionU64::Some(1680091200));
+    let administration_rules = (true, OptionU64::Some(1680091200));
 
     let cert_issuance: CertIssuanceClient = create_cert_issuance_contract_with_recipients(
         &e,
         &Option::None,
         &recipients,
         &organization,
-        &governance_rules,
+        &administration_rules,
     );
     assert_eq!(cert_issuance.file_storage(), "FileBase".into_val(&e));
     assert_eq!(cert_issuance.name(), "ChaincertName".into_val(&e));
@@ -115,14 +115,14 @@ fn test_initialize_with_limit_contract() {
         id: "12345".into_val(&e),
     };
     let distribution_limit: Option<u32> = Option::Some(6);
-    let governance_rules = (true, OptionU64::None);
+    let administration_rules = (true, OptionU64::None);
 
     let cert_issuance = create_cert_issuance_contract_with_limit(
         &e,
         &distribution_limit,
         &Option::None,
         &organization,
-        &governance_rules,
+        &administration_rules,
     );
     assert_eq!(cert_issuance.file_storage(), "FileBase".into_val(&e));
     assert_eq!(cert_issuance.name(), "ChaincertName".into_val(&e));
@@ -141,14 +141,14 @@ fn test_initialize_without_limit_contract_and_recipients() {
         id: "12345".into_val(&e),
     };
 
-    let governance_rules = (true, OptionU64::None);
+    let administration_rules = (true, OptionU64::None);
 
     let cert_issuance = create_cert_issuance_contract_with_limit(
         &e,
         &Option::None,
         &Option::None,
         &organization,
-        &governance_rules,
+        &administration_rules,
     );
     assert_eq!(cert_issuance.file_storage(), "FileBase".into_val(&e));
     assert_eq!(cert_issuance.name(), "ChaincertName".into_val(&e));
@@ -166,9 +166,9 @@ fn test_get_contract_info() {
         admin: Address::random(&e),
         id: "12345".into_val(&e),
     };
-    let governance_rules_without_expiration_time = (true, OptionU64::None);
+    let administration_rules_without_expiration_time = (true, OptionU64::None);
 
-    let governance_rules_with_expiration_time = (true, OptionU64::Some(31556926));
+    let administration_rules_with_expiration_time = (true, OptionU64::Some(31556926));
 
     let distribution_limit: Option<u32> = Option::Some(6);
 
@@ -177,7 +177,7 @@ fn test_get_contract_info() {
         &distribution_limit,
         &Option::None,
         &organization,
-        &governance_rules_without_expiration_time,
+        &administration_rules_without_expiration_time,
     );
 
     let cert_issuance_2 = create_cert_issuance_contract_with_limit(
@@ -185,7 +185,7 @@ fn test_get_contract_info() {
         &distribution_limit,
         &Option::None,
         &organization,
-        &governance_rules_with_expiration_time,
+        &administration_rules_with_expiration_time,
     );
 
     let info = Info {
@@ -218,13 +218,13 @@ fn test_distribute_with_distribution_limit_contract() {
         id: "12345".into_val(&e),
     };
     let distribution_limit: Option<u32> = Option::Some(6);
-    let governance_rules = (true, OptionU64::None);
+    let administration_rules = (true, OptionU64::None);
     let cert_issuance = create_cert_issuance_contract_with_limit(
         &e,
         &distribution_limit,
         &Option::None,
         &organization,
-        &governance_rules,
+        &administration_rules,
     );
 
     pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
@@ -263,13 +263,13 @@ fn test_distribute_with_initial_recipients() {
     };
     let distribution_date: u64 = 1679918400;
     pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
-    let governance_rules = (true, OptionU64::Some(31556926));
+    let administration_rules = (true, OptionU64::Some(31556926));
     let cert_issuance = create_cert_issuance_contract_with_recipients(
         &e,
         &Option::None,
         &recipients,
         &organization,
-        &governance_rules,
+        &administration_rules,
     );
 
     let mut recipients = cert_issuance.recipients();
@@ -309,7 +309,7 @@ fn test_revoke_chaincert() {
         id: "12345".into_val(&e),
     };
 
-    let governance_rules = (true, OptionU64::None);
+    let administration_rules = (true, OptionU64::None);
 
     let distribution_date: u64 = 1679918400;
     pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
@@ -319,7 +319,7 @@ fn test_revoke_chaincert() {
         &Option::None,
         &recipients,
         &organization,
-        &governance_rules,
+        &administration_rules,
     );
 
     cert_issuance.distribute(
@@ -354,14 +354,14 @@ fn test_initialize_contract_with_recipients_error() {
         id: "12345".into_val(&e),
     };
 
-    let governance_rules = (true, OptionU64::None);
+    let administration_rules = (true, OptionU64::None);
 
     let cert_issuance: CertIssuanceClient = create_cert_issuance_contract_with_recipients(
         &e,
         &Option::None,
         &recipients,
         &organization,
-        &governance_rules,
+        &administration_rules,
     );
 
     cert_issuance.initialize(
@@ -369,7 +369,7 @@ fn test_initialize_contract_with_recipients_error() {
         &"ChaincertName".into_val(&e),
         &recipients,
         &Option::None,
-        &governance_rules,
+        &administration_rules,
         &organization,
     )
 }
@@ -383,7 +383,7 @@ fn test_initialize_with_limit_contract_error() {
         id: "12345".into_val(&e),
     };
 
-    let governance_rules = (true, OptionU64::None);
+    let administration_rules = (true, OptionU64::None);
 
     let distribution_limit: Option<u32> = Option::Some(6);
     let cert_issuance = create_cert_issuance_contract_with_limit(
@@ -391,7 +391,7 @@ fn test_initialize_with_limit_contract_error() {
         &distribution_limit,
         &Option::None,
         &organization,
-        &governance_rules,
+        &administration_rules,
     );
 
     cert_issuance.initialize(
@@ -399,7 +399,7 @@ fn test_initialize_with_limit_contract_error() {
         &"ChaincertName".into_val(&e),
         &Option::None,
         &distribution_limit,
-        &governance_rules,
+        &administration_rules,
         &organization,
     )
 }
@@ -423,7 +423,7 @@ fn test_distribute_admin_error() {
         id: "12345".into_val(&e),
     };
 
-    let governance_rules = (true, OptionU64::None);
+    let administration_rules = (true, OptionU64::None);
 
     let distribution_date: u64 = 1679918400;
     let cert_issuance = create_cert_issuance_contract_with_recipients(
@@ -431,7 +431,7 @@ fn test_distribute_admin_error() {
         &Option::None,
         &recipients,
         &organization,
-        &governance_rules,
+        &administration_rules,
     );
 
     cert_issuance.distribute(
@@ -474,7 +474,7 @@ fn test_distribute_limit_error() {
         id: "12345".into_val(&e),
     };
 
-    let governance_rules = (true, OptionU64::None);
+    let administration_rules = (true, OptionU64::None);
 
     let distribution_date: u64 = 1679918400;
     let distribution_limit = Option::Some(1);
@@ -483,7 +483,7 @@ fn test_distribute_limit_error() {
         &distribution_limit,
         &Option::None,
         &organization,
-        &governance_rules,
+        &administration_rules,
     );
     pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
     pub const CID2: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrED";
@@ -534,7 +534,7 @@ fn test_distribute_status_error() {
         id: "12345".into_val(&e),
     };
 
-    let governance_rules = (true, OptionU64::None);
+    let administration_rules = (true, OptionU64::None);
 
     let distribution_date: u64 = 1679918400;
     let distribution_limit = Option::Some(3);
@@ -543,7 +543,7 @@ fn test_distribute_status_error() {
         &distribution_limit,
         &Option::None,
         &organization,
-        &governance_rules,
+        &administration_rules,
     );
     pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
 
@@ -590,7 +590,7 @@ fn test_revoke_admin_error() {
         id: "12345".into_val(&e),
     };
 
-    let governance_rules = (true, OptionU64::None);
+    let administration_rules = (true, OptionU64::None);
 
     let distribution_date: u64 = 1679918400;
     pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
@@ -599,7 +599,7 @@ fn test_revoke_admin_error() {
         &Option::None,
         &recipients,
         &organization,
-        &governance_rules,
+        &administration_rules,
     );
 
     cert_issuance.distribute(
@@ -630,14 +630,14 @@ fn test_revoke_status_unassigned_error() {
         id: "12345".into_val(&e),
     };
 
-    let governance_rules = (true, OptionU64::None);
+    let administration_rules = (true, OptionU64::None);
 
     let cert_issuance = create_cert_issuance_contract_with_recipients(
         &e,
         &Option::None,
         &recipients,
         &organization,
-        &governance_rules,
+        &administration_rules,
     );
 
     cert_issuance.revoke(&organization.admin, &recipient_address, &wallet.contract_id);
@@ -660,7 +660,7 @@ fn test_revoke_status_revoked_error() {
         id: "12345".into_val(&e),
     };
 
-    let governance_rules = (true, OptionU64::None);
+    let administration_rules = (true, OptionU64::None);
 
     let distribution_date: u64 = 1679918400;
     pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
@@ -669,7 +669,7 @@ fn test_revoke_status_revoked_error() {
         &Option::None,
         &recipients,
         &organization,
-        &governance_rules,
+        &administration_rules,
     );
     cert_issuance.distribute(
         &organization.admin,
@@ -700,14 +700,14 @@ fn test_revoke_no_revocable_cert() {
         id: "12345".into_val(&e),
     };
 
-    let governance_rules = (false, OptionU64::None);
+    let administration_rules = (false, OptionU64::None);
 
     let cert_issuance = create_cert_issuance_contract_with_recipients(
         &e,
         &Option::None,
         &recipients,
         &organization,
-        &governance_rules,
+        &administration_rules,
     );
 
     let recipient_address = recipients

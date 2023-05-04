@@ -26,7 +26,7 @@ impl IssuanceTrait for CertIssuance {
         name: Bytes,
         recipients: Option<Vec<Address>>,
         distribution_limit: Option<u32>,
-        governance_rules: (bool, OptionU64), // (revocable, expiration_time)
+        administration_rules: (bool, OptionU64), // (revocable, expiration_time)
         organization: Organization,
     ) {
         if has_organization(&e) {
@@ -35,8 +35,8 @@ impl IssuanceTrait for CertIssuance {
         write_organization(&e, organization);
         write_file_storage(&e, file_storage);
         write_name(&e, name);
-        write_revocable(&e, governance_rules.0);
-        write_expiration_time(&e, governance_rules.1);
+        write_revocable(&e, administration_rules.0);
+        write_expiration_time(&e, administration_rules.1);
         write_supply(&e, 0);
 
         define_limit_and_recipients(e, recipients, distribution_limit);

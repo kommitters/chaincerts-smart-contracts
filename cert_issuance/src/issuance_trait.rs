@@ -15,7 +15,7 @@ pub trait IssuanceTrait {
         name: Bytes,
         recipients: Option<Vec<Address>>,
         distribution_limit: Option<u32>,
-        distribution_rules: (bool, OptionU64),
+        administration_rules: (bool, OptionU64),
         organization: Organization,
     );
 

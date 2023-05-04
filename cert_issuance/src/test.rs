@@ -14,16 +14,16 @@ fn create_wallet_contract(env: &Env, owner: &Address, id: &Bytes) -> certs_walle
     wallet
 }
 
-fn create_cert_governance_contract_with_limit(
+fn create_cert_issuance_contract_with_limit(
     e: &Env,
     limit: &Option<u32>,
     address_recipients: &Option<Vec<Address>>,
     organization: &Organization,
     governance_rules: &(bool, OptionU64),
 ) -> CertIssuanceClient {
-    let cert_governance =
+    let cert_issuance =
         CertIssuanceClient::new(e, &e.register_contract(None, CertIssuance {}));
-    cert_governance.initialize(
+    cert_issuance.initialize(
         &("FileBase").into_val(e),
         &"ChaincertName".into_val(e),
         address_recipients,
@@ -31,20 +31,20 @@ fn create_cert_governance_contract_with_limit(
         governance_rules,
         organization,
     );
-    cert_governance
+    cert_issuance
 }
 
-fn create_cert_governance_contract_with_recipients(
+fn create_cert_issuance_contract_with_recipients(
     e: &Env,
     limit: &Option<u32>,
     address_recipients: &Option<Vec<Address>>,
     organization: &Organization,
     governance_rules: &(bool, OptionU64),
 ) -> CertIssuanceClient {
-    let cert_governance =
+    let cert_issuance =
         CertIssuanceClient::new(e, &e.register_contract(None, CertIssuance {}));
 
-    cert_governance.initialize(
+    cert_issuance.initialize(
         &"FileBase".into_val(e),
         &"ChaincertName".into_val(e),
         address_recipients,
@@ -52,7 +52,7 @@ fn create_cert_governance_contract_with_recipients(
         governance_rules,
         organization,
     );
-    cert_governance
+    cert_issuance
 }
 
 fn create_random_recipients_address(e: &Env) -> Vec<Address> {
@@ -88,23 +88,23 @@ fn test_initialize_contract_with_recipients() {
     };
     let governance_rules = (true, OptionU64::Some(1680091200));
 
-    let cert_governance: CertIssuanceClient = create_cert_governance_contract_with_recipients(
+    let cert_issuance: CertIssuanceClient = create_cert_issuance_contract_with_recipients(
         &e,
         &Option::None,
         &recipients,
         &organization,
         &governance_rules,
     );
-    assert_eq!(cert_governance.file_storage(), "FileBase".into_val(&e));
-    assert_eq!(cert_governance.name(), "ChaincertName".into_val(&e));
-    assert!(cert_governance.is_revocable());
+    assert_eq!(cert_issuance.file_storage(), "FileBase".into_val(&e));
+    assert_eq!(cert_issuance.name(), "ChaincertName".into_val(&e));
+    assert!(cert_issuance.is_revocable());
     assert_eq!(
-        cert_governance.expiration_time(),
+        cert_issuance.expiration_time(),
         OptionU64::Some(1680091200)
     );
-    assert_eq!(cert_governance.distribution_limit(), 3);
-    assert_eq!(cert_governance.supply(), 0);
-    assert_eq!(cert_governance.recipients().len(), 3);
+    assert_eq!(cert_issuance.distribution_limit(), 3);
+    assert_eq!(cert_issuance.supply(), 0);
+    assert_eq!(cert_issuance.recipients().len(), 3);
 }
 
 #[test]
@@ -117,20 +117,20 @@ fn test_initialize_with_limit_contract() {
     let distribution_limit: Option<u32> = Option::Some(6);
     let governance_rules = (true, OptionU64::None);
 
-    let cert_governance = create_cert_governance_contract_with_limit(
+    let cert_issuance = create_cert_issuance_contract_with_limit(
         &e,
         &distribution_limit,
         &Option::None,
         &organization,
         &governance_rules,
     );
-    assert_eq!(cert_governance.file_storage(), "FileBase".into_val(&e));
-    assert_eq!(cert_governance.name(), "ChaincertName".into_val(&e));
-    assert!(cert_governance.is_revocable());
-    assert_eq!(cert_governance.expiration_time(), OptionU64::None);
-    assert_eq!(cert_governance.distribution_limit(), 6);
-    assert_eq!(cert_governance.supply(), 0);
-    assert_eq!(cert_governance.recipients().len(), 0);
+    assert_eq!(cert_issuance.file_storage(), "FileBase".into_val(&e));
+    assert_eq!(cert_issuance.name(), "ChaincertName".into_val(&e));
+    assert!(cert_issuance.is_revocable());
+    assert_eq!(cert_issuance.expiration_time(), OptionU64::None);
+    assert_eq!(cert_issuance.distribution_limit(), 6);
+    assert_eq!(cert_issuance.supply(), 0);
+    assert_eq!(cert_issuance.recipients().len(), 0);
 }
 
 #[test]
@@ -143,20 +143,20 @@ fn test_initialize_without_limit_contract_and_recipients() {
 
     let governance_rules = (true, OptionU64::None);
 
-    let cert_governance = create_cert_governance_contract_with_limit(
+    let cert_issuance = create_cert_issuance_contract_with_limit(
         &e,
         &Option::None,
         &Option::None,
         &organization,
         &governance_rules,
     );
-    assert_eq!(cert_governance.file_storage(), "FileBase".into_val(&e));
-    assert_eq!(cert_governance.name(), "ChaincertName".into_val(&e));
-    assert!(cert_governance.is_revocable());
-    assert_eq!(cert_governance.expiration_time(), OptionU64::None);
-    assert_eq!(cert_governance.distribution_limit(), 10);
-    assert_eq!(cert_governance.supply(), 0);
-    assert_eq!(cert_governance.recipients().len(), 0);
+    assert_eq!(cert_issuance.file_storage(), "FileBase".into_val(&e));
+    assert_eq!(cert_issuance.name(), "ChaincertName".into_val(&e));
+    assert!(cert_issuance.is_revocable());
+    assert_eq!(cert_issuance.expiration_time(), OptionU64::None);
+    assert_eq!(cert_issuance.distribution_limit(), 10);
+    assert_eq!(cert_issuance.supply(), 0);
+    assert_eq!(cert_issuance.recipients().len(), 0);
 }
 
 #[test]
@@ -172,7 +172,7 @@ fn test_get_contract_info() {
 
     let distribution_limit: Option<u32> = Option::Some(6);
 
-    let cert_governance = create_cert_governance_contract_with_limit(
+    let cert_issuance = create_cert_issuance_contract_with_limit(
         &e,
         &distribution_limit,
         &Option::None,
@@ -180,7 +180,7 @@ fn test_get_contract_info() {
         &governance_rules_without_expiration_time,
     );
 
-    let cert_governance_2 = create_cert_governance_contract_with_limit(
+    let cert_issuance_2 = create_cert_issuance_contract_with_limit(
         &e,
         &distribution_limit,
         &Option::None,
@@ -204,8 +204,8 @@ fn test_get_contract_info() {
         supply: 0,
     };
 
-    assert_eq!(cert_governance.info(), info);
-    assert_eq!(cert_governance_2.info(), info_2);
+    assert_eq!(cert_issuance.info(), info);
+    assert_eq!(cert_issuance_2.info(), info_2);
 }
 
 #[test]
@@ -219,7 +219,7 @@ fn test_distribute_with_distribution_limit_contract() {
     };
     let distribution_limit: Option<u32> = Option::Some(6);
     let governance_rules = (true, OptionU64::None);
-    let cert_governance = create_cert_governance_contract_with_limit(
+    let cert_issuance = create_cert_issuance_contract_with_limit(
         &e,
         &distribution_limit,
         &Option::None,
@@ -230,18 +230,18 @@ fn test_distribute_with_distribution_limit_contract() {
     pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
 
     let distribution_date: u64 = 1679918400;
-    cert_governance.distribute(
+    cert_issuance.distribute(
         &organization.admin,
         &address_recipient_1,
         &wallet.contract_id,
         &CID1.into_val(&e),
         &distribution_date,
     );
-    let recipients: soroban_sdk::Map<Address, CertData> = cert_governance.recipients();
+    let recipients: soroban_sdk::Map<Address, CertData> = cert_issuance.recipients();
     let cert_data = recipients.get(address_recipient_1).unwrap().unwrap();
 
     assert_eq!(cert_data.status, Status::Distribute);
-    assert_eq!(cert_governance.supply(), 1);
+    assert_eq!(cert_issuance.supply(), 1);
     assert_eq!(recipients.len(), 1);
     assert_eq!(wallet.get_chaincerts().len(), 1);
 }
@@ -264,7 +264,7 @@ fn test_distribute_with_initial_recipients() {
     let distribution_date: u64 = 1679918400;
     pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
     let governance_rules = (true, OptionU64::Some(31556926));
-    let cert_governance = create_cert_governance_contract_with_recipients(
+    let cert_issuance = create_cert_issuance_contract_with_recipients(
         &e,
         &Option::None,
         &recipients,
@@ -272,11 +272,11 @@ fn test_distribute_with_initial_recipients() {
         &governance_rules,
     );
 
-    let mut recipients = cert_governance.recipients();
+    let mut recipients = cert_issuance.recipients();
     let mut cert_data = recipients.get(address_recipient_1.clone()).unwrap().unwrap();
     assert_eq!(cert_data.status, Status::Unassigned);
 
-    cert_governance.distribute(
+    cert_issuance.distribute(
         &organization.admin,
         &address_recipient_1,
         &wallet.contract_id,
@@ -284,11 +284,11 @@ fn test_distribute_with_initial_recipients() {
         &distribution_date,
     );
 
-    recipients = cert_governance.recipients();
+    recipients = cert_issuance.recipients();
     cert_data = recipients.get(address_recipient_1).unwrap().unwrap();
 
     assert_eq!(cert_data.status, Status::Distribute);
-    assert_eq!(cert_governance.supply(), 1);
+    assert_eq!(cert_issuance.supply(), 1);
     assert_eq!(recipients.len(), 3);
     assert_eq!(wallet.get_chaincerts().len(), 1);
 }
@@ -314,7 +314,7 @@ fn test_revoke_chaincert() {
     let distribution_date: u64 = 1679918400;
     pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
 
-    let cert_governance = create_cert_governance_contract_with_recipients(
+    let cert_issuance = create_cert_issuance_contract_with_recipients(
         &e,
         &Option::None,
         &recipients,
@@ -322,7 +322,7 @@ fn test_revoke_chaincert() {
         &governance_rules,
     );
 
-    cert_governance.distribute(
+    cert_issuance.distribute(
         &organization.admin,
         &recipient_address,
         &wallet.contract_id,
@@ -330,13 +330,13 @@ fn test_revoke_chaincert() {
         &distribution_date,
     );
 
-    let mut recipients = cert_governance.recipients();
+    let mut recipients = cert_issuance.recipients();
     let mut cert_data = recipients.get(recipient_address.clone()).unwrap().unwrap();
     assert_eq!(cert_data.status, Status::Distribute);
 
-    cert_governance.revoke(&organization.admin, &recipient_address, &wallet.contract_id);
+    cert_issuance.revoke(&organization.admin, &recipient_address, &wallet.contract_id);
 
-    recipients = cert_governance.recipients();
+    recipients = cert_issuance.recipients();
     cert_data = recipients.get(recipient_address).unwrap().unwrap();
     assert_eq!(cert_data.status, Status::Revoked);
 
@@ -356,7 +356,7 @@ fn test_initialize_contract_with_recipients_error() {
 
     let governance_rules = (true, OptionU64::None);
 
-    let cert_governance: CertIssuanceClient = create_cert_governance_contract_with_recipients(
+    let cert_issuance: CertIssuanceClient = create_cert_issuance_contract_with_recipients(
         &e,
         &Option::None,
         &recipients,
@@ -364,7 +364,7 @@ fn test_initialize_contract_with_recipients_error() {
         &governance_rules,
     );
 
-    cert_governance.initialize(
+    cert_issuance.initialize(
         &"FileBase".into_val(&e),
         &"ChaincertName".into_val(&e),
         &recipients,
@@ -386,7 +386,7 @@ fn test_initialize_with_limit_contract_error() {
     let governance_rules = (true, OptionU64::None);
 
     let distribution_limit: Option<u32> = Option::Some(6);
-    let cert_governance = create_cert_governance_contract_with_limit(
+    let cert_issuance = create_cert_issuance_contract_with_limit(
         &e,
         &distribution_limit,
         &Option::None,
@@ -394,7 +394,7 @@ fn test_initialize_with_limit_contract_error() {
         &governance_rules,
     );
 
-    cert_governance.initialize(
+    cert_issuance.initialize(
         &"FileBase".into_val(&e),
         &"ChaincertName".into_val(&e),
         &Option::None,
@@ -426,7 +426,7 @@ fn test_distribute_admin_error() {
     let governance_rules = (true, OptionU64::None);
 
     let distribution_date: u64 = 1679918400;
-    let cert_governance = create_cert_governance_contract_with_recipients(
+    let cert_issuance = create_cert_issuance_contract_with_recipients(
         &e,
         &Option::None,
         &recipients,
@@ -434,7 +434,7 @@ fn test_distribute_admin_error() {
         &governance_rules,
     );
 
-    cert_governance.distribute(
+    cert_issuance.distribute(
         &admin,
         &recipient_address,
         &wallet.contract_id,
@@ -478,7 +478,7 @@ fn test_distribute_limit_error() {
 
     let distribution_date: u64 = 1679918400;
     let distribution_limit = Option::Some(1);
-    let cert_governance = create_cert_governance_contract_with_limit(
+    let cert_issuance = create_cert_issuance_contract_with_limit(
         &e,
         &distribution_limit,
         &Option::None,
@@ -488,7 +488,7 @@ fn test_distribute_limit_error() {
     pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
     pub const CID2: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrED";
 
-    cert_governance.distribute(
+    cert_issuance.distribute(
         &organization.admin,
         &recipients
             .clone()
@@ -501,7 +501,7 @@ fn test_distribute_limit_error() {
         &distribution_date,
     );
 
-    cert_governance.distribute(
+    cert_issuance.distribute(
         &organization.admin,
         &recipients
             .expect("Vec of recipients")
@@ -538,7 +538,7 @@ fn test_distribute_status_error() {
 
     let distribution_date: u64 = 1679918400;
     let distribution_limit = Option::Some(3);
-    let cert_governance = create_cert_governance_contract_with_limit(
+    let cert_issuance = create_cert_issuance_contract_with_limit(
         &e,
         &distribution_limit,
         &Option::None,
@@ -547,7 +547,7 @@ fn test_distribute_status_error() {
     );
     pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
 
-    cert_governance.distribute(
+    cert_issuance.distribute(
         &organization.admin,
         &recipients
             .clone()
@@ -560,7 +560,7 @@ fn test_distribute_status_error() {
         &distribution_date,
     );
 
-    cert_governance.distribute(
+    cert_issuance.distribute(
         &organization.admin,
         &recipients
             .expect("Vec of recipients")
@@ -594,7 +594,7 @@ fn test_revoke_admin_error() {
 
     let distribution_date: u64 = 1679918400;
     pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
-    let cert_governance = create_cert_governance_contract_with_recipients(
+    let cert_issuance = create_cert_issuance_contract_with_recipients(
         &e,
         &Option::None,
         &recipients,
@@ -602,7 +602,7 @@ fn test_revoke_admin_error() {
         &governance_rules,
     );
 
-    cert_governance.distribute(
+    cert_issuance.distribute(
         &organization.admin,
         &recipient_address,
         &wallet.contract_id,
@@ -610,7 +610,7 @@ fn test_revoke_admin_error() {
         &distribution_date,
     );
 
-    cert_governance.revoke(&Address::random(&e), &recipient_address, &wallet.contract_id);
+    cert_issuance.revoke(&Address::random(&e), &recipient_address, &wallet.contract_id);
 }
 
 #[test]
@@ -632,7 +632,7 @@ fn test_revoke_status_unassigned_error() {
 
     let governance_rules = (true, OptionU64::None);
 
-    let cert_governance = create_cert_governance_contract_with_recipients(
+    let cert_issuance = create_cert_issuance_contract_with_recipients(
         &e,
         &Option::None,
         &recipients,
@@ -640,7 +640,7 @@ fn test_revoke_status_unassigned_error() {
         &governance_rules,
     );
 
-    cert_governance.revoke(&organization.admin, &recipient_address, &wallet.contract_id);
+    cert_issuance.revoke(&organization.admin, &recipient_address, &wallet.contract_id);
 }
 
 #[test]
@@ -664,14 +664,14 @@ fn test_revoke_status_revoked_error() {
 
     let distribution_date: u64 = 1679918400;
     pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
-    let cert_governance = create_cert_governance_contract_with_recipients(
+    let cert_issuance = create_cert_issuance_contract_with_recipients(
         &e,
         &Option::None,
         &recipients,
         &organization,
         &governance_rules,
     );
-    cert_governance.distribute(
+    cert_issuance.distribute(
         &organization.admin,
         &recipient_address,
         &wallet.contract_id,
@@ -679,8 +679,8 @@ fn test_revoke_status_revoked_error() {
         &distribution_date,
     );
 
-    cert_governance.revoke(&organization.admin, &recipient_address, &wallet.contract_id);
-    cert_governance.revoke(&organization.admin, &recipient_address, &wallet.contract_id);
+    cert_issuance.revoke(&organization.admin, &recipient_address, &wallet.contract_id);
+    cert_issuance.revoke(&organization.admin, &recipient_address, &wallet.contract_id);
 }
 
 #[test]
@@ -702,7 +702,7 @@ fn test_revoke_no_revocable_cert() {
 
     let governance_rules = (false, OptionU64::None);
 
-    let cert_governance = create_cert_governance_contract_with_recipients(
+    let cert_issuance = create_cert_issuance_contract_with_recipients(
         &e,
         &Option::None,
         &recipients,
@@ -716,5 +716,5 @@ fn test_revoke_no_revocable_cert() {
         .unwrap()
         .unwrap();
 
-    cert_governance.revoke(&organization.admin, &recipient_address, &wallet.contract_id);
+    cert_issuance.revoke(&organization.admin, &recipient_address, &wallet.contract_id);
 }

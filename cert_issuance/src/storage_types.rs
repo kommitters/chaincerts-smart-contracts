@@ -2,37 +2,49 @@
 //!
 //! Module where the DataKey of the contract and some necessary structs are defined.
 use crate::cert_wallet::OptionU64;
-use soroban_sdk::{contracttype, Address, Bytes};
+use soroban_sdk::{contracttype, Address, Bytes, String};
 
 #[contracttype]
 #[derive(Clone, Debug, PartialEq)]
 pub struct Organization {
-    pub id: Bytes,
+    pub did: Bytes,
     pub admin: Address,
 }
 
 #[contracttype]
 #[derive(Debug, Clone, PartialEq)]
 pub enum Status {
-    Unassigned,
-    Distribute,
+    Distributed,
     Revoked,
 }
 
 #[contracttype]
 #[derive(Clone, Debug, PartialEq)]
-pub struct CertData {
-    pub id: Bytes,
+pub struct CredentialData {
+    pub did: Bytes,
     pub status: Status,
-    pub distribution_date: OptionU64,
+    pub credential_type: String,
+    pub credential_title: String,
+    pub issuance_date: OptionU64,
+    pub signature: String,
 }
 
-impl CertData {
-    pub fn new(id: Bytes, status: Status, distribution_date: OptionU64) -> CertData {
-        CertData {
-            id,
+impl CredentialData {
+    pub fn new(
+        did: Bytes,
+        status: Status,
+        credential_type: String,
+        credential_title: String,
+        issuance_date: OptionU64,
+        signature: String,
+    ) -> CredentialData {
+        CredentialData {
+            did,
             status,
-            distribution_date,
+            credential_type,
+            credential_title,
+            issuance_date,
+            signature,
         }
     }
 }
@@ -54,8 +66,10 @@ pub enum DataKey {
     Name,              // Bytes
     Revocable,         // bool
     ExpirationTime,    // OptionU64
-    Recipients,        // Map <Address, CertData>
+    Recipients,        // Map <Address, Option<CredentialData>>
     Organization,      // Organization
     DistributionLimit, // u32
     Supply,            // u32
+    CredentialTitle,   // String
+    CredentialType,    // String
 }

@@ -10,13 +10,13 @@ const CHAINCERT_KEY: DataKey = DataKey::Chaincerts;
 #[contracttype]
 /// The `Chaincert` information stored in the wallet
 pub struct Chaincert {
-    pub cid: Bytes,
+    pub attestation: Bytes,
     /// Address of the issuance contract that distributed the `Chaincert`
     pub distributor_contract: Address,
     /// The id of the organization that distributed the `Chaincert`
     pub org_id: Bytes,
     /// The distribution date in Unix Timestamp format
-    pub distribution_date: u64,
+    pub issuance_date: u64,
     /// The expiration date in Unix Timestamp format
     pub expiration_date: OptionU64,
     /// A logical indicator that lets know if a `Chaincert` is revoked or not
@@ -25,18 +25,18 @@ pub struct Chaincert {
 
 impl Chaincert {
     fn new(
-        cid: Bytes,
+        attestation: Bytes,
         distributor_contract: Address,
         org_id: Bytes,
-        distribution_date: u64,
+        issuance_date: u64,
         expiration_date: OptionU64,
         revoked: bool,
     ) -> Chaincert {
         Chaincert {
-            cid,
+            attestation,
             distributor_contract,
             org_id,
-            distribution_date,
+            issuance_date,
             expiration_date,
             revoked,
         }
@@ -45,18 +45,18 @@ impl Chaincert {
 
 pub(crate) fn deposit_chaincert(
     env: &Env,
-    chaincert_id: Bytes,
-    cid: Bytes,
+    chaincert_did: Bytes,
+    attestation: Bytes,
     distributor_contract: Address,
     org_id: Bytes,
-    distribution_date: u64,
+    issuance_date: u64,
     expiration_date: OptionU64,
 ) {
     let chaincert = Chaincert::new(
-        cid,
+        attestation,
         distributor_contract,
         org_id,
-        distribution_date,
+        issuance_date,
         expiration_date,
         false,
     );
@@ -64,15 +64,15 @@ pub(crate) fn deposit_chaincert(
     let chaincerts = match env.storage().get(&CHAINCERT_KEY) {
         Some(chaincert_map) => {
             let mut chaincert_map: Map<Bytes, Chaincert> = chaincert_map.unwrap();
-            if !chaincert_map.contains_key(chaincert_id.clone()) {
-                chaincert_map.set(chaincert_id, chaincert);
+            if !chaincert_map.contains_key(chaincert_did.clone()) {
+                chaincert_map.set(chaincert_did, chaincert);
                 chaincert_map
             } else {
                 panic_with_error!(env, ContractError::ChaincertAlreadyInWallet)
             }
         }
         None => {
-            let map: Map<Bytes, Chaincert> = map![env, (chaincert_id, chaincert)];
+            let map: Map<Bytes, Chaincert> = map![env, (chaincert_did, chaincert)];
             map
         }
     };

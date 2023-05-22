@@ -3,9 +3,9 @@
 //! Module for obtaining and modifying the metadata fields.
 use crate::{
     cert_wallet::OptionU64,
-    storage_types::{CertData, DataKey},
+    storage_types::{CredentialData, DataKey},
 };
-use soroban_sdk::{Address, Bytes, Env, Map};
+use soroban_sdk::{Bytes, Env, Map, String};
 
 pub fn read_file_storage(e: &Env) -> Bytes {
     let key = DataKey::FileStorage;
@@ -47,7 +47,7 @@ pub fn write_expiration_time(e: &Env, expiration_time: OptionU64) {
     e.storage().set(&key, &expiration_time)
 }
 
-pub fn write_recipients(e: &Env, recipients: Map<Address, CertData>) {
+pub fn write_recipients(e: &Env, recipients: Map<String, Option<CredentialData>>) {
     let key = DataKey::Recipients;
     e.storage().set(&key, &recipients)
 }
@@ -74,4 +74,24 @@ pub fn read_supply(e: &Env) -> u32 {
 
 pub fn increment_supply(e: &Env) {
     write_supply(e, read_supply(e) + 1);
+}
+
+pub fn write_credential_title(e: &Env, credential_title: String) {
+    let key = DataKey::CredentialTitle;
+    e.storage().set(&key, &credential_title);
+}
+
+pub fn read_credential_title(e: &Env) -> String {
+    let key = DataKey::CredentialTitle;
+    e.storage().get_unchecked(&key).unwrap()
+}
+
+pub fn write_credential_type(e: &Env, credential_type: String) {
+    let key = DataKey::CredentialType;
+    e.storage().set(&key, &credential_type);
+}
+
+pub fn read_credential_type(e: &Env) -> String {
+    let key = DataKey::CredentialType;
+    e.storage().get_unchecked(&key).unwrap()
 }

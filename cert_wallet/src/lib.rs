@@ -37,10 +37,10 @@ impl Wallet {
     pub fn deposit_chaincert(
         env: Env,
         chaincert_id: Bytes,
-        cid: Bytes,
+        attestation: Bytes,
         distributor_contract: Address,
         org_id: Bytes,
-        distribution_date: u64,
+        issuance_date: u64,
         expiration_date: OptionU64,
     ) {
         access_control_list::check_access_control_list(&env, &org_id);
@@ -48,10 +48,10 @@ impl Wallet {
         chaincert::deposit_chaincert(
             &env,
             chaincert_id,
-            cid,
+            attestation,
             distributor_contract,
             org_id,
-            distribution_date,
+            issuance_date,
             expiration_date,
         )
     }

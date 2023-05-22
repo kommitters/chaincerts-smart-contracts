@@ -17,10 +17,10 @@ pub fn write_organization(e: &Env, org: Organization) {
     e.storage().set(&key, &org);
 }
 
-pub fn read_organization_id(e: &Env) -> Bytes {
+pub fn read_organization_did(e: &Env) -> Bytes {
     let key = DataKey::Organization;
     let organization: Organization = e.storage().get_unchecked(&key).unwrap();
-    organization.id
+    organization.did
 }
 
 fn read_organization_admin(e: &Env) -> Address {

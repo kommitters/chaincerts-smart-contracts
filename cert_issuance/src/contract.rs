@@ -81,6 +81,27 @@ impl IssuanceTrait for CertIssuance {
         }
     }
 
+    fn attest(
+        e: Env,
+        credential: Bytes,
+        issuer: Bytes,
+        recipient: String,
+        signature: String,
+    ) -> bool {
+        let organization_did: Bytes = read_organization_did(&e);
+        if issuer != organization_did {
+            return false;
+        }
+
+        let recipients_map: Map<String, Option<CredentialData>> = read_recipients(&e);
+        if let Some(recipient_data) = recipients_map.get(recipient) {
+            if let Some(data) = recipient_data.unwrap() {
+                return data.signature == signature && data.did == credential;
+            }
+        }
+        false
+    }
+
     /// Get the Chaincert name.
     fn name(e: Env) -> Bytes {
         read_name(&e)

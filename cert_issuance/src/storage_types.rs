@@ -69,7 +69,7 @@ pub enum DataKey {
     Name,              // Bytes
     Revocable,         // bool
     ExpirationTime,    // OptionU64
-    Recipients,        // Map <Address, Option<CredentialData>>
+    Recipients,        // Map <String, Option<CredentialData>>
     Organization,      // Organization
     DistributionLimit, // u32
     Supply,            // u32

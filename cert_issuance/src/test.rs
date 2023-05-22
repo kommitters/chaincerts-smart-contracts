@@ -1,9 +1,10 @@
 #![cfg(test)]
 use crate::cert_wallet::{self, OptionU64};
-use crate::storage_types::{CertData, Info, Organization, Status};
+use crate::issuance_trait::{CredentialParams, VerifiableCredential};
+use crate::storage_types::{CredentialData, Info, Organization, Status};
 use crate::{contract::CertIssuance, CertIssuanceClient};
 use soroban_sdk::testutils::Address as _;
-use soroban_sdk::{vec, Address, Bytes, Env, IntoVal, Vec};
+use soroban_sdk::{vec, Address, Bytes, Env, IntoVal, Map, String, Vec};
 
 const WASM: &[u8] = include_bytes!("../../target/wasm32-unknown-unknown/release/cert_wallet.wasm");
 
@@ -14,87 +15,78 @@ fn create_wallet_contract(env: &Env, owner: &Address, id: &Bytes) -> cert_wallet
     wallet
 }
 
-fn create_cert_issuance_contract_with_limit(
+fn create_cert_issuance(
     e: &Env,
     limit: &Option<u32>,
-    address_recipients: &Option<Vec<Address>>,
+    recipient_dids: &Option<Vec<String>>,
     organization: &Organization,
-    administration_rules: &(bool, OptionU64),
-) -> CertIssuanceClient {
-    let cert_issuance = CertIssuanceClient::new(e, &e.register_contract(None, CertIssuance {}));
-    cert_issuance.initialize(
-        &("FileBase").into_val(e),
-        &"ChaincertName".into_val(e),
-        address_recipients,
-        limit,
-        administration_rules,
-        organization,
-    );
-    cert_issuance
-}
-
-fn create_cert_issuance_contract_with_recipients(
-    e: &Env,
-    limit: &Option<u32>,
-    address_recipients: &Option<Vec<Address>>,
-    organization: &Organization,
-    administration_rules: &(bool, OptionU64),
+    credential_params: &CredentialParams,
 ) -> CertIssuanceClient {
     let cert_issuance = CertIssuanceClient::new(e, &e.register_contract(None, CertIssuance {}));
 
     cert_issuance.initialize(
-        &"FileBase".into_val(e),
-        &"ChaincertName".into_val(e),
-        address_recipients,
+        &"Issuance Contract Name".into_val(e),
+        recipient_dids,
         limit,
-        administration_rules,
         organization,
+        credential_params,
     );
     cert_issuance
 }
 
-fn create_random_recipients_address(e: &Env) -> Vec<Address> {
-    let recipient_1 = Address::random(e);
-    let recipient_2 = Address::random(e);
-    let recipient_3 = Address::random(e);
+fn create_random_recipient_dids(e: &Env) -> Vec<String> {
+    let recipient_1 = String::from_slice(e, "did:chaincerts:abc123");
+    let recipient_2 = String::from_slice(e, "did:chaincerts:def123");
+    let recipient_3 = String::from_slice(e, "did:chaincerts:ghi123");
     vec![e, recipient_1, recipient_2, recipient_3]
 }
 
 #[test]
 fn test_create_cert_data() {
     let e: Env = Default::default();
-    let id_chaincert: Bytes = "12345".into_val(&e);
-    let status = Status::Unassigned;
-    let distribution_date = OptionU64::Some(1711195200);
-    let cert_data = CertData::new(
-        id_chaincert.clone(),
+    let did: Bytes = "did:chaincerts:abc123#credential-xyz123".into_val(&e);
+    let status = Status::Distributed;
+    let issuance_date = OptionU64::Some(1711195200);
+    let cert_data = CredentialData::new(
+        did.clone(),
         status.clone(),
-        distribution_date.clone(),
+        String::from_slice(&e, "did:chaincerts:abc123"),
+        String::from_slice(&e, "Work"),
+        String::from_slice(&e, "Software Engineer"),
+        issuance_date.clone(),
+        String::from_slice(&e, "MEUCIFZ5o9zSYiC9d0hvN6V73Y8yBm9n3MF8Hj"),
     );
-    assert_eq!(cert_data.id, id_chaincert);
+    assert_eq!(cert_data.did, did);
     assert_eq!(cert_data.status, status);
-    assert_eq!(cert_data.distribution_date, distribution_date);
+    assert_eq!(cert_data.issuance_date, issuance_date);
 }
 
 #[test]
 fn test_initialize_contract_with_recipients() {
     let e: Env = Default::default();
-    let recipients: Option<Vec<Address>> = Option::Some(create_random_recipients_address(&e));
+    let recipients: Option<Vec<String>> = Option::Some(create_random_recipient_dids(&e));
     let organization: Organization = Organization {
         admin: Address::random(&e),
-        id: "12345".into_val(&e),
+        did: "did:chaincerts:org123".into_val(&e),
     };
-    let administration_rules = (true, OptionU64::Some(1680091200));
 
-    let cert_issuance: CertIssuanceClient = create_cert_issuance_contract_with_recipients(
+    let credential_params = CredentialParams {
+        file_storage: "FileBase".into_val(&e),
+        revocable: true,
+        expiration_time: OptionU64::Some(1680091200),
+        credential_type: String::from_slice(&e, "Work"),
+        credential_title: String::from_slice(&e, "Software Engineer"),
+    };
+
+    let cert_issuance: CertIssuanceClient = create_cert_issuance(
         &e,
         &Option::None,
         &recipients,
         &organization,
-        &administration_rules,
+        &credential_params,
     );
     assert_eq!(cert_issuance.file_storage(), "FileBase".into_val(&e));
-    assert_eq!(cert_issuance.name(), "ChaincertName".into_val(&e));
+    assert_eq!(cert_issuance.name(), "Issuance Contract Name".into_val(&e));
     assert!(cert_issuance.is_revocable());
     assert_eq!(cert_issuance.expiration_time(), OptionU64::Some(1680091200));
     assert_eq!(cert_issuance.distribution_limit(), 3);
@@ -107,20 +99,27 @@ fn test_initialize_with_limit_contract() {
     let e: Env = Default::default();
     let organization: Organization = Organization {
         admin: Address::random(&e),
-        id: "12345".into_val(&e),
+        did: "did:chaincerts:org123".into_val(&e),
     };
     let distribution_limit: Option<u32> = Option::Some(6);
-    let administration_rules = (true, OptionU64::None);
 
-    let cert_issuance = create_cert_issuance_contract_with_limit(
+    let credential_params = CredentialParams {
+        file_storage: "FileBase".into_val(&e),
+        revocable: true,
+        expiration_time: OptionU64::None,
+        credential_type: String::from_slice(&e, "Work"),
+        credential_title: String::from_slice(&e, "Software Engineer"),
+    };
+
+    let cert_issuance = create_cert_issuance(
         &e,
         &distribution_limit,
         &Option::None,
         &organization,
-        &administration_rules,
+        &credential_params,
     );
     assert_eq!(cert_issuance.file_storage(), "FileBase".into_val(&e));
-    assert_eq!(cert_issuance.name(), "ChaincertName".into_val(&e));
+    assert_eq!(cert_issuance.name(), "Issuance Contract Name".into_val(&e));
     assert!(cert_issuance.is_revocable());
     assert_eq!(cert_issuance.expiration_time(), OptionU64::None);
     assert_eq!(cert_issuance.distribution_limit(), 6);
@@ -133,20 +132,26 @@ fn test_initialize_without_limit_contract_and_recipients() {
     let e: Env = Default::default();
     let organization: Organization = Organization {
         admin: Address::random(&e),
-        id: "12345".into_val(&e),
+        did: "did:chaincerts:org123".into_val(&e),
     };
 
-    let administration_rules = (true, OptionU64::None);
+    let credential_params = CredentialParams {
+        file_storage: "FileBase".into_val(&e),
+        revocable: true,
+        expiration_time: OptionU64::None,
+        credential_type: String::from_slice(&e, "Work"),
+        credential_title: String::from_slice(&e, "Software Engineer"),
+    };
 
-    let cert_issuance = create_cert_issuance_contract_with_limit(
+    let cert_issuance = create_cert_issuance(
         &e,
         &Option::None,
         &Option::None,
         &organization,
-        &administration_rules,
+        &credential_params,
     );
     assert_eq!(cert_issuance.file_storage(), "FileBase".into_val(&e));
-    assert_eq!(cert_issuance.name(), "ChaincertName".into_val(&e));
+    assert_eq!(cert_issuance.name(), "Issuance Contract Name".into_val(&e));
     assert!(cert_issuance.is_revocable());
     assert_eq!(cert_issuance.expiration_time(), OptionU64::None);
     assert_eq!(cert_issuance.distribution_limit(), 10);
@@ -159,32 +164,45 @@ fn test_get_contract_info() {
     let e: Env = Default::default();
     let organization: Organization = Organization {
         admin: Address::random(&e),
-        id: "12345".into_val(&e),
+        did: "did:chaincerts:org123".into_val(&e),
     };
-    let administration_rules_without_expiration_time = (true, OptionU64::None);
 
-    let administration_rules_with_expiration_time = (true, OptionU64::Some(31556926));
+    let credential_params_without_expiration_time = CredentialParams {
+        file_storage: "FileBase".into_val(&e),
+        revocable: true,
+        expiration_time: OptionU64::None,
+        credential_type: String::from_slice(&e, "Work"),
+        credential_title: String::from_slice(&e, "Software Engineer"),
+    };
+
+    let credential_params_with_expiration_time = CredentialParams {
+        file_storage: "FileBase".into_val(&e),
+        revocable: true,
+        expiration_time: OptionU64::Some(31556926),
+        credential_type: String::from_slice(&e, "Work"),
+        credential_title: String::from_slice(&e, "Software Engineer"),
+    };
 
     let distribution_limit: Option<u32> = Option::Some(6);
 
-    let cert_issuance = create_cert_issuance_contract_with_limit(
+    let cert_issuance = create_cert_issuance(
         &e,
         &distribution_limit,
         &Option::None,
         &organization,
-        &administration_rules_without_expiration_time,
+        &credential_params_without_expiration_time,
     );
 
-    let cert_issuance_2 = create_cert_issuance_contract_with_limit(
+    let cert_issuance_2 = create_cert_issuance(
         &e,
         &distribution_limit,
         &Option::None,
         &organization,
-        &administration_rules_with_expiration_time,
+        &credential_params_with_expiration_time,
     );
 
     let info = Info {
-        name: "ChaincertName".into_val(&e),
+        name: "Issuance Contract Name".into_val(&e),
         revocable: true,
         expiration_time: OptionU64::None,
         distribution_limit: 6,
@@ -192,7 +210,7 @@ fn test_get_contract_info() {
     };
 
     let info_2 = Info {
-        name: "ChaincertName".into_val(&e),
+        name: "Issuance Contract Name".into_val(&e),
         revocable: true,
         expiration_time: OptionU64::Some(31556926),
         distribution_limit: 6,
@@ -206,36 +224,53 @@ fn test_get_contract_info() {
 #[test]
 fn test_distribute_with_distribution_limit_contract() {
     let e: Env = Default::default();
-    let address_recipient_1 = Address::random(&e);
-    let wallet = create_wallet_contract(&e, &address_recipient_1, &"12345".into_val(&e));
+    let recipient1_address = Address::random(&e);
+    let recipient1_did = String::from_slice(&e, "did:chaincerts:abc123");
     let organization: Organization = Organization {
         admin: Address::random(&e),
-        id: "12345".into_val(&e),
+        did: "did:chaincerts:org123".into_val(&e),
     };
+    let wallet = create_wallet_contract(&e, &recipient1_address, &organization.did);
     let distribution_limit: Option<u32> = Option::Some(6);
-    let administration_rules = (true, OptionU64::None);
-    let cert_issuance = create_cert_issuance_contract_with_limit(
+    let credential_params = CredentialParams {
+        file_storage: "FileBase".into_val(&e),
+        revocable: true,
+        expiration_time: OptionU64::None,
+        credential_type: String::from_slice(&e, "Work"),
+        credential_title: String::from_slice(&e, "Software Engineer"),
+    };
+    let cert_issuance = create_cert_issuance(
         &e,
         &distribution_limit,
         &Option::None,
         &organization,
-        &administration_rules,
+        &credential_params,
     );
 
-    pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
+    const ATTESTATION1: &str = "ipfs://QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
 
-    let distribution_date: u64 = 1679918400;
+    let verificable_credential = VerifiableCredential {
+        did: "did:chaincerts:abc123#credential-xyz123".into_val(&e),
+        id: "c8b875a2-3f5d-4a63-b1c8-791be9b01c02".into_val(&e),
+        recipient_did: recipient1_did,
+        signature: String::from_slice(&e, "MEUCIFZ5o9zSYiC9d0hvN6V73Y8yBm9n3MF8Hj"),
+        attestation: ATTESTATION1.into_val(&e),
+        issuance_date: 1679918400,
+    };
+
     cert_issuance.distribute(
         &organization.admin,
-        &address_recipient_1,
         &wallet.contract_id,
-        &CID1.into_val(&e),
-        &distribution_date,
+        &verificable_credential,
     );
-    let recipients: soroban_sdk::Map<Address, CertData> = cert_issuance.recipients();
-    let cert_data = recipients.get(address_recipient_1).unwrap().unwrap();
+    let recipients: Map<String, Option<CredentialData>> = cert_issuance.recipients();
+    let cert_data = recipients
+        .get(verificable_credential.recipient_did)
+        .unwrap()
+        .unwrap()
+        .unwrap();
 
-    assert_eq!(cert_data.status, Status::Distribute);
+    assert_eq!(cert_data.status, Status::Distributed);
     assert_eq!(cert_issuance.supply(), 1);
     assert_eq!(recipients.len(), 1);
     assert_eq!(wallet.get_chaincerts().len(), 1);
@@ -244,48 +279,61 @@ fn test_distribute_with_distribution_limit_contract() {
 #[test]
 fn test_distribute_with_initial_recipients() {
     let e: Env = Default::default();
-    let recipients = Option::Some(create_random_recipients_address(&e));
-    let address_recipient_1 = recipients
+    let recipients = Option::Some(create_random_recipient_dids(&e));
+    let recipient1_address = Address::random(&e);
+    let recipient1_did = recipients
         .clone()
         .expect("Vec of recipients")
         .get(0)
         .unwrap()
         .unwrap();
-    let wallet = create_wallet_contract(&e, &address_recipient_1, &"12345".into_val(&e));
     let organization: Organization = Organization {
         admin: Address::random(&e),
-        id: "12345".into_val(&e),
+        did: "did:chaincerts:org123".into_val(&e),
     };
-    let distribution_date: u64 = 1679918400;
-    pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
-    let administration_rules = (true, OptionU64::Some(31556926));
-    let cert_issuance = create_cert_issuance_contract_with_recipients(
+    let wallet = create_wallet_contract(&e, &recipient1_address, &organization.did);
+    const ATTESTATION1: &str = "ipfs://QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
+    let credential_params = CredentialParams {
+        file_storage: "FileBase".into_val(&e),
+        revocable: true,
+        expiration_time: OptionU64::Some(31556926),
+        credential_type: String::from_slice(&e, "Work"),
+        credential_title: String::from_slice(&e, "Software Engineer"),
+    };
+    let cert_issuance = create_cert_issuance(
         &e,
         &Option::None,
         &recipients,
         &organization,
-        &administration_rules,
+        &credential_params,
     );
 
     let mut recipients = cert_issuance.recipients();
-    let mut cert_data = recipients
-        .get(address_recipient_1.clone())
-        .unwrap()
-        .unwrap();
-    assert_eq!(cert_data.status, Status::Unassigned);
+    let mut cert_data = recipients.get(recipient1_did.clone()).unwrap().unwrap();
+    assert_eq!(cert_data, Option::None);
+
+    let verifiable_credential = VerifiableCredential {
+        did: "did:chaincerts:abc123#credential-xyz123".into_val(&e),
+        id: "c8b875a2-3f5d-4a63-b1c8-791be9b01c02".into_val(&e),
+        recipient_did: recipient1_did,
+        signature: String::from_slice(&e, "MEUCIFZ5o9zSYiC9d0hvN6V73Y8yBm9n3MF8Hj"),
+        attestation: ATTESTATION1.into_val(&e),
+        issuance_date: 1679918400,
+    };
 
     cert_issuance.distribute(
         &organization.admin,
-        &address_recipient_1,
         &wallet.contract_id,
-        &CID1.into_val(&e),
-        &distribution_date,
+        &verifiable_credential,
     );
 
     recipients = cert_issuance.recipients();
-    cert_data = recipients.get(address_recipient_1).unwrap().unwrap();
+    cert_data = recipients
+        .get(verifiable_credential.recipient_did)
+        .unwrap()
+        .unwrap();
 
-    assert_eq!(cert_data.status, Status::Distribute);
+    assert_eq!(cert_data.unwrap().status, Status::Distributed);
     assert_eq!(cert_issuance.supply(), 1);
     assert_eq!(recipients.len(), 3);
     assert_eq!(wallet.get_chaincerts().len(), 1);
@@ -294,48 +342,73 @@ fn test_distribute_with_initial_recipients() {
 #[test]
 fn test_revoke_chaincert() {
     let e: Env = Default::default();
-    let recipients: Option<Vec<Address>> = Option::Some(create_random_recipients_address(&e));
-    let recipient_address = recipients
+    let recipients: Option<Vec<String>> = Option::Some(create_random_recipient_dids(&e));
+    let recipient_address = Address::random(&e);
+    let recipient_did = recipients
         .clone()
         .expect("Vec of recipients")
         .get(0)
         .unwrap()
         .unwrap();
-    let wallet = create_wallet_contract(&e, &recipient_address, &"12345".into_val(&e));
     let organization: Organization = Organization {
         admin: Address::random(&e),
-        id: "12345".into_val(&e),
+        did: "did:chaincerts:org123".into_val(&e),
+    };
+    let wallet = create_wallet_contract(&e, &recipient_address, &organization.did);
+
+    pub const ATTESTATION1: &str = "ipfs://QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
+
+    let credential_params = CredentialParams {
+        file_storage: "FileBase".into_val(&e),
+        revocable: true,
+        expiration_time: OptionU64::None,
+        credential_type: String::from_slice(&e, "Work"),
+        credential_title: String::from_slice(&e, "Software Engineer"),
     };
 
-    let administration_rules = (true, OptionU64::None);
-
-    let distribution_date: u64 = 1679918400;
-    pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
-
-    let cert_issuance = create_cert_issuance_contract_with_recipients(
+    let cert_issuance = create_cert_issuance(
         &e,
         &Option::None,
         &recipients,
         &organization,
-        &administration_rules,
+        &credential_params,
     );
+
+    let verifiable_credential = VerifiableCredential {
+        did: "did:chaincerts:abc123#credential-xyz123".into_val(&e),
+        id: "c8b875a2-3f5d-4a63-b1c8-791be9b01c02".into_val(&e),
+        recipient_did,
+        signature: String::from_slice(&e, "MEUCIFZ5o9zSYiC9d0hvN6V73Y8yBm9n3MF8Hj"),
+        attestation: ATTESTATION1.into_val(&e),
+        issuance_date: 1679918400,
+    };
 
     cert_issuance.distribute(
         &organization.admin,
-        &recipient_address,
         &wallet.contract_id,
-        &CID1.into_val(&e),
-        &distribution_date,
+        &verifiable_credential,
     );
 
     let mut recipients = cert_issuance.recipients();
-    let mut cert_data = recipients.get(recipient_address.clone()).unwrap().unwrap();
-    assert_eq!(cert_data.status, Status::Distribute);
+    let mut cert_data = recipients
+        .get(verifiable_credential.recipient_did.clone())
+        .unwrap()
+        .unwrap()
+        .unwrap();
+    assert_eq!(cert_data.status, Status::Distributed);
 
-    cert_issuance.revoke(&organization.admin, &recipient_address, &wallet.contract_id);
+    cert_issuance.revoke(
+        &organization.admin,
+        &verifiable_credential.recipient_did,
+        &wallet.contract_id,
+    );
 
     recipients = cert_issuance.recipients();
-    cert_data = recipients.get(recipient_address).unwrap().unwrap();
+    cert_data = recipients
+        .get(verifiable_credential.recipient_did)
+        .unwrap()
+        .unwrap()
+        .unwrap();
     assert_eq!(cert_data.status, Status::Revoked);
 
     let chaincert = wallet.get_chaincerts().get(0).unwrap().unwrap();
@@ -346,30 +419,35 @@ fn test_revoke_chaincert() {
 #[should_panic(expected = "Status(ContractError(1))")]
 fn test_initialize_contract_with_recipients_error() {
     let e: Env = Default::default();
-    let recipients: Option<Vec<Address>> = Option::Some(create_random_recipients_address(&e));
+    let recipient_dids: Option<Vec<String>> = Option::Some(create_random_recipient_dids(&e));
     let organization: Organization = Organization {
         admin: Address::random(&e),
-        id: "12345".into_val(&e),
+        did: "did:chaincerts:org123".into_val(&e),
     };
 
-    let administration_rules = (true, OptionU64::None);
+    let credential_params = CredentialParams {
+        file_storage: "FileBase".into_val(&e),
+        revocable: true,
+        expiration_time: OptionU64::None,
+        credential_type: String::from_slice(&e, "Work"),
+        credential_title: String::from_slice(&e, "Software Engineer"),
+    };
 
-    let cert_issuance: CertIssuanceClient = create_cert_issuance_contract_with_recipients(
+    let cert_issuance: CertIssuanceClient = create_cert_issuance(
         &e,
         &Option::None,
-        &recipients,
+        &recipient_dids,
         &organization,
-        &administration_rules,
+        &credential_params,
     );
 
     cert_issuance.initialize(
-        &"FileBase".into_val(&e),
-        &"ChaincertName".into_val(&e),
-        &recipients,
+        &"Issuance Contract Name".into_val(&e),
+        &recipient_dids,
         &Option::None,
-        &administration_rules,
         &organization,
-    )
+        &credential_params,
+    );
 }
 
 #[test]
@@ -378,137 +456,146 @@ fn test_initialize_with_limit_contract_error() {
     let e: Env = Default::default();
     let organization: Organization = Organization {
         admin: Address::random(&e),
-        id: "12345".into_val(&e),
+        did: "did:chaincerts:org123".into_val(&e),
     };
 
-    let administration_rules = (true, OptionU64::None);
+    let credential_params = CredentialParams {
+        file_storage: "FileBase".into_val(&e),
+        revocable: true,
+        expiration_time: OptionU64::None,
+        credential_type: String::from_slice(&e, "Work"),
+        credential_title: String::from_slice(&e, "Software Engineer"),
+    };
 
     let distribution_limit: Option<u32> = Option::Some(6);
-    let cert_issuance = create_cert_issuance_contract_with_limit(
+    let cert_issuance = create_cert_issuance(
         &e,
         &distribution_limit,
         &Option::None,
         &organization,
-        &administration_rules,
+        &credential_params,
     );
 
     cert_issuance.initialize(
-        &"FileBase".into_val(&e),
-        &"ChaincertName".into_val(&e),
+        &"Issuance Contract Name".into_val(&e),
         &Option::None,
         &distribution_limit,
-        &administration_rules,
         &organization,
-    )
+        &credential_params,
+    );
 }
 
 #[test]
 #[should_panic(expected = "Status(ContractError(2))")]
 fn test_distribute_admin_error() {
-    pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
+    const ATTESTATION1: &str = "ipfs://QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
     let e: Env = Default::default();
-    let admin = Address::random(&e);
-    let recipients = Option::Some(create_random_recipients_address(&e));
-    let recipient_address = recipients
+    let invalid_admin = Address::random(&e);
+    let recipient_address = Address::random(&e);
+    let recipient_dids = Option::Some(create_random_recipient_dids(&e));
+    let recipient_did = recipient_dids
         .clone()
         .expect("Vec of recipients")
         .get(0)
         .unwrap()
         .unwrap();
-    let wallet = create_wallet_contract(&e, &recipient_address, &"12345".into_val(&e));
     let organization: Organization = Organization {
         admin: Address::random(&e),
-        id: "12345".into_val(&e),
+        did: "did:chaincerts:org123".into_val(&e),
+    };
+    let wallet = create_wallet_contract(&e, &recipient_address, &organization.did);
+
+    let credential_params = CredentialParams {
+        file_storage: "FileBase".into_val(&e),
+        revocable: true,
+        expiration_time: OptionU64::None,
+        credential_type: String::from_slice(&e, "Work"),
+        credential_title: String::from_slice(&e, "Software Engineer"),
     };
 
-    let administration_rules = (true, OptionU64::None);
-
-    let distribution_date: u64 = 1679918400;
-    let cert_issuance = create_cert_issuance_contract_with_recipients(
+    let cert_issuance = create_cert_issuance(
         &e,
         &Option::None,
-        &recipients,
+        &recipient_dids,
         &organization,
-        &administration_rules,
+        &credential_params,
     );
 
-    cert_issuance.distribute(
-        &admin,
-        &recipient_address,
-        &wallet.contract_id,
-        &CID1.into_val(&e),
-        &distribution_date,
-    );
+    let verifiable_credential = VerifiableCredential {
+        did: "did:chaincerts:abc123#credential-xyz123".into_val(&e),
+        id: "c8b875a2-3f5d-4a63-b1c8-791be9b01c02".into_val(&e),
+        recipient_did,
+        signature: String::from_slice(&e, "MEUCIFZ5o9zSYiC9d0hvN6V73Y8yBm9n3MF8Hj"),
+        attestation: ATTESTATION1.into_val(&e),
+        issuance_date: 1679918400,
+    };
+
+    cert_issuance.distribute(&invalid_admin, &wallet.contract_id, &verifiable_credential);
 }
 
 #[test]
 #[should_panic(expected = "Status(ContractError(3))")]
 fn test_distribute_limit_error() {
     let e: Env = Default::default();
-    let recipients = Option::Some(create_random_recipients_address(&e));
-    let wallet1 = create_wallet_contract(
-        &e,
-        &recipients
-            .clone()
-            .expect("Vec of recipients")
-            .get(0)
-            .unwrap()
-            .unwrap(),
-        &"12345".into_val(&e),
-    );
-    let wallet2 = create_wallet_contract(
-        &e,
-        &recipients
-            .clone()
-            .expect("Vec of recipients")
-            .get(1)
-            .unwrap()
-            .unwrap(),
-        &"12345".into_val(&e),
-    );
-
+    let recipients = Option::Some(create_random_recipient_dids(&e));
+    let address1 = Address::random(&e);
+    let address2 = Address::random(&e);
     let organization: Organization = Organization {
         admin: Address::random(&e),
-        id: "12345".into_val(&e),
+        did: "did:chaincerts:org123".into_val(&e),
+    };
+    let wallet1 = create_wallet_contract(&e, &address1, &organization.did);
+    let wallet2 = create_wallet_contract(&e, &address2, &organization.did);
+
+    let credential_params = CredentialParams {
+        file_storage: "FileBase".into_val(&e),
+        revocable: true,
+        expiration_time: OptionU64::None,
+        credential_type: String::from_slice(&e, "Work"),
+        credential_title: String::from_slice(&e, "Software Engineer"),
     };
 
-    let administration_rules = (true, OptionU64::None);
-
-    let distribution_date: u64 = 1679918400;
     let distribution_limit = Option::Some(1);
-    let cert_issuance = create_cert_issuance_contract_with_limit(
+    let cert_issuance = create_cert_issuance(
         &e,
         &distribution_limit,
         &Option::None,
         &organization,
-        &administration_rules,
+        &credential_params,
     );
-    pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
-    pub const CID2: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrED";
+    const ATTESTATION1: &str = "ipfs://QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
+    const ATTESTATION2: &str = "ipfs://QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrED";
 
-    cert_issuance.distribute(
-        &organization.admin,
-        &recipients
+    let mut verifiable_credential = VerifiableCredential {
+        did: "did:chaincerts:abc123#credential-xyz123".into_val(&e),
+        id: "c8b875a2-3f5d-4a63-b1c8-791be9b01c02".into_val(&e),
+        recipient_did: recipients
             .clone()
             .expect("Vec of recipients")
             .get(0)
             .unwrap()
             .unwrap(),
-        &wallet1.contract_id,
-        &CID1.into_val(&e),
-        &distribution_date,
-    );
+        signature: String::from_slice(&e, "MEUCIFZ5o9zSYiC9d0hvN6V73Y8yBm9n3MF8Hj"),
+        attestation: ATTESTATION1.into_val(&e),
+        issuance_date: 1679918400,
+    };
 
     cert_issuance.distribute(
         &organization.admin,
-        &recipients
-            .expect("Vec of recipients")
-            .get(1)
-            .unwrap()
-            .unwrap(),
+        &wallet1.contract_id,
+        &verifiable_credential,
+    );
+
+    verifiable_credential.recipient_did = recipients
+        .expect("Vec of recipients")
+        .get(1)
+        .unwrap()
+        .unwrap();
+    verifiable_credential.attestation = ATTESTATION2.into_val(&e);
+    cert_issuance.distribute(
+        &organization.admin,
         &wallet2.contract_id,
-        &CID2.into_val(&e),
-        &distribution_date,
+        &verifiable_credential,
     );
 }
 
@@ -516,58 +603,55 @@ fn test_distribute_limit_error() {
 #[should_panic(expected = "Status(ContractError(5))")]
 fn test_distribute_status_error() {
     let e: Env = Default::default();
-    let recipients = Option::Some(create_random_recipients_address(&e));
-    let wallet = create_wallet_contract(
-        &e,
-        &recipients
-            .clone()
-            .expect("Vec of recipients")
-            .get(0)
-            .unwrap()
-            .unwrap(),
-        &"12345".into_val(&e),
-    );
+    let wallet_owner = Address::random(&e);
+    let recipients = Option::Some(create_random_recipient_dids(&e));
     let organization: Organization = Organization {
         admin: Address::random(&e),
-        id: "12345".into_val(&e),
+        did: "did:chaincerts:org123".into_val(&e),
+    };
+    let wallet = create_wallet_contract(&e, &wallet_owner, &organization.did);
+
+    let credential_params = CredentialParams {
+        file_storage: "FileBase".into_val(&e),
+        revocable: true,
+        expiration_time: OptionU64::None,
+        credential_type: String::from_slice(&e, "Work"),
+        credential_title: String::from_slice(&e, "Software Engineer"),
     };
 
-    let administration_rules = (true, OptionU64::None);
-
-    let distribution_date: u64 = 1679918400;
     let distribution_limit = Option::Some(3);
-    let cert_issuance = create_cert_issuance_contract_with_limit(
+    let cert_issuance = create_cert_issuance(
         &e,
         &distribution_limit,
         &Option::None,
         &organization,
-        &administration_rules,
+        &credential_params,
     );
-    pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
+    pub const ATTESTATION1: &str = "ipfs://QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
 
-    cert_issuance.distribute(
-        &organization.admin,
-        &recipients
-            .clone()
+    let verifiable_credential = VerifiableCredential {
+        did: "did:chaincerts:abc123#credential-xyz123".into_val(&e),
+        id: "c8b875a2-3f5d-4a63-b1c8-791be9b01c02".into_val(&e),
+        recipient_did: recipients
             .expect("Vec of recipients")
             .get(0)
             .unwrap()
             .unwrap(),
+        signature: String::from_slice(&e, "MEUCIFZ5o9zSYiC9d0hvN6V73Y8yBm9n3MF8Hj"),
+        attestation: ATTESTATION1.into_val(&e),
+        issuance_date: 1679918400,
+    };
+
+    cert_issuance.distribute(
+        &organization.admin,
         &wallet.contract_id,
-        &CID1.into_val(&e),
-        &distribution_date,
+        &verifiable_credential,
     );
 
     cert_issuance.distribute(
         &organization.admin,
-        &recipients
-            .expect("Vec of recipients")
-            .get(0)
-            .unwrap()
-            .unwrap(),
         &wallet.contract_id,
-        &CID1.into_val(&e),
-        &distribution_date,
+        &verifiable_credential,
     );
 }
 
@@ -575,122 +659,168 @@ fn test_distribute_status_error() {
 #[should_panic(expected = "Status(ContractError(2))")]
 fn test_revoke_admin_error() {
     let e: Env = Default::default();
-    let recipients: Option<Vec<Address>> = Option::Some(create_random_recipients_address(&e));
-    let recipient_address = recipients
+    let recipients: Option<Vec<String>> = Option::Some(create_random_recipient_dids(&e));
+    let recipient_address = Address::random(&e);
+    let recipient_did = recipients
         .clone()
         .expect("Vec of recipients")
         .get(0)
         .unwrap()
         .unwrap();
-    let wallet = create_wallet_contract(&e, &recipient_address, &"12345".into_val(&e));
     let organization: Organization = Organization {
         admin: Address::random(&e),
-        id: "12345".into_val(&e),
+        did: "did:chaincerts:org123".into_val(&e),
+    };
+    let wallet = create_wallet_contract(&e, &recipient_address, &organization.did);
+
+    pub const ATTESTATION1: &str = "ipfs://QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
+
+    let credential_params = CredentialParams {
+        file_storage: "FileBase".into_val(&e),
+        revocable: true,
+        expiration_time: OptionU64::None,
+        credential_type: String::from_slice(&e, "Work"),
+        credential_title: String::from_slice(&e, "Software Engineer"),
     };
 
-    let administration_rules = (true, OptionU64::None);
-
-    let distribution_date: u64 = 1679918400;
-    pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
-    let cert_issuance = create_cert_issuance_contract_with_recipients(
+    let cert_issuance = create_cert_issuance(
         &e,
         &Option::None,
         &recipients,
         &organization,
-        &administration_rules,
+        &credential_params,
     );
+
+    let verifiable_credential = VerifiableCredential {
+        did: "did:chaincerts:abc123#credential-xyz123".into_val(&e),
+        id: "c8b875a2-3f5d-4a63-b1c8-791be9b01c02".into_val(&e),
+        recipient_did,
+        signature: String::from_slice(&e, "MEUCIFZ5o9zSYiC9d0hvN6V73Y8yBm9n3MF8Hj"),
+        attestation: ATTESTATION1.into_val(&e),
+        issuance_date: 1679918400,
+    };
 
     cert_issuance.distribute(
         &organization.admin,
-        &recipient_address,
         &wallet.contract_id,
-        &CID1.into_val(&e),
-        &distribution_date,
+        &verifiable_credential,
     );
 
     cert_issuance.revoke(
         &Address::random(&e),
-        &recipient_address,
+        &verifiable_credential.recipient_did,
         &wallet.contract_id,
     );
 }
 
 #[test]
 #[should_panic(expected = "Status(ContractError(7))")]
-fn test_revoke_status_unassigned_error() {
+fn test_revoke_credential_data_none_error() {
     let e: Env = Default::default();
-    let recipients: Option<Vec<Address>> = Option::Some(create_random_recipients_address(&e));
-    let recipient_address = recipients
+    let recipients: Option<Vec<String>> = Option::Some(create_random_recipient_dids(&e));
+    let recipient_address = Address::random(&e);
+    let recipient_did = recipients
         .clone()
         .expect("Vec of recipients")
         .get(0)
         .unwrap()
         .unwrap();
-    let wallet = create_wallet_contract(&e, &recipient_address, &"12345".into_val(&e));
+    let org_did = "did:chaincerts:org123".into_val(&e);
+    let wallet = create_wallet_contract(&e, &recipient_address, &org_did);
     let organization: Organization = Organization {
         admin: Address::random(&e),
-        id: "12345".into_val(&e),
+        did: "did:chaincerts:org123".into_val(&e),
     };
 
-    let administration_rules = (true, OptionU64::None);
+    let credential_params = CredentialParams {
+        file_storage: "FileBase".into_val(&e),
+        revocable: true,
+        expiration_time: OptionU64::None,
+        credential_type: String::from_slice(&e, "Work"),
+        credential_title: String::from_slice(&e, "Software Engineer"),
+    };
 
-    let cert_issuance = create_cert_issuance_contract_with_recipients(
+    let cert_issuance = create_cert_issuance(
         &e,
         &Option::None,
         &recipients,
         &organization,
-        &administration_rules,
+        &credential_params,
     );
 
-    cert_issuance.revoke(&organization.admin, &recipient_address, &wallet.contract_id);
+    cert_issuance.revoke(&organization.admin, &recipient_did, &wallet.contract_id);
 }
 
 #[test]
 #[should_panic(expected = "Status(ContractError(7))")]
 fn test_revoke_status_revoked_error() {
     let e: Env = Default::default();
-    let recipients: Option<Vec<Address>> = Option::Some(create_random_recipients_address(&e));
-    let recipient_address = recipients
+    let recipients: Option<Vec<String>> = Option::Some(create_random_recipient_dids(&e));
+    let recipient_did = recipients
         .clone()
         .expect("Vec of recipients")
         .get(0)
         .unwrap()
         .unwrap();
-    let wallet = create_wallet_contract(&e, &recipient_address, &"12345".into_val(&e));
+
     let organization: Organization = Organization {
         admin: Address::random(&e),
-        id: "12345".into_val(&e),
+        did: "did:chaincerts:org123".into_val(&e),
+    };
+    let recipient_address = Address::random(&e);
+    let wallet = create_wallet_contract(&e, &recipient_address, &organization.did);
+    const ATTESTATION1: &str = "ipfs://QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
+
+    let credential_params = CredentialParams {
+        file_storage: "FileBase".into_val(&e),
+        revocable: true,
+        expiration_time: OptionU64::None,
+        credential_type: String::from_slice(&e, "Work"),
+        credential_title: String::from_slice(&e, "Software Engineer"),
     };
 
-    let administration_rules = (true, OptionU64::None);
-
-    let distribution_date: u64 = 1679918400;
-    pub const CID1: &str = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
-    let cert_issuance = create_cert_issuance_contract_with_recipients(
+    let cert_issuance = create_cert_issuance(
         &e,
         &Option::None,
         &recipients,
         &organization,
-        &administration_rules,
-    );
-    cert_issuance.distribute(
-        &organization.admin,
-        &recipient_address,
-        &wallet.contract_id,
-        &CID1.into_val(&e),
-        &distribution_date,
+        &credential_params,
     );
 
-    cert_issuance.revoke(&organization.admin, &recipient_address, &wallet.contract_id);
-    cert_issuance.revoke(&organization.admin, &recipient_address, &wallet.contract_id);
+    let verifiable_credential = VerifiableCredential {
+        did: "did:chaincerts:abc123#credential-xyz123".into_val(&e),
+        id: "c8b875a2-3f5d-4a63-b1c8-791be9b01c02".into_val(&e),
+        recipient_did,
+        signature: String::from_slice(&e, "MEUCIFZ5o9zSYiC9d0hvN6V73Y8yBm9n3MF8Hj"),
+        attestation: ATTESTATION1.into_val(&e),
+        issuance_date: 1679918400,
+    };
+
+    cert_issuance.distribute(
+        &organization.admin,
+        &wallet.contract_id,
+        &verifiable_credential,
+    );
+
+    cert_issuance.revoke(
+        &organization.admin,
+        &verifiable_credential.recipient_did,
+        &wallet.contract_id,
+    );
+    cert_issuance.revoke(
+        &organization.admin,
+        &verifiable_credential.recipient_did,
+        &wallet.contract_id,
+    );
 }
 
 #[test]
 #[should_panic(expected = "Status(ContractError(7))")]
 fn test_revoke_no_revocable_cert() {
     let e: Env = Default::default();
-    let recipients: Option<Vec<Address>> = Option::Some(create_random_recipients_address(&e));
-    let recipient_address = recipients
+    let recipients: Option<Vec<String>> = Option::Some(create_random_recipient_dids(&e));
+    let recipient_address = Address::random(&e);
+    let recipient_did = recipients
         .clone()
         .expect("Vec of recipients")
         .get(0)
@@ -699,24 +829,24 @@ fn test_revoke_no_revocable_cert() {
     let wallet = create_wallet_contract(&e, &recipient_address, &"12345".into_val(&e));
     let organization: Organization = Organization {
         admin: Address::random(&e),
-        id: "12345".into_val(&e),
+        did: "did:chaincerts:org123".into_val(&e),
     };
 
-    let administration_rules = (false, OptionU64::None);
+    let credential_params = CredentialParams {
+        file_storage: "FileBase".into_val(&e),
+        revocable: false,
+        expiration_time: OptionU64::None,
+        credential_type: String::from_slice(&e, "Work"),
+        credential_title: String::from_slice(&e, "Software Engineer"),
+    };
 
-    let cert_issuance = create_cert_issuance_contract_with_recipients(
+    let cert_issuance = create_cert_issuance(
         &e,
         &Option::None,
         &recipients,
         &organization,
-        &administration_rules,
+        &credential_params,
     );
 
-    let recipient_address = recipients
-        .expect("Vec of recipients")
-        .get(0)
-        .unwrap()
-        .unwrap();
-
-    cert_issuance.revoke(&organization.admin, &recipient_address, &wallet.contract_id);
+    cert_issuance.revoke(&organization.admin, &recipient_did, &wallet.contract_id);
 }

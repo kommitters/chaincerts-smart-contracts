@@ -3,18 +3,20 @@
 //! Module containing the main contract logic.
 use crate::cert_wallet::{self, OptionU64};
 use crate::error::ContractError;
-use crate::issuance_trait::IssuanceTrait;
+use crate::issuance_trait::{CredentialParams, IssuanceTrait, VerifiableCredential};
 use crate::metadata::{
-    increment_supply, read_distribution_limit, read_expiration_time, read_file_storage, read_name,
-    read_revocable, read_supply, write_distribution_limit, write_expiration_time,
+    increment_supply, read_credential_title, read_credential_type, read_distribution_limit,
+    read_expiration_time, read_file_storage, read_name, read_revocable, read_supply,
+    write_credential_title, write_credential_type, write_distribution_limit, write_expiration_time,
     write_file_storage, write_name, write_recipients, write_revocable, write_supply,
 };
 use crate::organization::{
-    check_admin, has_organization, read_organization_id, write_organization,
+    check_admin, has_organization, read_organization_did, write_organization,
 };
 use crate::recipients::{add_recipient, create_recipients, read_recipients};
-use crate::storage_types::{CertData, Info, Organization, Status};
-use soroban_sdk::{contractimpl, panic_with_error, Address, Bytes, BytesN, Env, Map, Vec};
+use crate::storage_types::{CredentialData, Info, Organization, Status};
+use soroban_sdk::{contractimpl, panic_with_error, Address, Bytes, BytesN, Env, Map, String, Vec};
+
 pub struct CertIssuance;
 
 #[contractimpl]
@@ -22,22 +24,23 @@ impl IssuanceTrait for CertIssuance {
     /// Initialize the contract a list of recipients or with the limit of Chaincerts that can be distributed.
     fn initialize(
         e: Env,
-        file_storage: Bytes,
         name: Bytes,
-        recipients: Option<Vec<Address>>,
+        recipients: Option<Vec<String>>,
         distribution_limit: Option<u32>,
-        administration_rules: (bool, OptionU64), // (revocable, expiration_time)
         organization: Organization,
+        credential_params: CredentialParams,
     ) {
         if has_organization(&e) {
             panic_with_error!(&e, ContractError::AlreadyInit);
         }
         write_organization(&e, organization);
-        write_file_storage(&e, file_storage);
+        write_file_storage(&e, credential_params.file_storage);
         write_name(&e, name);
-        write_revocable(&e, administration_rules.0);
-        write_expiration_time(&e, administration_rules.1);
+        write_revocable(&e, credential_params.revocable);
+        write_expiration_time(&e, credential_params.expiration_time);
         write_supply(&e, 0);
+        write_credential_type(&e, credential_params.credential_type);
+        write_credential_title(&e, credential_params.credential_title);
 
         define_limit_and_recipients(e, recipients, distribution_limit);
     }
@@ -46,31 +49,36 @@ impl IssuanceTrait for CertIssuance {
     fn distribute(
         e: Env,
         admin: Address,
-        recipient: Address,
         wallet_contract_id: BytesN<32>,
-        cid: Bytes,
-        distribution_date: u64,
+        verifiable_credential: VerifiableCredential,
     ) {
         check_admin(&e, &admin);
         admin.require_auth();
         check_amount(&e);
 
-        apply_distribution(e, recipient, wallet_contract_id, cid, distribution_date);
+        apply_distribution(e, wallet_contract_id, &verifiable_credential);
     }
 
     /// Revoke a Chaincert from a holder.
-    fn revoke(e: Env, admin: Address, holder: Address, wallet_contract_id: BytesN<32>) {
+    fn revoke(e: Env, admin: Address, holder: String, wallet_contract_id: BytesN<32>) {
         check_revocable(&e);
         check_admin(&e, &admin);
         admin.require_auth();
-        let mut recipients: Map<Address, CertData> = read_recipients(&e);
-        let mut cert_data: CertData = recipients.get(holder.clone()).unwrap().unwrap();
-        check_recipient_status_for_revoke(&e, &cert_data);
+        let mut recipients: Map<String, Option<CredentialData>> = read_recipients(&e);
+        let cert_data: Option<CredentialData> = recipients.get(holder.clone()).unwrap().unwrap();
 
-        revoke_from_wallet(&e, wallet_contract_id, &cert_data.id);
-        cert_data.status = Status::Revoked;
-        recipients.set(holder, cert_data);
-        write_recipients(&e, recipients);
+        match cert_data {
+            Some(mut data) => {
+                check_recipient_status_for_revoke(&e, &data);
+                revoke_from_wallet(&e, wallet_contract_id, &data.did);
+                data.status = Status::Revoked;
+                recipients.set(holder, Some(data));
+                write_recipients(&e, recipients);
+            }
+            None => {
+                panic_with_error!(e, ContractError::NoRevocable);
+            }
+        }
     }
 
     /// Get the Chaincert name.
@@ -104,7 +112,7 @@ impl IssuanceTrait for CertIssuance {
     }
 
     /// Get the recipients data in the contract.
-    fn recipients(e: Env) -> Map<Address, CertData> {
+    fn recipients(e: Env) -> Map<String, Option<CredentialData>> {
         read_recipients(&e)
     }
 
@@ -123,18 +131,16 @@ impl IssuanceTrait for CertIssuance {
 /// Defines recipients and distribution_limit depending on the received ones.
 fn apply_distribution(
     e: Env,
-    recipient: Address,
     wallet_contract_id: BytesN<32>,
-    cid: Bytes,
-    distribution_date: u64,
+    verifiable_credential: &VerifiableCredential,
 ) {
-    match read_recipients(&e).get(recipient.clone()) {
+    match read_recipients(&e).get(verifiable_credential.recipient_did.clone()) {
         Some(_) => {
-            distribute_to_recipient(&e, &recipient, distribution_date, wallet_contract_id, cid);
+            distribute_to_recipient(&e, wallet_contract_id, verifiable_credential);
         }
         None => {
-            add_recipient(&e, &recipient);
-            distribute_to_recipient(&e, &recipient, distribution_date, wallet_contract_id, cid);
+            add_recipient(&e, &verifiable_credential.recipient_did);
+            distribute_to_recipient(&e, wallet_contract_id, verifiable_credential);
         }
     };
 }
@@ -142,7 +148,7 @@ fn apply_distribution(
 /// Defines recipients and distribution_limit depending on the received ones.
 fn define_limit_and_recipients(
     e: Env,
-    recipients: Option<Vec<Address>>,
+    recipients: Option<Vec<String>>,
     distribution_limit: Option<u32>,
 ) {
     match recipients {
@@ -156,15 +162,15 @@ fn define_limit_and_recipients(
             } else {
                 write_distribution_limit(&e, 10);
             }
-            write_recipients(&e, Map::<Address, CertData>::new(&e));
+            write_recipients(&e, Map::<String, Option<CredentialData>>::new(&e));
         }
     };
 }
 
 /// Calculates the expiration date of a distributed Chaincert (using Epoch Unix Timestamp, and Epoch time).
-fn expiration_date(e: &Env, distribution_date: u64) -> OptionU64 {
+fn expiration_date(e: &Env, issuance_date: u64) -> OptionU64 {
     match read_expiration_time(e) {
-        OptionU64::Some(value) => OptionU64::Some(distribution_date + value),
+        OptionU64::Some(value) => OptionU64::Some(issuance_date + value),
         OptionU64::None => OptionU64::None,
     }
 }
@@ -176,16 +182,16 @@ fn check_amount(e: &Env) {
     }
 }
 
-/// Checks that the status of the CertData of the recipient_data to distribute is Unassigned.
-fn check_recipient_status_for_distribute(e: &Env, recipient_data: &CertData) {
-    if recipient_data.status != Status::Unassigned {
+/// Checks that the status of the CredentialData of the recipient_data to distribute is Unassigned.
+fn check_recipient_status_for_distribute(e: &Env, recipient_data: &Option<CredentialData>) {
+    if !matches!(recipient_data, None) {
         panic_with_error!(e, ContractError::AlreadyIssued);
     }
 }
 
 /// Checks that the status of the CertData of the recipient_data to revoke is Distributed.
-fn check_recipient_status_for_revoke(e: &Env, recipient_data: &CertData) {
-    if recipient_data.status != Status::Distribute {
+fn check_recipient_status_for_revoke(e: &Env, recipient_data: &CredentialData) {
+    if recipient_data.status != Status::Distributed {
         panic_with_error!(e, ContractError::NoRevocable);
     }
 }
@@ -199,26 +205,31 @@ fn check_revocable(e: &Env) {
 /// Deposit a chaincert to a wallet and makes the necessary storage changes when successful.
 fn distribute_to_recipient(
     e: &Env,
-    address: &Address,
-    distribution_date: u64,
     wallet_contract_id: BytesN<32>,
-    cid: Bytes,
+    verifiable_credential: &VerifiableCredential,
 ) {
-    let mut recipients: Map<Address, CertData> = read_recipients(e);
-    let mut cert_data: CertData = recipients.get(address.clone()).unwrap().unwrap();
-    check_recipient_status_for_distribute(e, &cert_data);
+    let mut recipients: Map<String, Option<CredentialData>> = read_recipients(e);
+    let mut credential_data: Option<CredentialData> = recipients
+        .get(verifiable_credential.recipient_did.clone())
+        .unwrap()
+        .unwrap();
+    check_recipient_status_for_distribute(e, &credential_data);
+    let credential_type = read_credential_type(e);
+    let credential_title = read_credential_title(e);
 
-    deposit_to_wallet(
-        e,
-        wallet_contract_id,
-        cert_data.id.clone(),
-        cid,
-        distribution_date,
-    );
+    deposit_to_wallet(e, wallet_contract_id, verifiable_credential);
 
-    cert_data.status = Status::Distribute;
-    cert_data.distribution_date = OptionU64::Some(distribution_date);
-    recipients.set(address.clone(), cert_data);
+    credential_data = Some(CredentialData::new(
+        verifiable_credential.did.clone(),
+        Status::Distributed,
+        verifiable_credential.recipient_did.clone(),
+        credential_type,
+        credential_title,
+        OptionU64::Some(verifiable_credential.issuance_date),
+        verifiable_credential.signature.clone(),
+    ));
+
+    recipients.set(verifiable_credential.recipient_did.clone(), credential_data);
     write_recipients(e, recipients);
     increment_supply(e);
 }
@@ -227,20 +238,18 @@ fn distribute_to_recipient(
 fn deposit_to_wallet(
     e: &Env,
     wallet_contract_id: BytesN<32>,
-    chaincert_id: Bytes,
-    cid: Bytes,
-    distribution_date: u64,
+    verifiable_credential: &VerifiableCredential,
 ) {
     let wallet_client = cert_wallet::Client::new(e, &wallet_contract_id);
     let distributor_contract = e.current_contract_address();
-    let expiration_date: OptionU64 = expiration_date(e, distribution_date);
-    let org_id = read_organization_id(e);
+    let expiration_date: OptionU64 = expiration_date(e, verifiable_credential.issuance_date);
+    let org_did = read_organization_did(e);
     wallet_client.deposit_chaincert(
-        &chaincert_id,
-        &cid,
+        &verifiable_credential.did,
+        &verifiable_credential.attestation,
         &distributor_contract,
-        &org_id,
-        &distribution_date,
+        &org_did,
+        &verifiable_credential.issuance_date,
         &expiration_date,
     );
 }
@@ -249,6 +258,6 @@ fn deposit_to_wallet(
 fn revoke_from_wallet(e: &Env, wallet_contract_id: BytesN<32>, chaincert_id: &Bytes) {
     let wallet_client = cert_wallet::Client::new(e, &wallet_contract_id);
     let distributor_contract = e.current_contract_address();
-    let org_id = read_organization_id(e);
+    let org_id = read_organization_did(e);
     wallet_client.revoke_chaincert(chaincert_id, &distributor_contract, &org_id);
 }

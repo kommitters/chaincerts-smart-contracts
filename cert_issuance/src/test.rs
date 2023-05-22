@@ -41,6 +41,51 @@ fn create_random_recipient_dids(e: &Env) -> Vec<String> {
     vec![e, recipient_1, recipient_2, recipient_3]
 }
 
+fn setup_initialized_and_distributed_contract(
+) -> (Env, Organization, VerifiableCredential, CertIssuanceClient) {
+    let e: Env = Default::default();
+    let recipient_address = Address::random(&e);
+    let recipient_did = String::from_slice(&e, "did:chaincerts:abc123");
+    let organization: Organization = Organization {
+        admin: Address::random(&e),
+        did: "did:chaincerts:org123".into_val(&e),
+    };
+    let wallet = create_wallet_contract(&e, &recipient_address, &organization.did);
+    let distribution_limit: Option<u32> = Option::Some(6);
+    let credential_params = CredentialParams {
+        file_storage: "FileBase".into_val(&e),
+        revocable: true,
+        expiration_time: OptionU64::None,
+        credential_type: String::from_slice(&e, "Work"),
+        credential_title: String::from_slice(&e, "Software Engineer"),
+    };
+    let cert_issuance = create_cert_issuance(
+        &e,
+        &distribution_limit,
+        &Option::None,
+        &organization,
+        &credential_params,
+    );
+
+    const ATTESTATION1: &str = "ipfs://QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
+
+    let verifiable_credential = VerifiableCredential {
+        did: "did:chaincerts:abc123#credential-xyz123".into_val(&e),
+        id: "c8b875a2-3f5d-4a63-b1c8-791be9b01c02".into_val(&e),
+        recipient_did,
+        signature: String::from_slice(&e, "MEUCIFZ5o9zSYiC9d0hvN6V73Y8yBm9n3MF8Hj"),
+        attestation: ATTESTATION1.into_val(&e),
+        issuance_date: 1679918400,
+    };
+
+    cert_issuance.distribute(
+        &organization.admin,
+        &wallet.contract_id,
+        &verifiable_credential,
+    );
+    (e, organization, verifiable_credential, cert_issuance)
+}
+
 #[test]
 fn test_create_cert_data() {
     let e: Env = Default::default();
@@ -249,7 +294,7 @@ fn test_distribute_with_distribution_limit_contract() {
 
     const ATTESTATION1: &str = "ipfs://QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
 
-    let verificable_credential = VerifiableCredential {
+    let verifiable_credential = VerifiableCredential {
         did: "did:chaincerts:abc123#credential-xyz123".into_val(&e),
         id: "c8b875a2-3f5d-4a63-b1c8-791be9b01c02".into_val(&e),
         recipient_did: recipient1_did,
@@ -261,11 +306,11 @@ fn test_distribute_with_distribution_limit_contract() {
     cert_issuance.distribute(
         &organization.admin,
         &wallet.contract_id,
-        &verificable_credential,
+        &verifiable_credential,
     );
     let recipients: Map<String, Option<CredentialData>> = cert_issuance.recipients();
     let cert_data = recipients
-        .get(verificable_credential.recipient_did)
+        .get(verifiable_credential.recipient_did)
         .unwrap()
         .unwrap()
         .unwrap();
@@ -849,4 +894,79 @@ fn test_revoke_no_revocable_cert() {
     );
 
     cert_issuance.revoke(&organization.admin, &recipient_did, &wallet.contract_id);
+}
+
+#[test]
+fn test_attest_with_valid_params() {
+    let (_e, organization, verifiable_credential, cert_issuance) =
+        setup_initialized_and_distributed_contract();
+
+    let attest = cert_issuance.attest(
+        &verifiable_credential.did,
+        &organization.did,
+        &verifiable_credential.recipient_did,
+        &verifiable_credential.signature,
+    );
+
+    assert!(attest)
+}
+
+#[test]
+fn test_attest_with_invalid_credential() {
+    let (e, organization, verifiable_credential, cert_issuance) =
+        setup_initialized_and_distributed_contract();
+
+    let attest = cert_issuance.attest(
+        &"did:chaincerts:abc123#credential-invalid".into_val(&e),
+        &organization.did,
+        &verifiable_credential.recipient_did,
+        &verifiable_credential.signature,
+    );
+
+    assert!(!attest)
+}
+
+#[test]
+fn test_attest_with_invalid_issuer() {
+    let (e, _organization, verifiable_credential, cert_issuance) =
+        setup_initialized_and_distributed_contract();
+
+    let attest = cert_issuance.attest(
+        &verifiable_credential.did,
+        &"did:chaincerts:invalid-org-123".into_val(&e),
+        &verifiable_credential.recipient_did,
+        &verifiable_credential.signature,
+    );
+
+    assert!(!attest)
+}
+
+#[test]
+fn test_attest_with_invalid_recipient() {
+    let (e, organization, verifiable_credential, cert_issuance) =
+        setup_initialized_and_distributed_contract();
+
+    let attest = cert_issuance.attest(
+        &verifiable_credential.did,
+        &organization.did,
+        &"did:chaincerts:invalid-recipient-123".into_val(&e),
+        &verifiable_credential.signature,
+    );
+
+    assert!(!attest)
+}
+
+#[test]
+fn test_attest_with_invalid_signature() {
+    let (e, organization, verifiable_credential, cert_issuance) =
+        setup_initialized_and_distributed_contract();
+
+    let attest = cert_issuance.attest(
+        &verifiable_credential.did,
+        &organization.did,
+        &verifiable_credential.recipient_did,
+        &String::from_slice(&e, "Invalid signature"),
+    );
+
+    assert!(!attest)
 }

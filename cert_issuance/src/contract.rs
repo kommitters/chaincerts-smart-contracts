@@ -222,6 +222,7 @@ fn distribute_to_recipient(
     credential_data = Some(CredentialData::new(
         verifiable_credential.did.clone(),
         Status::Distributed,
+        verifiable_credential.recipient_did.clone(),
         credential_type,
         credential_title,
         OptionU64::Some(verifiable_credential.issuance_date),

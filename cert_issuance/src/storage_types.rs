@@ -23,6 +23,7 @@ pub enum Status {
 pub struct CredentialData {
     pub did: Bytes,
     pub status: Status,
+    pub recipient_id: String,
     pub credential_type: String,
     pub credential_title: String,
     pub issuance_date: OptionU64,
@@ -33,6 +34,7 @@ impl CredentialData {
     pub fn new(
         did: Bytes,
         status: Status,
+        recipient_id: String,
         credential_type: String,
         credential_title: String,
         issuance_date: OptionU64,
@@ -41,6 +43,7 @@ impl CredentialData {
         CredentialData {
             did,
             status,
+            recipient_id,
             credential_type,
             credential_title,
             issuance_date,

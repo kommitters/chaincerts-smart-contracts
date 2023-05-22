@@ -50,6 +50,7 @@ fn test_create_cert_data() {
     let cert_data = CredentialData::new(
         did.clone(),
         status.clone(),
+        String::from_slice(&e, "did:chaincerts:abc123"),
         String::from_slice(&e, "Work"),
         String::from_slice(&e, "Software Engineer"),
         issuance_date.clone(),

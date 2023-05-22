@@ -81,6 +81,7 @@ impl IssuanceTrait for CertIssuance {
         }
     }
 
+    /// Attest the authenticity and legitimacy of a credential.
     fn attest(
         e: Env,
         credential: Bytes,

@@ -51,6 +51,7 @@ pub trait IssuanceTrait {
     /// Revoke a Chaincert from a recipient.
     fn revoke(e: Env, admin: Address, recipient: String, wallet_contract_id: BytesN<32>);
 
+    /// Attest the authenticity and legitimacy of a credential.
     fn attest(
         e: Env,
         credential: Bytes,

@@ -9,14 +9,16 @@ use crate::metadata::{
     read_expiration_time, read_file_storage, read_name, read_revocable, read_revoked_credentials,
     read_supply, write_credential_title, write_credential_type, write_distribution_limit,
     write_expiration_time, write_file_storage, write_name, write_recipients, write_revocable,
-    write_revoked_credential, write_supply,
+    write_revoked_credentials, write_supply,
 };
 use crate::organization::{
     check_admin, has_organization, read_organization_did, write_organization,
 };
 use crate::recipients::{add_recipient, create_recipients, read_recipients};
-use crate::storage_types::{CredentialData, Info, Organization};
-use soroban_sdk::{contractimpl, panic_with_error, Address, Bytes, BytesN, Env, Map, String, Vec};
+use crate::storage_types::{CredentialData, Info, Organization, RevokedCredential};
+use soroban_sdk::{
+    contractimpl, panic_with_error, Address, Bytes, BytesN, Env, Map, String, Vec,
+};
 
 pub struct IssuanceContract;
 
@@ -38,7 +40,7 @@ impl IssuanceTrait for IssuanceContract {
         write_file_storage(&e, credential_params.file_storage);
         write_name(&e, name);
         write_revocable(&e, credential_params.revocable);
-        write_revoked_credential(&e, Vec::<CredentialData>::new(&e));
+        write_revoked_credentials(&e, Map::<String, RevokedCredential>::new(&e));
         write_expiration_time(&e, credential_params.expiration_time);
         write_supply(&e, 0);
         write_credential_type(&e, credential_params.credential_type);
@@ -62,7 +64,7 @@ impl IssuanceTrait for IssuanceContract {
     }
 
     /// Revoke a Chaincert from a recipient.
-    fn revoke(e: Env, admin: Address, recipient_did: String) {
+    fn revoke(e: Env, admin: Address, recipient_did: String, revoked_at: u64) {
         check_revocable(&e);
         check_admin(&e, &admin);
         admin.require_auth();
@@ -71,10 +73,11 @@ impl IssuanceTrait for IssuanceContract {
             match credential_data.unwrap() {
                 Some(data) => {
                     let mut revoked_credentials = read_revoked_credentials(&e);
-                    revoked_credentials.push_front(data);
+                    let revoked_credential = RevokedCredential::new(data, revoked_at);
+                    revoked_credentials.set(recipient_did.clone(), revoked_credential);
                     recipients.remove(recipient_did);
                     write_recipients(&e, recipients);
-                    write_revoked_credential(&e, revoked_credentials);
+                    write_revoked_credentials(&e, revoked_credentials);
                 }
                 None => {
                     panic_with_error!(e, ContractError::NoRevocable);
@@ -93,8 +96,7 @@ impl IssuanceTrait for IssuanceContract {
         recipient: String,
         signature: String,
     ) -> bool {
-        let organization_did: Bytes = read_organization_did(&e);
-        if issuer != organization_did {
+        if issuer != read_organization_did(&e) {
             return false;
         }
 
@@ -156,10 +158,10 @@ impl IssuanceTrait for IssuanceContract {
     }
 
     /// Get all revoked credentials.
-    fn revoked_credentials(e: Env, admin: Address) -> Vec<CredentialData> {
+    fn revoked_credentials(e: Env, admin: Address) -> Vec<RevokedCredential> {
         check_admin(&e, &admin);
         admin.require_auth();
-        read_revoked_credentials(&e)
+        read_revoked_credentials(&e).values()
     }
 }
 

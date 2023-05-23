@@ -5,7 +5,7 @@ use soroban_sdk::{contracttype, Address, Bytes, BytesN, Env, Map, String, Vec};
 
 use crate::{
     did_contract::OptionU64,
-    storage_types::{CredentialData, Info, Organization},
+    storage_types::{CredentialData, Info, Organization, RevokedCredential},
 };
 
 #[contracttype]
@@ -49,7 +49,7 @@ pub trait IssuanceTrait {
     );
 
     /// Revoke a Chaincert from a recipient.
-    fn revoke(e: Env, admin: Address, recipient: String);
+    fn revoke(e: Env, admin: Address, recipient: String, revoked_at: u64);
 
     /// Attest the authenticity and legitimacy of a credential.
     fn attest(
@@ -85,5 +85,5 @@ pub trait IssuanceTrait {
     fn info(e: Env) -> Info;
 
     /// Get all revoked credentials.
-    fn revoked_credentials(e: Env, admin: Address) -> Vec<CredentialData>;
+    fn revoked_credentials(e: Env, admin: Address) -> Vec<RevokedCredential>;
 }

@@ -22,6 +22,13 @@ pub struct CredentialData {
     pub signature: String,
 }
 
+#[contracttype]
+#[derive(Clone, Debug, PartialEq)]
+pub struct RevokedCredential {
+    pub credential_data: CredentialData,
+    pub revoked_at: u64,
+}
+
 impl CredentialData {
     pub fn new(
         did: Bytes,
@@ -38,6 +45,15 @@ impl CredentialData {
             credential_title,
             issuance_date,
             signature,
+        }
+    }
+}
+
+impl RevokedCredential {
+    pub fn new(credential_data: CredentialData, revoked_at: u64) -> RevokedCredential {
+        RevokedCredential {
+            credential_data,
+            revoked_at,
         }
     }
 }

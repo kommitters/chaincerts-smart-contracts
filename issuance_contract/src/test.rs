@@ -1,7 +1,7 @@
 #![cfg(test)]
 use crate::did_contract::{self, OptionU64};
 use crate::issuance_trait::{CredentialParams, VerifiableCredential};
-use crate::storage_types::{CredentialData, Info, Organization};
+use crate::storage_types::{CredentialData, Info, Organization, RevokedCredential};
 use crate::{contract::IssuanceContract, IssuanceContractClient};
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{vec, Address, Bytes, Env, IntoVal, Map, String, Vec};
@@ -435,6 +435,8 @@ fn test_revoke_chaincert() {
         issuance_date: 1679918400,
     };
 
+    let revoked_at: u64 = 1684875611;
+
     issuance_contract.distribute(
         &organization.admin,
         &wallet.contract_id,
@@ -448,7 +450,11 @@ fn test_revoke_chaincert() {
         .unwrap();
     assert!(cert_data.is_some());
 
-    issuance_contract.revoke(&organization.admin, &verifiable_credential.recipient_did);
+    issuance_contract.revoke(
+        &organization.admin,
+        &verifiable_credential.recipient_did,
+        &revoked_at,
+    );
 
     let revoked_credentials = issuance_contract.revoked_credentials(&organization.admin);
 
@@ -461,10 +467,15 @@ fn test_revoke_chaincert() {
         signature: verifiable_credential.signature,
     };
 
+    let revoked_credential = RevokedCredential {
+        credential_data,
+        revoked_at,
+    };
+
     assert_eq!(revoked_credentials.len(), 1);
     assert_eq!(
         revoked_credentials.get_unchecked(0).unwrap(),
-        credential_data
+        revoked_credential
     );
 }
 
@@ -753,13 +764,19 @@ fn test_revoke_admin_error() {
         issuance_date: 1679918400,
     };
 
+    let revoked_at: u64 = 1684875611;
+
     issuance_contract.distribute(
         &organization.admin,
         &wallet.contract_id,
         &verifiable_credential,
     );
 
-    issuance_contract.revoke(&Address::random(&e), &verifiable_credential.recipient_did);
+    issuance_contract.revoke(
+        &Address::random(&e),
+        &verifiable_credential.recipient_did,
+        &revoked_at,
+    );
 }
 
 #[test]
@@ -786,6 +803,8 @@ fn test_revoke_credential_data_none_error() {
         credential_title: String::from_slice(&e, "Software Engineer"),
     };
 
+    let revoked_at: u64 = 1684875611;
+
     let issuance_contract = create_issuance_contract(
         &e,
         &Option::None,
@@ -794,7 +813,7 @@ fn test_revoke_credential_data_none_error() {
         &credential_params,
     );
 
-    issuance_contract.revoke(&organization.admin, &recipient_did);
+    issuance_contract.revoke(&organization.admin, &recipient_did, &revoked_at);
 }
 
 #[test]
@@ -842,14 +861,24 @@ fn test_revoke_status_revoked_error() {
         issuance_date: 1679918400,
     };
 
+    let revoked_at: u64 = 1684875611;
+
     issuance_contract.distribute(
         &organization.admin,
         &wallet.contract_id,
         &verifiable_credential,
     );
 
-    issuance_contract.revoke(&organization.admin, &verifiable_credential.recipient_did);
-    issuance_contract.revoke(&organization.admin, &verifiable_credential.recipient_did);
+    issuance_contract.revoke(
+        &organization.admin,
+        &verifiable_credential.recipient_did,
+        &revoked_at,
+    );
+    issuance_contract.revoke(
+        &organization.admin,
+        &verifiable_credential.recipient_did,
+        &revoked_at,
+    );
 }
 
 #[test]
@@ -876,6 +905,8 @@ fn test_revoke_no_revocable_cert() {
         credential_title: String::from_slice(&e, "Software Engineer"),
     };
 
+    let revoked_at: u64 = 1684875611;
+
     let issuance_contract = create_issuance_contract(
         &e,
         &Option::None,
@@ -884,7 +915,7 @@ fn test_revoke_no_revocable_cert() {
         &credential_params,
     );
 
-    issuance_contract.revoke(&organization.admin, &recipient_did);
+    issuance_contract.revoke(&organization.admin, &recipient_did, &revoked_at);
 }
 
 #[test]

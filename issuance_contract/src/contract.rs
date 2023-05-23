@@ -3,7 +3,9 @@
 //! Module containing the main contract logic.
 use crate::did_contract::{self, OptionU64};
 use crate::error::ContractError;
-use crate::issuance_trait::{CredentialParams, IssuanceTrait, VerifiableCredential};
+use crate::issuance_trait::{
+    CredentialParams, CredentialStatus, IssuanceTrait, VerifiableCredential,
+};
 use crate::metadata::{
     increment_supply, read_credential_title, read_credential_type, read_distribution_limit,
     read_expiration_time, read_file_storage, read_name, read_revocable, read_revoked_credentials,
@@ -16,9 +18,7 @@ use crate::organization::{
 };
 use crate::recipients::{add_recipient, create_recipients, read_recipients};
 use crate::storage_types::{CredentialData, Info, Organization, RevokedCredential};
-use soroban_sdk::{
-    contractimpl, panic_with_error, Address, Bytes, BytesN, Env, Map, String, Vec,
-};
+use soroban_sdk::{contractimpl, panic_with_error, Address, Bytes, BytesN, Env, Map, String, Vec};
 
 pub struct IssuanceContract;
 
@@ -64,7 +64,7 @@ impl IssuanceTrait for IssuanceContract {
     }
 
     /// Revoke a Chaincert from a recipient.
-    fn revoke(e: Env, admin: Address, recipient_did: String, revoked_at: u64) {
+    fn revoke(e: Env, admin: Address, recipient_did: String, revocation_date: u64) {
         check_revocable(&e);
         check_admin(&e, &admin);
         admin.require_auth();
@@ -73,7 +73,7 @@ impl IssuanceTrait for IssuanceContract {
             match credential_data.unwrap() {
                 Some(data) => {
                     let mut revoked_credentials = read_revoked_credentials(&e);
-                    let revoked_credential = RevokedCredential::new(data, revoked_at);
+                    let revoked_credential = RevokedCredential::new(data, revocation_date);
                     revoked_credentials.set(recipient_did.clone(), revoked_credential);
                     recipients.remove(recipient_did);
                     write_recipients(&e, recipients);
@@ -95,18 +95,54 @@ impl IssuanceTrait for IssuanceContract {
         issuer: Bytes,
         recipient: String,
         signature: String,
-    ) -> bool {
+    ) -> CredentialStatus {
+        // Check issuer
         if issuer != read_organization_did(&e) {
-            return false;
+            return CredentialStatus {
+                status: String::from_slice(&e, "invalid"),
+                expiration_date: OptionU64::None,
+                revocation_date: OptionU64::None,
+            };
         }
 
+        // Check if revoked
+        let revoked_credentials: Map<String, RevokedCredential> = read_revoked_credentials(&e);
+        if let Some(revoked_credential_result) = revoked_credentials.get(recipient.clone()) {
+            if let Ok(revoked_credential) = revoked_credential_result {
+                if revoked_credential.credential_data.did == credential
+                    && revoked_credential.credential_data.signature == signature
+                {
+                    let expiration_date = read_expiration_time(&e);
+                    return CredentialStatus {
+                        status: String::from_slice(&e, "revoked"),
+                        expiration_date,
+                        revocation_date: OptionU64::Some(revoked_credential.revocation_date),
+                    };
+                }
+            }
+        }
+
+        // Check if valid
         let recipients_map: Map<String, Option<CredentialData>> = read_recipients(&e);
         if let Some(recipient_data) = recipients_map.get(recipient) {
             if let Some(data) = recipient_data.unwrap() {
-                return data.signature == signature && data.did == credential;
+                if data.signature == signature && data.did == credential {
+                    let expiration_date = read_expiration_time(&e);
+                    return CredentialStatus {
+                        status: String::from_slice(&e, "valid"),
+                        expiration_date,
+                        revocation_date: OptionU64::None,
+                    };
+                }
             }
         }
-        false
+
+        // Invalid
+        CredentialStatus {
+            status: String::from_slice(&e, "invalid"),
+            expiration_date: OptionU64::None,
+            revocation_date: OptionU64::None,
+        }
     }
 
     /// Get the Chaincert name.

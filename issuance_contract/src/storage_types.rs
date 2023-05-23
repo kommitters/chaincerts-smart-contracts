@@ -26,7 +26,7 @@ pub struct CredentialData {
 #[derive(Clone, Debug, PartialEq)]
 pub struct RevokedCredential {
     pub credential_data: CredentialData,
-    pub revoked_at: u64,
+    pub revocation_date: u64,
 }
 
 impl CredentialData {
@@ -50,10 +50,10 @@ impl CredentialData {
 }
 
 impl RevokedCredential {
-    pub fn new(credential_data: CredentialData, revoked_at: u64) -> RevokedCredential {
+    pub fn new(credential_data: CredentialData, revocation_date: u64) -> RevokedCredential {
         RevokedCredential {
             credential_data,
-            revoked_at,
+            revocation_date,
         }
     }
 }

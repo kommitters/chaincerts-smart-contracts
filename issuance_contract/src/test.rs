@@ -1,6 +1,6 @@
 #![cfg(test)]
 use crate::did_contract::{self, OptionU64};
-use crate::issuance_trait::{CredentialParams, VerifiableCredential};
+use crate::issuance_trait::{CredentialParams, CredentialStatus, VerifiableCredential};
 use crate::storage_types::{CredentialData, Info, Organization, RevokedCredential};
 use crate::{contract::IssuanceContract, IssuanceContractClient};
 use soroban_sdk::testutils::Address as _;
@@ -435,7 +435,7 @@ fn test_revoke_chaincert() {
         issuance_date: 1679918400,
     };
 
-    let revoked_at: u64 = 1684875611;
+    let revocation_date: u64 = 1684875611;
 
     issuance_contract.distribute(
         &organization.admin,
@@ -453,7 +453,7 @@ fn test_revoke_chaincert() {
     issuance_contract.revoke(
         &organization.admin,
         &verifiable_credential.recipient_did,
-        &revoked_at,
+        &revocation_date,
     );
 
     let revoked_credentials = issuance_contract.revoked_credentials(&organization.admin);
@@ -469,7 +469,7 @@ fn test_revoke_chaincert() {
 
     let revoked_credential = RevokedCredential {
         credential_data,
-        revoked_at,
+        revocation_date,
     };
 
     assert_eq!(revoked_credentials.len(), 1);
@@ -764,7 +764,7 @@ fn test_revoke_admin_error() {
         issuance_date: 1679918400,
     };
 
-    let revoked_at: u64 = 1684875611;
+    let revocation_date: u64 = 1684875611;
 
     issuance_contract.distribute(
         &organization.admin,
@@ -775,7 +775,7 @@ fn test_revoke_admin_error() {
     issuance_contract.revoke(
         &Address::random(&e),
         &verifiable_credential.recipient_did,
-        &revoked_at,
+        &revocation_date,
     );
 }
 
@@ -803,7 +803,7 @@ fn test_revoke_credential_data_none_error() {
         credential_title: String::from_slice(&e, "Software Engineer"),
     };
 
-    let revoked_at: u64 = 1684875611;
+    let revocation_date: u64 = 1684875611;
 
     let issuance_contract = create_issuance_contract(
         &e,
@@ -813,7 +813,7 @@ fn test_revoke_credential_data_none_error() {
         &credential_params,
     );
 
-    issuance_contract.revoke(&organization.admin, &recipient_did, &revoked_at);
+    issuance_contract.revoke(&organization.admin, &recipient_did, &revocation_date);
 }
 
 #[test]
@@ -861,7 +861,7 @@ fn test_revoke_status_revoked_error() {
         issuance_date: 1679918400,
     };
 
-    let revoked_at: u64 = 1684875611;
+    let revocation_date: u64 = 1684875611;
 
     issuance_contract.distribute(
         &organization.admin,
@@ -872,12 +872,12 @@ fn test_revoke_status_revoked_error() {
     issuance_contract.revoke(
         &organization.admin,
         &verifiable_credential.recipient_did,
-        &revoked_at,
+        &revocation_date,
     );
     issuance_contract.revoke(
         &organization.admin,
         &verifiable_credential.recipient_did,
-        &revoked_at,
+        &revocation_date,
     );
 }
 
@@ -905,7 +905,7 @@ fn test_revoke_no_revocable_cert() {
         credential_title: String::from_slice(&e, "Software Engineer"),
     };
 
-    let revoked_at: u64 = 1684875611;
+    let revocation_date: u64 = 1684875611;
 
     let issuance_contract = create_issuance_contract(
         &e,
@@ -915,13 +915,19 @@ fn test_revoke_no_revocable_cert() {
         &credential_params,
     );
 
-    issuance_contract.revoke(&organization.admin, &recipient_did, &revoked_at);
+    issuance_contract.revoke(&organization.admin, &recipient_did, &revocation_date);
 }
 
 #[test]
-fn test_attest_with_valid_params() {
-    let (_e, organization, verifiable_credential, issuance_contract) =
+fn test_attest_valid() {
+    let (e, organization, verifiable_credential, issuance_contract) =
         setup_initialized_and_distributed_contract();
+
+    let credential_status = CredentialStatus {
+        status: String::from_slice(&e, "valid"),
+        expiration_date: issuance_contract.expiration_time(),
+        revocation_date: OptionU64::None,
+    };
 
     let attest = issuance_contract.attest(
         &verifiable_credential.did,
@@ -930,13 +936,47 @@ fn test_attest_with_valid_params() {
         &verifiable_credential.signature,
     );
 
-    assert!(attest)
+    assert_eq!(attest, credential_status)
+}
+
+#[test]
+fn test_attest_revoked() {
+    let (e, organization, verifiable_credential, issuance_contract) =
+        setup_initialized_and_distributed_contract();
+
+    let revocation_date: u64 = 1684875611;
+    let credential_status = CredentialStatus {
+        status: String::from_slice(&e, "revoked"),
+        expiration_date: issuance_contract.expiration_time(),
+        revocation_date: OptionU64::Some(revocation_date),
+    };
+
+    issuance_contract.revoke(
+        &organization.admin,
+        &verifiable_credential.recipient_did,
+        &revocation_date,
+    );
+
+    let attest = issuance_contract.attest(
+        &verifiable_credential.did,
+        &organization.did,
+        &verifiable_credential.recipient_did,
+        &verifiable_credential.signature,
+    );
+
+    assert_eq!(attest, credential_status)
 }
 
 #[test]
 fn test_attest_with_invalid_credential() {
     let (e, organization, verifiable_credential, issuance_contract) =
         setup_initialized_and_distributed_contract();
+
+    let credential_status = CredentialStatus {
+        status: String::from_slice(&e, "invalid"),
+        expiration_date: OptionU64::None,
+        revocation_date: OptionU64::None,
+    };
 
     let attest = issuance_contract.attest(
         &"did:chaincerts:abc123#credential-invalid".into_val(&e),
@@ -945,13 +985,19 @@ fn test_attest_with_invalid_credential() {
         &verifiable_credential.signature,
     );
 
-    assert!(!attest)
+    assert_eq!(attest, credential_status)
 }
 
 #[test]
 fn test_attest_with_invalid_issuer() {
     let (e, _organization, verifiable_credential, issuance_contract) =
         setup_initialized_and_distributed_contract();
+
+    let credential_status = CredentialStatus {
+        status: String::from_slice(&e, "invalid"),
+        expiration_date: OptionU64::None,
+        revocation_date: OptionU64::None,
+    };
 
     let attest = issuance_contract.attest(
         &verifiable_credential.did,
@@ -960,13 +1006,19 @@ fn test_attest_with_invalid_issuer() {
         &verifiable_credential.signature,
     );
 
-    assert!(!attest)
+    assert_eq!(attest, credential_status)
 }
 
 #[test]
 fn test_attest_with_invalid_recipient() {
     let (e, organization, verifiable_credential, issuance_contract) =
         setup_initialized_and_distributed_contract();
+
+    let credential_status = CredentialStatus {
+        status: String::from_slice(&e, "invalid"),
+        expiration_date: OptionU64::None,
+        revocation_date: OptionU64::None,
+    };
 
     let attest = issuance_contract.attest(
         &verifiable_credential.did,
@@ -975,13 +1027,19 @@ fn test_attest_with_invalid_recipient() {
         &verifiable_credential.signature,
     );
 
-    assert!(!attest)
+    assert_eq!(attest, credential_status)
 }
 
 #[test]
 fn test_attest_with_invalid_signature() {
     let (e, organization, verifiable_credential, issuance_contract) =
         setup_initialized_and_distributed_contract();
+
+    let credential_status = CredentialStatus {
+        status: String::from_slice(&e, "invalid"),
+        expiration_date: OptionU64::None,
+        revocation_date: OptionU64::None,
+    };
 
     let attest = issuance_contract.attest(
         &verifiable_credential.did,
@@ -990,5 +1048,5 @@ fn test_attest_with_invalid_signature() {
         &String::from_slice(&e, "Invalid signature"),
     );
 
-    assert!(!attest)
+    assert_eq!(attest, credential_status)
 }

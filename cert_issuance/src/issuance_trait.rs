@@ -49,7 +49,7 @@ pub trait IssuanceTrait {
     );
 
     /// Revoke a Chaincert from a recipient.
-    fn revoke(e: Env, admin: Address, recipient: String, wallet_contract_id: BytesN<32>);
+    fn revoke(e: Env, admin: Address, recipient: String);
 
     /// Attest the authenticity and legitimacy of a credential.
     fn attest(
@@ -81,6 +81,9 @@ pub trait IssuanceTrait {
     /// Get the recipients data in the contract.
     fn recipients(e: Env) -> Map<String, Option<CredentialData>>;
 
-    // Get all relevant contract data.
+    /// Get all relevant contract data.
     fn info(e: Env) -> Info;
+
+    /// Get all revoked credentials.
+    fn revoked_credentials(e: Env, admin: Address) -> Vec<CredentialData>;
 }

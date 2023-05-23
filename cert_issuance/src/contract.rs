@@ -6,15 +6,16 @@ use crate::error::ContractError;
 use crate::issuance_trait::{CredentialParams, IssuanceTrait, VerifiableCredential};
 use crate::metadata::{
     increment_supply, read_credential_title, read_credential_type, read_distribution_limit,
-    read_expiration_time, read_file_storage, read_name, read_revocable, read_supply,
-    write_credential_title, write_credential_type, write_distribution_limit, write_expiration_time,
-    write_file_storage, write_name, write_recipients, write_revocable, write_supply,
+    read_expiration_time, read_file_storage, read_name, read_revocable, read_revoked_credentials,
+    read_supply, write_credential_title, write_credential_type, write_distribution_limit,
+    write_expiration_time, write_file_storage, write_name, write_recipients, write_revocable,
+    write_revoked_credential, write_supply,
 };
 use crate::organization::{
     check_admin, has_organization, read_organization_did, write_organization,
 };
 use crate::recipients::{add_recipient, create_recipients, read_recipients};
-use crate::storage_types::{CredentialData, Info, Organization, Status};
+use crate::storage_types::{CredentialData, Info, Organization};
 use soroban_sdk::{contractimpl, panic_with_error, Address, Bytes, BytesN, Env, Map, String, Vec};
 
 pub struct CertIssuance;
@@ -37,6 +38,7 @@ impl IssuanceTrait for CertIssuance {
         write_file_storage(&e, credential_params.file_storage);
         write_name(&e, name);
         write_revocable(&e, credential_params.revocable);
+        write_revoked_credential(&e, Vec::<CredentialData>::new(&e));
         write_expiration_time(&e, credential_params.expiration_time);
         write_supply(&e, 0);
         write_credential_type(&e, credential_params.credential_type);
@@ -59,25 +61,27 @@ impl IssuanceTrait for CertIssuance {
         apply_distribution(e, wallet_contract_id, &verifiable_credential);
     }
 
-    /// Revoke a Chaincert from a holder.
-    fn revoke(e: Env, admin: Address, holder: String, wallet_contract_id: BytesN<32>) {
+    /// Revoke a Chaincert from a recipient.
+    fn revoke(e: Env, admin: Address, recipient_did: String) {
         check_revocable(&e);
         check_admin(&e, &admin);
         admin.require_auth();
         let mut recipients: Map<String, Option<CredentialData>> = read_recipients(&e);
-        let cert_data: Option<CredentialData> = recipients.get(holder.clone()).unwrap().unwrap();
-
-        match cert_data {
-            Some(mut data) => {
-                check_recipient_status_for_revoke(&e, &data);
-                revoke_from_wallet(&e, wallet_contract_id, &data.did);
-                data.status = Status::Revoked;
-                recipients.set(holder, Some(data));
-                write_recipients(&e, recipients);
+        if let Some(credential_data) = recipients.get(recipient_did.clone()) {
+            match credential_data.unwrap() {
+                Some(data) => {
+                    let mut revoked_credentials = read_revoked_credentials(&e);
+                    revoked_credentials.push_front(data);
+                    recipients.remove(recipient_did);
+                    write_recipients(&e, recipients);
+                    write_revoked_credential(&e, revoked_credentials);
+                }
+                None => {
+                    panic_with_error!(e, ContractError::NoRevocable);
+                }
             }
-            None => {
-                panic_with_error!(e, ContractError::NoRevocable);
-            }
+        } else {
+            panic_with_error!(e, ContractError::NoRevocable);
         }
     }
 
@@ -146,7 +150,16 @@ impl IssuanceTrait for CertIssuance {
             expiration_time: read_expiration_time(&e),
             distribution_limit: read_distribution_limit(&e),
             supply: read_supply(&e),
+            credential_type: read_credential_type(&e),
+            credential_title: read_credential_title(&e),
         }
+    }
+
+    /// Get all revoked credentials.
+    fn revoked_credentials(e: Env, admin: Address) -> Vec<CredentialData> {
+        check_admin(&e, &admin);
+        admin.require_auth();
+        read_revoked_credentials(&e)
     }
 }
 
@@ -211,13 +224,6 @@ fn check_recipient_status_for_distribute(e: &Env, recipient_data: &Option<Creden
     }
 }
 
-/// Checks that the status of the CertData of the recipient_data to revoke is Distributed.
-fn check_recipient_status_for_revoke(e: &Env, recipient_data: &CredentialData) {
-    if recipient_data.status != Status::Distributed {
-        panic_with_error!(e, ContractError::NoRevocable);
-    }
-}
-
 fn check_revocable(e: &Env) {
     if !read_revocable(e) {
         panic_with_error!(e, ContractError::NoRevocable);
@@ -243,7 +249,6 @@ fn distribute_to_recipient(
 
     credential_data = Some(CredentialData::new(
         verifiable_credential.did.clone(),
-        Status::Distributed,
         verifiable_credential.recipient_did.clone(),
         credential_type,
         credential_title,
@@ -274,12 +279,4 @@ fn deposit_to_wallet(
         &verifiable_credential.issuance_date,
         &expiration_date,
     );
-}
-
-/// Invokes a wallet contract to execute a chaincert revocation.
-fn revoke_from_wallet(e: &Env, wallet_contract_id: BytesN<32>, chaincert_id: &Bytes) {
-    let wallet_client = cert_wallet::Client::new(e, &wallet_contract_id);
-    let distributor_contract = e.current_contract_address();
-    let org_id = read_organization_did(e);
-    wallet_client.revoke_chaincert(chaincert_id, &distributor_contract, &org_id);
 }

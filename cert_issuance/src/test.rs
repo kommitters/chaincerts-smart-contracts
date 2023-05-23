@@ -1,7 +1,7 @@
 #![cfg(test)]
 use crate::cert_wallet::{self, OptionU64};
 use crate::issuance_trait::{CredentialParams, VerifiableCredential};
-use crate::storage_types::{CredentialData, Info, Organization, Status};
+use crate::storage_types::{CredentialData, Info, Organization};
 use crate::{contract::CertIssuance, CertIssuanceClient};
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{vec, Address, Bytes, Env, IntoVal, Map, String, Vec};
@@ -90,11 +90,9 @@ fn setup_initialized_and_distributed_contract(
 fn test_create_cert_data() {
     let e: Env = Default::default();
     let did: Bytes = "did:chaincerts:abc123#credential-xyz123".into_val(&e);
-    let status = Status::Distributed;
     let issuance_date = OptionU64::Some(1711195200);
     let cert_data = CredentialData::new(
         did.clone(),
-        status.clone(),
         String::from_slice(&e, "did:chaincerts:abc123"),
         String::from_slice(&e, "Work"),
         String::from_slice(&e, "Software Engineer"),
@@ -102,7 +100,6 @@ fn test_create_cert_data() {
         String::from_slice(&e, "MEUCIFZ5o9zSYiC9d0hvN6V73Y8yBm9n3MF8Hj"),
     );
     assert_eq!(cert_data.did, did);
-    assert_eq!(cert_data.status, status);
     assert_eq!(cert_data.issuance_date, issuance_date);
 }
 
@@ -252,6 +249,8 @@ fn test_get_contract_info() {
         expiration_time: OptionU64::None,
         distribution_limit: 6,
         supply: 0,
+        credential_type: String::from_slice(&e, "Work"),
+        credential_title: String::from_slice(&e, "Software Engineer"),
     };
 
     let info_2 = Info {
@@ -260,6 +259,8 @@ fn test_get_contract_info() {
         expiration_time: OptionU64::Some(31556926),
         distribution_limit: 6,
         supply: 0,
+        credential_type: String::from_slice(&e, "Work"),
+        credential_title: String::from_slice(&e, "Software Engineer"),
     };
 
     assert_eq!(cert_issuance.info(), info);
@@ -309,13 +310,7 @@ fn test_distribute_with_distribution_limit_contract() {
         &verifiable_credential,
     );
     let recipients: Map<String, Option<CredentialData>> = cert_issuance.recipients();
-    let cert_data = recipients
-        .get(verifiable_credential.recipient_did)
-        .unwrap()
-        .unwrap()
-        .unwrap();
 
-    assert_eq!(cert_data.status, Status::Distributed);
     assert_eq!(cert_issuance.supply(), 1);
     assert_eq!(recipients.len(), 1);
     assert_eq!(wallet.get_chaincerts().len(), 1);
@@ -354,7 +349,7 @@ fn test_distribute_with_initial_recipients() {
     );
 
     let mut recipients = cert_issuance.recipients();
-    let mut cert_data = recipients.get(recipient1_did.clone()).unwrap().unwrap();
+    let cert_data = recipients.get(recipient1_did.clone()).unwrap().unwrap();
     assert_eq!(cert_data, Option::None);
 
     let verifiable_credential = VerifiableCredential {
@@ -373,12 +368,7 @@ fn test_distribute_with_initial_recipients() {
     );
 
     recipients = cert_issuance.recipients();
-    cert_data = recipients
-        .get(verifiable_credential.recipient_did)
-        .unwrap()
-        .unwrap();
 
-    assert_eq!(cert_data.unwrap().status, Status::Distributed);
     assert_eq!(cert_issuance.supply(), 1);
     assert_eq!(recipients.len(), 3);
     assert_eq!(wallet.get_chaincerts().len(), 1);
@@ -434,30 +424,31 @@ fn test_revoke_chaincert() {
         &verifiable_credential,
     );
 
-    let mut recipients = cert_issuance.recipients();
-    let mut cert_data = recipients
+    let recipients = cert_issuance.recipients();
+    let cert_data = recipients
         .get(verifiable_credential.recipient_did.clone())
         .unwrap()
-        .unwrap()
         .unwrap();
-    assert_eq!(cert_data.status, Status::Distributed);
+    assert!(cert_data.is_some());
 
-    cert_issuance.revoke(
-        &organization.admin,
-        &verifiable_credential.recipient_did,
-        &wallet.contract_id,
+    cert_issuance.revoke(&organization.admin, &verifiable_credential.recipient_did);
+
+    let revoked_credentials = cert_issuance.revoked_credentials(&organization.admin);
+
+    let credential_data = CredentialData {
+        did: verifiable_credential.did,
+        recipient_did: verifiable_credential.recipient_did,
+        credential_type: credential_params.credential_type,
+        credential_title: credential_params.credential_title,
+        issuance_date: OptionU64::Some(verifiable_credential.issuance_date),
+        signature: verifiable_credential.signature,
+    };
+
+    assert_eq!(revoked_credentials.len(), 1);
+    assert_eq!(
+        revoked_credentials.get_unchecked(0).unwrap(),
+        credential_data
     );
-
-    recipients = cert_issuance.recipients();
-    cert_data = recipients
-        .get(verifiable_credential.recipient_did)
-        .unwrap()
-        .unwrap()
-        .unwrap();
-    assert_eq!(cert_data.status, Status::Revoked);
-
-    let chaincert = wallet.get_chaincerts().get(0).unwrap().unwrap();
-    assert!(chaincert.revoked);
 }
 
 #[test]
@@ -751,11 +742,7 @@ fn test_revoke_admin_error() {
         &verifiable_credential,
     );
 
-    cert_issuance.revoke(
-        &Address::random(&e),
-        &verifiable_credential.recipient_did,
-        &wallet.contract_id,
-    );
+    cert_issuance.revoke(&Address::random(&e), &verifiable_credential.recipient_did);
 }
 
 #[test]
@@ -763,15 +750,12 @@ fn test_revoke_admin_error() {
 fn test_revoke_credential_data_none_error() {
     let e: Env = Default::default();
     let recipients: Option<Vec<String>> = Option::Some(create_random_recipient_dids(&e));
-    let recipient_address = Address::random(&e);
     let recipient_did = recipients
         .clone()
         .expect("Vec of recipients")
         .get(0)
         .unwrap()
         .unwrap();
-    let org_did = "did:chaincerts:org123".into_val(&e);
-    let wallet = create_wallet_contract(&e, &recipient_address, &org_did);
     let organization: Organization = Organization {
         admin: Address::random(&e),
         did: "did:chaincerts:org123".into_val(&e),
@@ -793,7 +777,7 @@ fn test_revoke_credential_data_none_error() {
         &credential_params,
     );
 
-    cert_issuance.revoke(&organization.admin, &recipient_did, &wallet.contract_id);
+    cert_issuance.revoke(&organization.admin, &recipient_did);
 }
 
 #[test]
@@ -847,16 +831,8 @@ fn test_revoke_status_revoked_error() {
         &verifiable_credential,
     );
 
-    cert_issuance.revoke(
-        &organization.admin,
-        &verifiable_credential.recipient_did,
-        &wallet.contract_id,
-    );
-    cert_issuance.revoke(
-        &organization.admin,
-        &verifiable_credential.recipient_did,
-        &wallet.contract_id,
-    );
+    cert_issuance.revoke(&organization.admin, &verifiable_credential.recipient_did);
+    cert_issuance.revoke(&organization.admin, &verifiable_credential.recipient_did);
 }
 
 #[test]
@@ -864,14 +840,12 @@ fn test_revoke_status_revoked_error() {
 fn test_revoke_no_revocable_cert() {
     let e: Env = Default::default();
     let recipients: Option<Vec<String>> = Option::Some(create_random_recipient_dids(&e));
-    let recipient_address = Address::random(&e);
     let recipient_did = recipients
         .clone()
         .expect("Vec of recipients")
         .get(0)
         .unwrap()
         .unwrap();
-    let wallet = create_wallet_contract(&e, &recipient_address, &"12345".into_val(&e));
     let organization: Organization = Organization {
         admin: Address::random(&e),
         did: "did:chaincerts:org123".into_val(&e),
@@ -893,7 +867,7 @@ fn test_revoke_no_revocable_cert() {
         &credential_params,
     );
 
-    cert_issuance.revoke(&organization.admin, &recipient_did, &wallet.contract_id);
+    cert_issuance.revoke(&organization.admin, &recipient_did);
 }
 
 #[test]

@@ -6,7 +6,7 @@ use crate::{contract::IssuanceContract, IssuanceContractClient};
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{vec, Address, Bytes, Env, IntoVal, Map, String, Vec};
 
-const WASM: &[u8] = include_bytes!("../../target/wasm32-unknown-unknown/release/did_contract.wasm");
+const WASM: &[u8] = include_bytes!("../did_contract.wasm");
 
 fn create_did_contract(env: &Env, owner: &Address, id: &Bytes) -> did_contract::Client {
     let wallet = did_contract::Client::new(env, &env.register_contract_wasm(None, WASM));

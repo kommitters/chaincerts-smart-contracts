@@ -12,18 +12,10 @@ pub struct Organization {
 }
 
 #[contracttype]
-#[derive(Debug, Clone, PartialEq)]
-pub enum Status {
-    Distributed,
-    Revoked,
-}
-
-#[contracttype]
 #[derive(Clone, Debug, PartialEq)]
 pub struct CredentialData {
     pub did: Bytes,
-    pub status: Status,
-    pub recipient_id: String,
+    pub recipient_did: String,
     pub credential_type: String,
     pub credential_title: String,
     pub issuance_date: OptionU64,
@@ -33,8 +25,7 @@ pub struct CredentialData {
 impl CredentialData {
     pub fn new(
         did: Bytes,
-        status: Status,
-        recipient_id: String,
+        recipient_did: String,
         credential_type: String,
         credential_title: String,
         issuance_date: OptionU64,
@@ -42,8 +33,7 @@ impl CredentialData {
     ) -> CredentialData {
         CredentialData {
             did,
-            status,
-            recipient_id,
+            recipient_did,
             credential_type,
             credential_title,
             issuance_date,
@@ -60,19 +50,22 @@ pub struct Info {
     pub expiration_time: OptionU64,
     pub distribution_limit: u32,
     pub supply: u32,
+    pub credential_type: String,
+    pub credential_title: String,
 }
 
 #[derive(Clone, Debug)]
 #[contracttype]
 pub enum DataKey {
-    FileStorage,       // Bytes
-    Name,              // Bytes
-    Revocable,         // bool
-    ExpirationTime,    // OptionU64
-    Recipients,        // Map <String, Option<CredentialData>>
-    Organization,      // Organization
-    DistributionLimit, // u32
-    Supply,            // u32
-    CredentialTitle,   // String
-    CredentialType,    // String
+    FileStorage,        // Bytes
+    Name,               // Bytes
+    Revocable,          // bool
+    RevokedCredentials, // Vec<CredentialData>
+    ExpirationTime,     // OptionU64
+    Recipients,         // Map <String, Option<CredentialData>>
+    Organization,       // Organization
+    DistributionLimit,  // u32
+    Supply,             // u32
+    CredentialTitle,    // String
+    CredentialType,     // String
 }

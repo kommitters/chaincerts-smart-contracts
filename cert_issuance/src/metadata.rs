@@ -5,7 +5,7 @@ use crate::{
     cert_wallet::OptionU64,
     storage_types::{CredentialData, DataKey},
 };
-use soroban_sdk::{Bytes, Env, Map, String};
+use soroban_sdk::{Bytes, Env, Map, String, Vec};
 
 pub fn read_file_storage(e: &Env) -> Bytes {
     let key = DataKey::FileStorage;
@@ -35,6 +35,16 @@ pub fn read_revocable(e: &Env) -> bool {
 pub fn write_revocable(e: &Env, revocable: bool) {
     let key = DataKey::Revocable;
     e.storage().set(&key, &revocable)
+}
+
+pub fn read_revoked_credentials(e: &Env) -> Vec<CredentialData> {
+    let key = DataKey::RevokedCredentials;
+    e.storage().get_unchecked(&key).unwrap()
+}
+
+pub fn write_revoked_credential(e: &Env, credential_list: Vec<CredentialData>) {
+    let key = DataKey::RevokedCredentials;
+    e.storage().set(&key, &credential_list)
 }
 
 pub fn read_expiration_time(e: &Env) -> OptionU64 {

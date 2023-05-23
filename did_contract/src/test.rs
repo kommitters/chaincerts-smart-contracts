@@ -5,7 +5,7 @@ use crate::{
     owner::{Owner, VerificationMethod},
     DIDContract, DIDContractClient,
 };
-use soroban_sdk::{testutils::Address as _, vec, Address, Env, IntoVal, String, Vec};
+use soroban_sdk::{testutils::Address as _, vec, Address, Env, IntoVal, String, Symbol, Vec};
 
 fn create_wallet(
     e: &Env,
@@ -69,7 +69,7 @@ impl DIDContractTest {
         let metadata = Metadata {
             created: 1684872059,
             updated: 1684872059,
-            version: String::from_slice(&env, "1.0"),
+            version: Symbol::short("1.0"),
         };
         let wallet = create_wallet(
             &env,
@@ -123,7 +123,7 @@ fn test_successful_execution_of_wallet_capabilities() {
         2
     );
 
-    test.wallet.deposit_chaincert(
+    test.wallet.deposit_credential(
         &test.credential_did,
         &test.organizations.get_unchecked(0).unwrap(),
         &1680105831,
@@ -131,7 +131,7 @@ fn test_successful_execution_of_wallet_capabilities() {
         &test.cids.get_unchecked(0).unwrap(),
     );
 
-    test.wallet.deposit_chaincert(
+    test.wallet.deposit_credential(
         &new_credential_did,
         &test.organizations.get_unchecked(0).unwrap(),
         &1680205831,
@@ -222,7 +222,7 @@ fn test_remove_organization_when_organization_not_found() {
 
 #[test]
 #[should_panic(expected = "Status(ContractError(2))")]
-fn test_deposit_chaincert_when_organization_is_not_in_the_acl() {
+fn test_deposit_credential_when_organization_is_not_in_the_acl() {
     let test = DIDContractTest::setup();
 
     test.wallet.add_organization(
@@ -230,7 +230,7 @@ fn test_deposit_chaincert_when_organization_is_not_in_the_acl() {
         &test.owner_address,
     );
 
-    test.wallet.deposit_chaincert(
+    test.wallet.deposit_credential(
         &test.credential_did,
         &test.organizations.get_unchecked(1).unwrap(),
         &1680105831,
@@ -241,10 +241,10 @@ fn test_deposit_chaincert_when_organization_is_not_in_the_acl() {
 
 #[test]
 #[should_panic(expected = "Status(ContractError(6))")]
-fn test_deposit_chaincert_when_no_organizations_in_the_acl() {
+fn test_deposit_credential_when_no_organizations_in_the_acl() {
     let test = DIDContractTest::setup();
 
-    test.wallet.deposit_chaincert(
+    test.wallet.deposit_credential(
         &test.credential_did,
         &test.organizations.get_unchecked(1).unwrap(),
         &1680105831,
@@ -255,7 +255,7 @@ fn test_deposit_chaincert_when_no_organizations_in_the_acl() {
 
 #[test]
 #[should_panic(expected = "Status(ContractError(9))")]
-fn test_deposit_chaincert_chaincert_is_already_in_the_wallet() {
+fn test_deposit_credential_chaincert_is_already_in_the_wallet() {
     let test = DIDContractTest::setup();
 
     test.wallet.add_organization(
@@ -267,7 +267,7 @@ fn test_deposit_chaincert_chaincert_is_already_in_the_wallet() {
         &test.owner_address,
     );
 
-    test.wallet.deposit_chaincert(
+    test.wallet.deposit_credential(
         &test.credential_did,
         &test.organizations.get_unchecked(0).unwrap(),
         &1680105831,
@@ -275,7 +275,7 @@ fn test_deposit_chaincert_chaincert_is_already_in_the_wallet() {
         &test.cids.get_unchecked(0).unwrap(),
     );
 
-    test.wallet.deposit_chaincert(
+    test.wallet.deposit_credential(
         &test.credential_did,
         &test.organizations.get_unchecked(0).unwrap(),
         &1680105831,
@@ -305,7 +305,7 @@ fn test_revoke_credential_when_chaincert_not_found() {
     let new_chaincert: String = "CHAINCERT2".into_val(&test.env);
 
     test.wallet.add_organization(&org1, &test.owner_address);
-    test.wallet.deposit_chaincert(
+    test.wallet.deposit_credential(
         &test.credential_did,
         &org1,
         &1680105831,

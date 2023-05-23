@@ -271,7 +271,7 @@ fn deposit_to_wallet(
     let distributor_contract = e.current_contract_address();
     let expiration_date: OptionU64 = expiration_date(e, verifiable_credential.issuance_date);
     let org_did = read_organization_did(e);
-    wallet_client.deposit_chaincert(
+    wallet_client.deposit_credential(
         &verifiable_credential.did,
         &verifiable_credential.attestation,
         &distributor_contract,

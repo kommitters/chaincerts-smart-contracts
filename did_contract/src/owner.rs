@@ -13,6 +13,7 @@ pub struct Owner {
     pub verification_methods: Vec<VerificationMethod>,
 }
 
+// TODO! set default values
 #[derive(Clone, PartialEq, Eq, Debug)]
 #[contracttype]
 /// The DID `VerificationMethod` information

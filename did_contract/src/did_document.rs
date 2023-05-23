@@ -1,6 +1,8 @@
-use soroban_sdk::{contracttype, Env, String, Vec};
-
+//! Module DIDDocument
+//!
+//! Module responsible of managing the DID document data.
 use crate::storage_types::DataKey;
+use soroban_sdk::{contracttype, Env, String, Symbol, Vec};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 #[contracttype]
@@ -29,13 +31,7 @@ pub struct Metadata {
     /// Last update date in unix time stamp
     pub updated: u64,
     /// DID document version
-    pub version: String,
-}
-
-#[cfg(not(tarpaulin_include))]
-pub(crate) fn _read_context(env: &Env) -> Vec<String> {
-    let key: DataKey = DataKey::Context;
-    env.storage().get_unchecked(&key).unwrap()
+    pub version: Symbol,
 }
 
 pub(crate) fn write_context(env: &Env, context: &Vec<String>) {
@@ -43,32 +39,14 @@ pub(crate) fn write_context(env: &Env, context: &Vec<String>) {
     env.storage().set(&key, context);
 }
 
-#[cfg(not(tarpaulin_include))]
-pub(crate) fn _read_verification_processes(env: &Env) -> Vec<Method> {
-    let key: DataKey = DataKey::VerificationProcesses;
-    env.storage().get_unchecked(&key).unwrap()
-}
-
 pub(crate) fn write_verification_processes(env: &Env, verification_processes: &Vec<Method>) {
     let key: DataKey = DataKey::VerificationProcesses;
     env.storage().set(&key, verification_processes);
 }
 
-#[cfg(not(tarpaulin_include))]
-pub(crate) fn _read_services(env: &Env) -> Vec<Service> {
-    let key: DataKey = DataKey::Services;
-    env.storage().get_unchecked(&key).unwrap()
-}
-
 pub(crate) fn write_services(env: &Env, services: &Vec<Service>) {
     let key: DataKey = DataKey::Services;
     env.storage().set(&key, services);
-}
-
-#[cfg(not(tarpaulin_include))]
-pub(crate) fn _read_metadata(env: &Env) -> Metadata {
-    let key: DataKey = DataKey::Metadata;
-    env.storage().get_unchecked(&key).unwrap()
 }
 
 pub(crate) fn write_metadata(env: &Env, metadata: &Metadata) {

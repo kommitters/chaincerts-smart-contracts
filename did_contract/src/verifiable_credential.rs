@@ -4,7 +4,7 @@
 use crate::{error::ContractError, option::OptionU64, storage_types::DataKey};
 use soroban_sdk::{contracttype, map, panic_with_error, Env, Map, String, Vec};
 
-const CHAINCERT_KEY: DataKey = DataKey::VerifiableCredentials;
+const VERIFIABLE_CREDENTIAL_KEY: DataKey = DataKey::VerifiableCredentials;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 #[contracttype]
@@ -60,7 +60,7 @@ pub(crate) fn deposit_credential(
         false,
     );
 
-    let credentials = match env.storage().get(&CHAINCERT_KEY) {
+    let credentials = match env.storage().get(&VERIFIABLE_CREDENTIAL_KEY) {
         Some(credential_map) => {
             let mut credential_map: Map<String, VerifiableCredentials> = credential_map.unwrap();
             if !credential_map.contains_key(credential_did.clone()) {
@@ -79,7 +79,7 @@ pub(crate) fn deposit_credential(
 }
 
 pub(crate) fn revoke_credential(env: &Env, credential_did: &String) {
-    match env.storage().get(&CHAINCERT_KEY) {
+    match env.storage().get(&VERIFIABLE_CREDENTIAL_KEY) {
         Some(credential_map) => {
             let mut credential_map: Map<String, VerifiableCredentials> = credential_map.unwrap();
             revoke_credential_from_map(env, &mut credential_map, credential_did);
@@ -111,12 +111,12 @@ fn revoke_credential_from_map(
 }
 
 fn read_credentials(env: &Env) -> Map<String, VerifiableCredentials> {
-    match env.storage().get(&CHAINCERT_KEY) {
-        Some(cc) => cc.unwrap(),
+    match env.storage().get(&VERIFIABLE_CREDENTIAL_KEY) {
+        Some(credential) => credential.unwrap(),
         None => panic_with_error!(env, ContractError::NoVerifiableCredentials),
     }
 }
 
 fn write_credentials(env: &Env, certs: &Map<String, VerifiableCredentials>) {
-    env.storage().set(&CHAINCERT_KEY, certs)
+    env.storage().set(&VERIFIABLE_CREDENTIAL_KEY, certs)
 }

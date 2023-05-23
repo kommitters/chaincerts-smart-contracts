@@ -50,8 +50,8 @@ impl DIDContract {
         access_control_list::remove_organization(&env, &issuer)
     }
 
-    /// Deposit a `VerifiableCredentials` to the wallet
-    pub fn deposit_chaincert(
+    /// Deposit a `VerifiableCredentials` to the DID contract
+    pub fn deposit_credential(
         env: Env,
         credential_did: String,
         issuer: String,
@@ -77,12 +77,12 @@ impl DIDContract {
         verifiable_credential::revoke_credential(&env, &credential_did);
     }
 
-    /// Get the list of the `VerifiableCredentials` stored in the wallet
+    /// Get the list of the `VerifiableCredentials` stored in the DID contract
     pub fn get_credentials(env: Env) -> Vec<VerifiableCredentials> {
         verifiable_credential::get_credentials(&env)
     }
 
-    /// Get the ACL stored in the wallet
+    /// Get the ACL stored in the DID contract
     pub fn get_access_control_list(env: Env, address: Address) -> Vec<String> {
         owner::check_invocation_address(&env, &address);
         address.require_auth();

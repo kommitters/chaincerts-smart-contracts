@@ -83,11 +83,7 @@ pub(crate) fn revoke_chaincert(env: &Env, credential_did: &Bytes) {
     match env.storage().get(&CHAINCERT_KEY) {
         Some(credential_map) => {
             let mut credential_map: Map<Bytes, Chaincert> = credential_map.unwrap();
-            revoke_chaincert_from_map(
-                env,
-                &mut credential_map,
-                credential_did,
-            );
+            revoke_chaincert_from_map(env, &mut credential_map, credential_did);
             write_chaincerts(env, &credential_map);
         }
         None => {

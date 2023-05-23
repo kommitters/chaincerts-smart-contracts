@@ -22,7 +22,8 @@ fn create_issuance_contract(
     organization: &Organization,
     credential_params: &CredentialParams,
 ) -> IssuanceContractClient {
-    let issuance_contract = IssuanceContractClient::new(e, &e.register_contract(None, IssuanceContract {}));
+    let issuance_contract =
+        IssuanceContractClient::new(e, &e.register_contract(None, IssuanceContract {}));
 
     issuance_contract.initialize(
         &"Issuance Contract Name".into_val(e),
@@ -41,8 +42,12 @@ fn create_random_recipient_dids(e: &Env) -> Vec<String> {
     vec![e, recipient_1, recipient_2, recipient_3]
 }
 
-fn setup_initialized_and_distributed_contract(
-) -> (Env, Organization, VerifiableCredential, IssuanceContractClient) {
+fn setup_initialized_and_distributed_contract() -> (
+    Env,
+    Organization,
+    VerifiableCredential,
+    IssuanceContractClient,
+) {
     let e: Env = Default::default();
     let recipient_address = Address::random(&e);
     let recipient_did = String::from_slice(&e, "did:chaincerts:abc123");

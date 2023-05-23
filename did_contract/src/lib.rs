@@ -57,10 +57,7 @@ impl DIDContract {
     }
 
     /// Self-revoke a Credential.
-    pub fn revoke_credential(
-        env: Env,
-        credential_did: Bytes,
-    ) {
+    pub fn revoke_credential(env: Env, credential_did: Bytes) {
         owner::read_owner(&env).require_auth();
         chaincert::revoke_chaincert(&env, &credential_did);
     }

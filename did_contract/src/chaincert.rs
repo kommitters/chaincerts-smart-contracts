@@ -62,11 +62,11 @@ pub(crate) fn deposit_chaincert(
     );
 
     let chaincerts = match env.storage().get(&CHAINCERT_KEY) {
-        Some(chaincert_map) => {
-            let mut chaincert_map: Map<Bytes, Chaincert> = chaincert_map.unwrap();
-            if !chaincert_map.contains_key(chaincert_did.clone()) {
-                chaincert_map.set(chaincert_did, chaincert);
-                chaincert_map
+        Some(credential_map) => {
+            let mut credential_map: Map<Bytes, Chaincert> = credential_map.unwrap();
+            if !credential_map.contains_key(chaincert_did.clone()) {
+                credential_map.set(chaincert_did, chaincert);
+                credential_map
             } else {
                 panic_with_error!(env, ContractError::ChaincertAlreadyInWallet)
             }
@@ -79,23 +79,16 @@ pub(crate) fn deposit_chaincert(
     write_chaincerts(env, &chaincerts)
 }
 
-pub(crate) fn revoke_chaincert(
-    env: &Env,
-    chaincert_id: &Bytes,
-    distributor_contract: &Address,
-    org_id: &Bytes,
-) {
+pub(crate) fn revoke_chaincert(env: &Env, credential_did: &Bytes) {
     match env.storage().get(&CHAINCERT_KEY) {
-        Some(chaincert_map) => {
-            let mut chaincert_map: Map<Bytes, Chaincert> = chaincert_map.unwrap();
-            remove_chaincert_from_map(
+        Some(credential_map) => {
+            let mut credential_map: Map<Bytes, Chaincert> = credential_map.unwrap();
+            revoke_chaincert_from_map(
                 env,
-                &mut chaincert_map,
-                chaincert_id,
-                distributor_contract,
-                org_id,
+                &mut credential_map,
+                credential_did,
             );
-            write_chaincerts(env, &chaincert_map);
+            write_chaincerts(env, &credential_map);
         }
         None => {
             panic_with_error!(env, ContractError::NoChaincerts)
@@ -107,24 +100,16 @@ pub(crate) fn get_chaincerts(env: &Env) -> Vec<Chaincert> {
     read_chaincerts(env).values()
 }
 
-fn remove_chaincert_from_map(
+fn revoke_chaincert_from_map(
     env: &Env,
-    chaincert_map: &mut Map<Bytes, Chaincert>,
-    chaincert_id: &Bytes,
-    distributor_contract: &Address,
-    org_id: &Bytes,
+    credential_map: &mut Map<Bytes, Chaincert>,
+    credential_did: &Bytes,
 ) {
-    match chaincert_map.get(chaincert_id.clone()) {
+    match credential_map.get(credential_did.clone()) {
         Some(chaincert) => {
             let mut chaincert = chaincert.unwrap();
-            if chaincert.distributor_contract == distributor_contract.clone()
-                && chaincert.org_id == org_id.clone()
-            {
-                chaincert.revoked = true;
-                chaincert_map.set(chaincert_id.clone(), chaincert);
-            } else {
-                panic_with_error!(env, ContractError::NotAuthorized);
-            }
+            chaincert.revoked = true;
+            credential_map.set(credential_did.clone(), chaincert);
         }
         None => panic_with_error!(env, ContractError::ChaincertNotFound),
     }

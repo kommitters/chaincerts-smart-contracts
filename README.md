@@ -60,7 +60,7 @@ soroban contract deploy \
     --source-account SOURCE_ACCOUNT_SECRET_KEY \
     --rpc-url https://rpc-futurenet.stellar.org:443 \
     --network-passphrase 'Test SDF Future Network ; October 2022' \
-    --wasm target/wasm32-unknown-unknown/release/cert_issuance.wasm
+    --wasm target/wasm32-unknown-unknown/release/issuance_contract.wasm
 SUCCESS
 SUCCESS
 
@@ -72,7 +72,7 @@ soroban contract deploy \
     --source-account SOURCE_ACCOUNT_SECRET_KEY \
     --rpc-url https://rpc-futurenet.stellar.org:443 \
     --network-passphrase 'Test SDF Future Network ; October 2022' \
-    --wasm target/wasm32-unknown-unknown/release/cert_wallet.wasm
+    --wasm target/wasm32-unknown-unknown/release/did_contract.wasm
 SUCCESS
 SUCCESS
 

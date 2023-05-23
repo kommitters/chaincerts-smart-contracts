@@ -1,37 +1,37 @@
 #![cfg(test)]
-use crate::cert_wallet::{self, OptionU64};
+use crate::did_contract::{self, OptionU64};
 use crate::issuance_trait::{CredentialParams, VerifiableCredential};
 use crate::storage_types::{CredentialData, Info, Organization};
-use crate::{contract::CertIssuance, CertIssuanceClient};
+use crate::{contract::IssuanceContract, IssuanceContractClient};
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{vec, Address, Bytes, Env, IntoVal, Map, String, Vec};
 
-const WASM: &[u8] = include_bytes!("../../target/wasm32-unknown-unknown/release/cert_wallet.wasm");
+const WASM: &[u8] = include_bytes!("../../target/wasm32-unknown-unknown/release/did_contract.wasm");
 
-fn create_wallet_contract(env: &Env, owner: &Address, id: &Bytes) -> cert_wallet::Client {
-    let wallet = cert_wallet::Client::new(env, &env.register_contract_wasm(None, WASM));
+fn create_did_contract(env: &Env, owner: &Address, id: &Bytes) -> did_contract::Client {
+    let wallet = did_contract::Client::new(env, &env.register_contract_wasm(None, WASM));
     wallet.initialize(owner);
     wallet.add_organization(id);
     wallet
 }
 
-fn create_cert_issuance(
+fn create_issuance_contract(
     e: &Env,
     limit: &Option<u32>,
     recipient_dids: &Option<Vec<String>>,
     organization: &Organization,
     credential_params: &CredentialParams,
-) -> CertIssuanceClient {
-    let cert_issuance = CertIssuanceClient::new(e, &e.register_contract(None, CertIssuance {}));
+) -> IssuanceContractClient {
+    let issuance_contract = IssuanceContractClient::new(e, &e.register_contract(None, IssuanceContract {}));
 
-    cert_issuance.initialize(
+    issuance_contract.initialize(
         &"Issuance Contract Name".into_val(e),
         recipient_dids,
         limit,
         organization,
         credential_params,
     );
-    cert_issuance
+    issuance_contract
 }
 
 fn create_random_recipient_dids(e: &Env) -> Vec<String> {
@@ -42,7 +42,7 @@ fn create_random_recipient_dids(e: &Env) -> Vec<String> {
 }
 
 fn setup_initialized_and_distributed_contract(
-) -> (Env, Organization, VerifiableCredential, CertIssuanceClient) {
+) -> (Env, Organization, VerifiableCredential, IssuanceContractClient) {
     let e: Env = Default::default();
     let recipient_address = Address::random(&e);
     let recipient_did = String::from_slice(&e, "did:chaincerts:abc123");
@@ -50,7 +50,7 @@ fn setup_initialized_and_distributed_contract(
         admin: Address::random(&e),
         did: "did:chaincerts:org123".into_val(&e),
     };
-    let wallet = create_wallet_contract(&e, &recipient_address, &organization.did);
+    let wallet = create_did_contract(&e, &recipient_address, &organization.did);
     let distribution_limit: Option<u32> = Option::Some(6);
     let credential_params = CredentialParams {
         file_storage: "FileBase".into_val(&e),
@@ -59,7 +59,7 @@ fn setup_initialized_and_distributed_contract(
         credential_type: String::from_slice(&e, "Work"),
         credential_title: String::from_slice(&e, "Software Engineer"),
     };
-    let cert_issuance = create_cert_issuance(
+    let issuance_contract = create_issuance_contract(
         &e,
         &distribution_limit,
         &Option::None,
@@ -78,12 +78,12 @@ fn setup_initialized_and_distributed_contract(
         issuance_date: 1679918400,
     };
 
-    cert_issuance.distribute(
+    issuance_contract.distribute(
         &organization.admin,
         &wallet.contract_id,
         &verifiable_credential,
     );
-    (e, organization, verifiable_credential, cert_issuance)
+    (e, organization, verifiable_credential, issuance_contract)
 }
 
 #[test]
@@ -120,20 +120,26 @@ fn test_initialize_contract_with_recipients() {
         credential_title: String::from_slice(&e, "Software Engineer"),
     };
 
-    let cert_issuance: CertIssuanceClient = create_cert_issuance(
+    let issuance_contract: IssuanceContractClient = create_issuance_contract(
         &e,
         &Option::None,
         &recipients,
         &organization,
         &credential_params,
     );
-    assert_eq!(cert_issuance.file_storage(), "FileBase".into_val(&e));
-    assert_eq!(cert_issuance.name(), "Issuance Contract Name".into_val(&e));
-    assert!(cert_issuance.is_revocable());
-    assert_eq!(cert_issuance.expiration_time(), OptionU64::Some(1680091200));
-    assert_eq!(cert_issuance.distribution_limit(), 3);
-    assert_eq!(cert_issuance.supply(), 0);
-    assert_eq!(cert_issuance.recipients().len(), 3);
+    assert_eq!(issuance_contract.file_storage(), "FileBase".into_val(&e));
+    assert_eq!(
+        issuance_contract.name(),
+        "Issuance Contract Name".into_val(&e)
+    );
+    assert!(issuance_contract.is_revocable());
+    assert_eq!(
+        issuance_contract.expiration_time(),
+        OptionU64::Some(1680091200)
+    );
+    assert_eq!(issuance_contract.distribution_limit(), 3);
+    assert_eq!(issuance_contract.supply(), 0);
+    assert_eq!(issuance_contract.recipients().len(), 3);
 }
 
 #[test]
@@ -153,20 +159,23 @@ fn test_initialize_with_limit_contract() {
         credential_title: String::from_slice(&e, "Software Engineer"),
     };
 
-    let cert_issuance = create_cert_issuance(
+    let issuance_contract = create_issuance_contract(
         &e,
         &distribution_limit,
         &Option::None,
         &organization,
         &credential_params,
     );
-    assert_eq!(cert_issuance.file_storage(), "FileBase".into_val(&e));
-    assert_eq!(cert_issuance.name(), "Issuance Contract Name".into_val(&e));
-    assert!(cert_issuance.is_revocable());
-    assert_eq!(cert_issuance.expiration_time(), OptionU64::None);
-    assert_eq!(cert_issuance.distribution_limit(), 6);
-    assert_eq!(cert_issuance.supply(), 0);
-    assert_eq!(cert_issuance.recipients().len(), 0);
+    assert_eq!(issuance_contract.file_storage(), "FileBase".into_val(&e));
+    assert_eq!(
+        issuance_contract.name(),
+        "Issuance Contract Name".into_val(&e)
+    );
+    assert!(issuance_contract.is_revocable());
+    assert_eq!(issuance_contract.expiration_time(), OptionU64::None);
+    assert_eq!(issuance_contract.distribution_limit(), 6);
+    assert_eq!(issuance_contract.supply(), 0);
+    assert_eq!(issuance_contract.recipients().len(), 0);
 }
 
 #[test]
@@ -185,20 +194,23 @@ fn test_initialize_without_limit_contract_and_recipients() {
         credential_title: String::from_slice(&e, "Software Engineer"),
     };
 
-    let cert_issuance = create_cert_issuance(
+    let issuance_contract = create_issuance_contract(
         &e,
         &Option::None,
         &Option::None,
         &organization,
         &credential_params,
     );
-    assert_eq!(cert_issuance.file_storage(), "FileBase".into_val(&e));
-    assert_eq!(cert_issuance.name(), "Issuance Contract Name".into_val(&e));
-    assert!(cert_issuance.is_revocable());
-    assert_eq!(cert_issuance.expiration_time(), OptionU64::None);
-    assert_eq!(cert_issuance.distribution_limit(), 10);
-    assert_eq!(cert_issuance.supply(), 0);
-    assert_eq!(cert_issuance.recipients().len(), 0);
+    assert_eq!(issuance_contract.file_storage(), "FileBase".into_val(&e));
+    assert_eq!(
+        issuance_contract.name(),
+        "Issuance Contract Name".into_val(&e)
+    );
+    assert!(issuance_contract.is_revocable());
+    assert_eq!(issuance_contract.expiration_time(), OptionU64::None);
+    assert_eq!(issuance_contract.distribution_limit(), 10);
+    assert_eq!(issuance_contract.supply(), 0);
+    assert_eq!(issuance_contract.recipients().len(), 0);
 }
 
 #[test]
@@ -227,7 +239,7 @@ fn test_get_contract_info() {
 
     let distribution_limit: Option<u32> = Option::Some(6);
 
-    let cert_issuance = create_cert_issuance(
+    let issuance_contract = create_issuance_contract(
         &e,
         &distribution_limit,
         &Option::None,
@@ -235,7 +247,7 @@ fn test_get_contract_info() {
         &credential_params_without_expiration_time,
     );
 
-    let cert_issuance_2 = create_cert_issuance(
+    let issuance_contract_2 = create_issuance_contract(
         &e,
         &distribution_limit,
         &Option::None,
@@ -263,8 +275,8 @@ fn test_get_contract_info() {
         credential_title: String::from_slice(&e, "Software Engineer"),
     };
 
-    assert_eq!(cert_issuance.info(), info);
-    assert_eq!(cert_issuance_2.info(), info_2);
+    assert_eq!(issuance_contract.info(), info);
+    assert_eq!(issuance_contract_2.info(), info_2);
 }
 
 #[test]
@@ -276,7 +288,7 @@ fn test_distribute_with_distribution_limit_contract() {
         admin: Address::random(&e),
         did: "did:chaincerts:org123".into_val(&e),
     };
-    let wallet = create_wallet_contract(&e, &recipient1_address, &organization.did);
+    let wallet = create_did_contract(&e, &recipient1_address, &organization.did);
     let distribution_limit: Option<u32> = Option::Some(6);
     let credential_params = CredentialParams {
         file_storage: "FileBase".into_val(&e),
@@ -285,7 +297,7 @@ fn test_distribute_with_distribution_limit_contract() {
         credential_type: String::from_slice(&e, "Work"),
         credential_title: String::from_slice(&e, "Software Engineer"),
     };
-    let cert_issuance = create_cert_issuance(
+    let issuance_contract = create_issuance_contract(
         &e,
         &distribution_limit,
         &Option::None,
@@ -304,14 +316,14 @@ fn test_distribute_with_distribution_limit_contract() {
         issuance_date: 1679918400,
     };
 
-    cert_issuance.distribute(
+    issuance_contract.distribute(
         &organization.admin,
         &wallet.contract_id,
         &verifiable_credential,
     );
-    let recipients: Map<String, Option<CredentialData>> = cert_issuance.recipients();
+    let recipients: Map<String, Option<CredentialData>> = issuance_contract.recipients();
 
-    assert_eq!(cert_issuance.supply(), 1);
+    assert_eq!(issuance_contract.supply(), 1);
     assert_eq!(recipients.len(), 1);
     assert_eq!(wallet.get_chaincerts().len(), 1);
 }
@@ -331,7 +343,7 @@ fn test_distribute_with_initial_recipients() {
         admin: Address::random(&e),
         did: "did:chaincerts:org123".into_val(&e),
     };
-    let wallet = create_wallet_contract(&e, &recipient1_address, &organization.did);
+    let wallet = create_did_contract(&e, &recipient1_address, &organization.did);
     const ATTESTATION1: &str = "ipfs://QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
     let credential_params = CredentialParams {
         file_storage: "FileBase".into_val(&e),
@@ -340,7 +352,7 @@ fn test_distribute_with_initial_recipients() {
         credential_type: String::from_slice(&e, "Work"),
         credential_title: String::from_slice(&e, "Software Engineer"),
     };
-    let cert_issuance = create_cert_issuance(
+    let issuance_contract = create_issuance_contract(
         &e,
         &Option::None,
         &recipients,
@@ -348,7 +360,7 @@ fn test_distribute_with_initial_recipients() {
         &credential_params,
     );
 
-    let mut recipients = cert_issuance.recipients();
+    let mut recipients = issuance_contract.recipients();
     let cert_data = recipients.get(recipient1_did.clone()).unwrap().unwrap();
     assert_eq!(cert_data, Option::None);
 
@@ -361,15 +373,15 @@ fn test_distribute_with_initial_recipients() {
         issuance_date: 1679918400,
     };
 
-    cert_issuance.distribute(
+    issuance_contract.distribute(
         &organization.admin,
         &wallet.contract_id,
         &verifiable_credential,
     );
 
-    recipients = cert_issuance.recipients();
+    recipients = issuance_contract.recipients();
 
-    assert_eq!(cert_issuance.supply(), 1);
+    assert_eq!(issuance_contract.supply(), 1);
     assert_eq!(recipients.len(), 3);
     assert_eq!(wallet.get_chaincerts().len(), 1);
 }
@@ -389,7 +401,7 @@ fn test_revoke_chaincert() {
         admin: Address::random(&e),
         did: "did:chaincerts:org123".into_val(&e),
     };
-    let wallet = create_wallet_contract(&e, &recipient_address, &organization.did);
+    let wallet = create_did_contract(&e, &recipient_address, &organization.did);
 
     pub const ATTESTATION1: &str = "ipfs://QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
 
@@ -401,7 +413,7 @@ fn test_revoke_chaincert() {
         credential_title: String::from_slice(&e, "Software Engineer"),
     };
 
-    let cert_issuance = create_cert_issuance(
+    let issuance_contract = create_issuance_contract(
         &e,
         &Option::None,
         &recipients,
@@ -418,22 +430,22 @@ fn test_revoke_chaincert() {
         issuance_date: 1679918400,
     };
 
-    cert_issuance.distribute(
+    issuance_contract.distribute(
         &organization.admin,
         &wallet.contract_id,
         &verifiable_credential,
     );
 
-    let recipients = cert_issuance.recipients();
+    let recipients = issuance_contract.recipients();
     let cert_data = recipients
         .get(verifiable_credential.recipient_did.clone())
         .unwrap()
         .unwrap();
     assert!(cert_data.is_some());
 
-    cert_issuance.revoke(&organization.admin, &verifiable_credential.recipient_did);
+    issuance_contract.revoke(&organization.admin, &verifiable_credential.recipient_did);
 
-    let revoked_credentials = cert_issuance.revoked_credentials(&organization.admin);
+    let revoked_credentials = issuance_contract.revoked_credentials(&organization.admin);
 
     let credential_data = CredentialData {
         did: verifiable_credential.did,
@@ -469,7 +481,7 @@ fn test_initialize_contract_with_recipients_error() {
         credential_title: String::from_slice(&e, "Software Engineer"),
     };
 
-    let cert_issuance: CertIssuanceClient = create_cert_issuance(
+    let issuance_contract: IssuanceContractClient = create_issuance_contract(
         &e,
         &Option::None,
         &recipient_dids,
@@ -477,7 +489,7 @@ fn test_initialize_contract_with_recipients_error() {
         &credential_params,
     );
 
-    cert_issuance.initialize(
+    issuance_contract.initialize(
         &"Issuance Contract Name".into_val(&e),
         &recipient_dids,
         &Option::None,
@@ -504,7 +516,7 @@ fn test_initialize_with_limit_contract_error() {
     };
 
     let distribution_limit: Option<u32> = Option::Some(6);
-    let cert_issuance = create_cert_issuance(
+    let issuance_contract = create_issuance_contract(
         &e,
         &distribution_limit,
         &Option::None,
@@ -512,7 +524,7 @@ fn test_initialize_with_limit_contract_error() {
         &credential_params,
     );
 
-    cert_issuance.initialize(
+    issuance_contract.initialize(
         &"Issuance Contract Name".into_val(&e),
         &Option::None,
         &distribution_limit,
@@ -539,7 +551,7 @@ fn test_distribute_admin_error() {
         admin: Address::random(&e),
         did: "did:chaincerts:org123".into_val(&e),
     };
-    let wallet = create_wallet_contract(&e, &recipient_address, &organization.did);
+    let wallet = create_did_contract(&e, &recipient_address, &organization.did);
 
     let credential_params = CredentialParams {
         file_storage: "FileBase".into_val(&e),
@@ -549,7 +561,7 @@ fn test_distribute_admin_error() {
         credential_title: String::from_slice(&e, "Software Engineer"),
     };
 
-    let cert_issuance = create_cert_issuance(
+    let issuance_contract = create_issuance_contract(
         &e,
         &Option::None,
         &recipient_dids,
@@ -566,7 +578,7 @@ fn test_distribute_admin_error() {
         issuance_date: 1679918400,
     };
 
-    cert_issuance.distribute(&invalid_admin, &wallet.contract_id, &verifiable_credential);
+    issuance_contract.distribute(&invalid_admin, &wallet.contract_id, &verifiable_credential);
 }
 
 #[test]
@@ -580,8 +592,8 @@ fn test_distribute_limit_error() {
         admin: Address::random(&e),
         did: "did:chaincerts:org123".into_val(&e),
     };
-    let wallet1 = create_wallet_contract(&e, &address1, &organization.did);
-    let wallet2 = create_wallet_contract(&e, &address2, &organization.did);
+    let wallet1 = create_did_contract(&e, &address1, &organization.did);
+    let wallet2 = create_did_contract(&e, &address2, &organization.did);
 
     let credential_params = CredentialParams {
         file_storage: "FileBase".into_val(&e),
@@ -592,7 +604,7 @@ fn test_distribute_limit_error() {
     };
 
     let distribution_limit = Option::Some(1);
-    let cert_issuance = create_cert_issuance(
+    let issuance_contract = create_issuance_contract(
         &e,
         &distribution_limit,
         &Option::None,
@@ -616,7 +628,7 @@ fn test_distribute_limit_error() {
         issuance_date: 1679918400,
     };
 
-    cert_issuance.distribute(
+    issuance_contract.distribute(
         &organization.admin,
         &wallet1.contract_id,
         &verifiable_credential,
@@ -628,7 +640,7 @@ fn test_distribute_limit_error() {
         .unwrap()
         .unwrap();
     verifiable_credential.attestation = ATTESTATION2.into_val(&e);
-    cert_issuance.distribute(
+    issuance_contract.distribute(
         &organization.admin,
         &wallet2.contract_id,
         &verifiable_credential,
@@ -645,7 +657,7 @@ fn test_distribute_status_error() {
         admin: Address::random(&e),
         did: "did:chaincerts:org123".into_val(&e),
     };
-    let wallet = create_wallet_contract(&e, &wallet_owner, &organization.did);
+    let wallet = create_did_contract(&e, &wallet_owner, &organization.did);
 
     let credential_params = CredentialParams {
         file_storage: "FileBase".into_val(&e),
@@ -656,7 +668,7 @@ fn test_distribute_status_error() {
     };
 
     let distribution_limit = Option::Some(3);
-    let cert_issuance = create_cert_issuance(
+    let issuance_contract = create_issuance_contract(
         &e,
         &distribution_limit,
         &Option::None,
@@ -678,13 +690,13 @@ fn test_distribute_status_error() {
         issuance_date: 1679918400,
     };
 
-    cert_issuance.distribute(
+    issuance_contract.distribute(
         &organization.admin,
         &wallet.contract_id,
         &verifiable_credential,
     );
 
-    cert_issuance.distribute(
+    issuance_contract.distribute(
         &organization.admin,
         &wallet.contract_id,
         &verifiable_credential,
@@ -707,7 +719,7 @@ fn test_revoke_admin_error() {
         admin: Address::random(&e),
         did: "did:chaincerts:org123".into_val(&e),
     };
-    let wallet = create_wallet_contract(&e, &recipient_address, &organization.did);
+    let wallet = create_did_contract(&e, &recipient_address, &organization.did);
 
     pub const ATTESTATION1: &str = "ipfs://QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
 
@@ -719,7 +731,7 @@ fn test_revoke_admin_error() {
         credential_title: String::from_slice(&e, "Software Engineer"),
     };
 
-    let cert_issuance = create_cert_issuance(
+    let issuance_contract = create_issuance_contract(
         &e,
         &Option::None,
         &recipients,
@@ -736,13 +748,13 @@ fn test_revoke_admin_error() {
         issuance_date: 1679918400,
     };
 
-    cert_issuance.distribute(
+    issuance_contract.distribute(
         &organization.admin,
         &wallet.contract_id,
         &verifiable_credential,
     );
 
-    cert_issuance.revoke(&Address::random(&e), &verifiable_credential.recipient_did);
+    issuance_contract.revoke(&Address::random(&e), &verifiable_credential.recipient_did);
 }
 
 #[test]
@@ -769,7 +781,7 @@ fn test_revoke_credential_data_none_error() {
         credential_title: String::from_slice(&e, "Software Engineer"),
     };
 
-    let cert_issuance = create_cert_issuance(
+    let issuance_contract = create_issuance_contract(
         &e,
         &Option::None,
         &recipients,
@@ -777,7 +789,7 @@ fn test_revoke_credential_data_none_error() {
         &credential_params,
     );
 
-    cert_issuance.revoke(&organization.admin, &recipient_did);
+    issuance_contract.revoke(&organization.admin, &recipient_did);
 }
 
 #[test]
@@ -797,7 +809,7 @@ fn test_revoke_status_revoked_error() {
         did: "did:chaincerts:org123".into_val(&e),
     };
     let recipient_address = Address::random(&e);
-    let wallet = create_wallet_contract(&e, &recipient_address, &organization.did);
+    let wallet = create_did_contract(&e, &recipient_address, &organization.did);
     const ATTESTATION1: &str = "ipfs://QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
 
     let credential_params = CredentialParams {
@@ -808,7 +820,7 @@ fn test_revoke_status_revoked_error() {
         credential_title: String::from_slice(&e, "Software Engineer"),
     };
 
-    let cert_issuance = create_cert_issuance(
+    let issuance_contract = create_issuance_contract(
         &e,
         &Option::None,
         &recipients,
@@ -825,14 +837,14 @@ fn test_revoke_status_revoked_error() {
         issuance_date: 1679918400,
     };
 
-    cert_issuance.distribute(
+    issuance_contract.distribute(
         &organization.admin,
         &wallet.contract_id,
         &verifiable_credential,
     );
 
-    cert_issuance.revoke(&organization.admin, &verifiable_credential.recipient_did);
-    cert_issuance.revoke(&organization.admin, &verifiable_credential.recipient_did);
+    issuance_contract.revoke(&organization.admin, &verifiable_credential.recipient_did);
+    issuance_contract.revoke(&organization.admin, &verifiable_credential.recipient_did);
 }
 
 #[test]
@@ -859,7 +871,7 @@ fn test_revoke_no_revocable_cert() {
         credential_title: String::from_slice(&e, "Software Engineer"),
     };
 
-    let cert_issuance = create_cert_issuance(
+    let issuance_contract = create_issuance_contract(
         &e,
         &Option::None,
         &recipients,
@@ -867,15 +879,15 @@ fn test_revoke_no_revocable_cert() {
         &credential_params,
     );
 
-    cert_issuance.revoke(&organization.admin, &recipient_did);
+    issuance_contract.revoke(&organization.admin, &recipient_did);
 }
 
 #[test]
 fn test_attest_with_valid_params() {
-    let (_e, organization, verifiable_credential, cert_issuance) =
+    let (_e, organization, verifiable_credential, issuance_contract) =
         setup_initialized_and_distributed_contract();
 
-    let attest = cert_issuance.attest(
+    let attest = issuance_contract.attest(
         &verifiable_credential.did,
         &organization.did,
         &verifiable_credential.recipient_did,
@@ -887,10 +899,10 @@ fn test_attest_with_valid_params() {
 
 #[test]
 fn test_attest_with_invalid_credential() {
-    let (e, organization, verifiable_credential, cert_issuance) =
+    let (e, organization, verifiable_credential, issuance_contract) =
         setup_initialized_and_distributed_contract();
 
-    let attest = cert_issuance.attest(
+    let attest = issuance_contract.attest(
         &"did:chaincerts:abc123#credential-invalid".into_val(&e),
         &organization.did,
         &verifiable_credential.recipient_did,
@@ -902,10 +914,10 @@ fn test_attest_with_invalid_credential() {
 
 #[test]
 fn test_attest_with_invalid_issuer() {
-    let (e, _organization, verifiable_credential, cert_issuance) =
+    let (e, _organization, verifiable_credential, issuance_contract) =
         setup_initialized_and_distributed_contract();
 
-    let attest = cert_issuance.attest(
+    let attest = issuance_contract.attest(
         &verifiable_credential.did,
         &"did:chaincerts:invalid-org-123".into_val(&e),
         &verifiable_credential.recipient_did,
@@ -917,10 +929,10 @@ fn test_attest_with_invalid_issuer() {
 
 #[test]
 fn test_attest_with_invalid_recipient() {
-    let (e, organization, verifiable_credential, cert_issuance) =
+    let (e, organization, verifiable_credential, issuance_contract) =
         setup_initialized_and_distributed_contract();
 
-    let attest = cert_issuance.attest(
+    let attest = issuance_contract.attest(
         &verifiable_credential.did,
         &organization.did,
         &"did:chaincerts:invalid-recipient-123".into_val(&e),
@@ -932,10 +944,10 @@ fn test_attest_with_invalid_recipient() {
 
 #[test]
 fn test_attest_with_invalid_signature() {
-    let (e, organization, verifiable_credential, cert_issuance) =
+    let (e, organization, verifiable_credential, issuance_contract) =
         setup_initialized_and_distributed_contract();
 
-    let attest = cert_issuance.attest(
+    let attest = issuance_contract.attest(
         &verifiable_credential.did,
         &organization.did,
         &verifiable_credential.recipient_did,

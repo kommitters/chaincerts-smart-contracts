@@ -4,7 +4,7 @@
 use soroban_sdk::{contracttype, Address, Bytes, BytesN, Env, Map, String, Vec};
 
 use crate::{
-    cert_wallet::OptionU64,
+    did_contract::OptionU64,
     storage_types::{CredentialData, Info, Organization},
 };
 

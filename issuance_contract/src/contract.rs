@@ -1,7 +1,7 @@
 //! Module Contract
 //!
 //! Module containing the main contract logic.
-use crate::cert_wallet::{self, OptionU64};
+use crate::did_contract::{self, OptionU64};
 use crate::error::ContractError;
 use crate::issuance_trait::{CredentialParams, IssuanceTrait, VerifiableCredential};
 use crate::metadata::{
@@ -18,10 +18,10 @@ use crate::recipients::{add_recipient, create_recipients, read_recipients};
 use crate::storage_types::{CredentialData, Info, Organization};
 use soroban_sdk::{contractimpl, panic_with_error, Address, Bytes, BytesN, Env, Map, String, Vec};
 
-pub struct CertIssuance;
+pub struct IssuanceContract;
 
 #[contractimpl]
-impl IssuanceTrait for CertIssuance {
+impl IssuanceTrait for IssuanceContract {
     /// Initialize the contract a list of recipients or with the limit of Chaincerts that can be distributed.
     fn initialize(
         e: Env,
@@ -267,7 +267,7 @@ fn deposit_to_wallet(
     wallet_contract_id: BytesN<32>,
     verifiable_credential: &VerifiableCredential,
 ) {
-    let wallet_client = cert_wallet::Client::new(e, &wallet_contract_id);
+    let wallet_client = did_contract::Client::new(e, &wallet_contract_id);
     let distributor_contract = e.current_contract_address();
     let expiration_date: OptionU64 = expiration_date(e, verifiable_credential.issuance_date);
     let org_did = read_organization_did(e);

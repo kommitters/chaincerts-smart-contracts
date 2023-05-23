@@ -10,10 +10,10 @@ use chaincert::Chaincert;
 use option::OptionU64;
 use soroban_sdk::{contractimpl, panic_with_error, Address, Bytes, Env, Vec};
 
-pub struct Wallet;
+pub struct DIDContract;
 
 #[contractimpl]
-impl Wallet {
+impl DIDContract {
     pub fn initialize(env: Env, owner: Address) {
         if owner::has_owner(&env) {
             panic_with_error!(env, ContractError::AlreadyInit);
@@ -36,7 +36,7 @@ impl Wallet {
     /// Deposit a `Chaincert` to the wallet
     pub fn deposit_chaincert(
         env: Env,
-        chaincert_id: Bytes,
+        credential_did: Bytes,
         attestation: Bytes,
         distributor_contract: Address,
         org_id: Bytes,
@@ -47,7 +47,7 @@ impl Wallet {
         distributor_contract.require_auth();
         chaincert::deposit_chaincert(
             &env,
-            chaincert_id,
+            credential_did,
             attestation,
             distributor_contract,
             org_id,
@@ -56,15 +56,10 @@ impl Wallet {
         )
     }
 
-    /// Revoke a `Chaincert` from the wallet
-    pub fn revoke_chaincert(
-        env: Env,
-        chaincert_id: Bytes,
-        distributor_contract: Address,
-        org_id: Bytes,
-    ) {
-        distributor_contract.require_auth();
-        chaincert::revoke_chaincert(&env, &chaincert_id, &distributor_contract, &org_id);
+    /// Self-revoke a Credential.
+    pub fn revoke_credential(env: Env, credential_did: Bytes) {
+        owner::read_owner(&env).require_auth();
+        chaincert::revoke_chaincert(&env, &credential_did);
     }
 
     /// Get the list of the `Chaincerts` stored in the wallet

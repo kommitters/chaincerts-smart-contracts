@@ -9,7 +9,7 @@ pub enum ContractError {
     AlreadyInACL = 4,
     NoOrganizationsInACL = 6,
     OrganizationNotFound = 8,
-    ChaincertAlreadyInWallet = 9,
-    ChaincertNotFound = 10,
-    NoChaincerts = 11,
+    VerifiableCredentialAlreadyInWallet = 9,
+    VerifiableCredentialNotFound = 10,
+    NoVerifiableCredentials = 11,
 }

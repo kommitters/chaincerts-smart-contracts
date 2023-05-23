@@ -9,6 +9,14 @@ pub enum DataKey {
     Owner,
     /// Access Control List
     AccessControlList,
-    /// A map that stores the Chaincerts, identified by a chaincert_id `Map<Bytes, Chaincert>`
-    Chaincerts,
+    /// A map that stores the VerifiableCredentialss, identified by a chaincert_id `Map<String, VerifiableCredentials>`
+    VerifiableCredentials,
+    /// Vec<String> that stores DID document context urls
+    Context,
+    /// Vec<Method> that stores DID document verification processes
+    VerificationProcesses,
+    /// Vec<Service> that stored DID document services
+    Services,
+    /// Stores the DID document `MetaData`
+    Metadata,
 }

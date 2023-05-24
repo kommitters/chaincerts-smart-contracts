@@ -6,22 +6,21 @@ use soroban_sdk::contracttype;
 #[derive(Clone)]
 #[contracttype]
 pub enum DataKey {
-    /// DID document Id
     Id,
-    /// Vec<String> with the authentication keys of the DID document
-    Authentications,
-    /// Vec<VerificationMethod> with the verification methods of the DID document
+    /// Vec<String> with the authentication keys
+    Authentication,
+    /// Vec<VerificationMethod> with the verification methods of the DID
     VerificationMethods,
     /// Access Control List
     AccessControlList,
-    /// A map that stores the VerifiableCredentials, identified by a credential_id `Map<String, VerifiableCredentials>`
-    VerifiableCredentials,
-    /// Vec<String> that stores DID document context urls
+    /// A map that stores the VerifiableCredential, identified by a credential_id `Map<String, VerifiableCredential>`
+    VerifiableCredential,
+    /// Vec<String> that stores DID context urls
     Context,
-    /// Vec<Method> that stores DID document verification processes
+    /// Vec<Method> that stores DID verification processes
     VerificationProcesses,
-    /// Vec<Service> that stored DID document services
+    /// Vec<Service> that stored DID services
     Services,
-    /// Stores the DID document `Metadata`
+    /// Stores the DID `Metadata`
     Metadata,
 }

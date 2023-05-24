@@ -60,7 +60,7 @@ impl DIDContractTest {
         };
         let verification_processes = vec![&env, method];
         let service = Service {
-            service_type: String::from_slice(&env, "VerifiableCredentials"),
+            service_type: String::from_slice(&env, "VerifiableCredential"),
             service_endpoint: String::from_slice(&env, "https://did.chaincerts.co/ABC123"),
         };
         let services = vec![&env, service];

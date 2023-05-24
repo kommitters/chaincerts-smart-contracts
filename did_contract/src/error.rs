@@ -11,5 +11,5 @@ pub enum ContractError {
     OrganizationNotFound = 8,
     VerifiableCredentialAlreadyInWallet = 9,
     VerifiableCredentialNotFound = 10,
-    NoVerifiableCredentials = 11,
+    NoVerifiableCredential = 11,
 }

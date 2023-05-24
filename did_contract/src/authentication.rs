@@ -5,7 +5,7 @@ use soroban_sdk::{contracttype, panic_with_error, vec, Address, Env, String, Vec
 
 use crate::{did_document, error::ContractError, storage_types::DataKey};
 
-const AUTHENTICATIONS_KEY: DataKey = DataKey::Authentications;
+const AUTHENTICATION_KEY: DataKey = DataKey::Authentication;
 const VER_METHODS_KEY: DataKey = DataKey::VerificationMethods;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -30,7 +30,7 @@ impl VerificationMethod {
 }
 
 pub(crate) fn has_authentication(env: &Env) -> bool {
-    env.storage().has(&AUTHENTICATIONS_KEY)
+    env.storage().has(&AUTHENTICATION_KEY)
 }
 
 pub(crate) fn write_authentication(env: &Env, key_id: &String, address: &Address) {
@@ -38,9 +38,9 @@ pub(crate) fn write_authentication(env: &Env, key_id: &String, address: &Address
     let verification_method =
         VerificationMethod::new(env, key_id.clone(), address.clone(), controller);
 
-    let authentications = vec![env, key_id.clone()];
+    let authentication = vec![env, key_id.clone()];
 
-    env.storage().set(&AUTHENTICATIONS_KEY, &authentications);
+    env.storage().set(&AUTHENTICATION_KEY, &authentication);
 
     write_verification_method(env, verification_method);
 }
@@ -51,7 +51,7 @@ pub(crate) fn write_verification_method(env: &Env, verification_method: Verifica
     env.storage().set(&VER_METHODS_KEY, &verification_methods);
 }
 
-pub(crate) fn check_owner(env: &Env, address: &Address) -> bool {
+pub(crate) fn check_authentication(env: &Env, address: &Address) -> bool {
     let verification_methods: Vec<VerificationMethod> =
         env.storage().get_unchecked(&VER_METHODS_KEY).unwrap();
 
@@ -62,7 +62,7 @@ pub(crate) fn check_owner(env: &Env, address: &Address) -> bool {
 }
 
 pub(crate) fn check_invocation_address(env: &Env, address: &Address) {
-    if !check_owner(env, address) {
+    if !check_authentication(env, address) {
         panic_with_error!(env, ContractError::NotAuthorized);
     }
 }

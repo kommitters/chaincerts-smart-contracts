@@ -11,7 +11,7 @@ use crate::error::ContractError;
 use did_document::{Metadata, Method, Service};
 use option::OptionU64;
 use soroban_sdk::{contractimpl, panic_with_error, Address, Env, String, Vec};
-use verifiable_credential::VerifiableCredentials;
+use verifiable_credential::VerifiableCredential;
 
 pub struct DIDContract;
 
@@ -55,7 +55,7 @@ impl DIDContract {
         access_control_list::remove_organization(&env, &issuer)
     }
 
-    /// Deposit a `VerifiableCredentials` to the DID contract
+    /// Deposit a `VerifiableCredential` to the DID contract
     pub fn deposit_credential(
         env: Env,
         credential_did: String,
@@ -82,8 +82,8 @@ impl DIDContract {
         verifiable_credential::revoke_credential(&env, &credential_did);
     }
 
-    /// Get the list of the `VerifiableCredentials` stored in the DID contract
-    pub fn get_credentials(env: Env) -> Vec<VerifiableCredentials> {
+    /// Get the list of the `VerifiableCredential` stored in the DID contract
+    pub fn get_credentials(env: Env) -> Vec<VerifiableCredential> {
         verifiable_credential::get_credentials(&env)
     }
 

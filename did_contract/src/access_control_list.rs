@@ -1,6 +1,6 @@
 //! Module AccessControlList
 //!
-//! Module responsible of managing the ACL that allows organizations to deposit `VerifiableCredentials` to a DID contract
+//! Module responsible of managing the ACL that allows organizations to deposit `VerifiableCredential` to a DID contract
 use soroban_sdk::{panic_with_error, vec, Env, String, Vec};
 
 use crate::error::ContractError;

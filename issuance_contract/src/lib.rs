@@ -6,6 +6,7 @@ mod metadata;
 mod organization;
 mod recipients;
 mod storage_types;
+mod attest;
 mod did_contract {
     soroban_sdk::contractimport!(file = "./did_contract.wasm");
 }

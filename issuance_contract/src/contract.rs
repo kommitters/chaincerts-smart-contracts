@@ -1,6 +1,10 @@
 //! Module Contract
 //!
 //! Module containing the main contract logic.
+use crate::attest::{
+    get_credential_data, get_revoked_credential, invalid_status, is_valid, revoked_status,
+    valid_status,
+};
 use crate::did_contract::{self, OptionU64};
 use crate::error::ContractError;
 use crate::issuance_trait::{
@@ -96,53 +100,23 @@ impl IssuanceTrait for IssuanceContract {
         recipient: String,
         signature: String,
     ) -> CredentialStatus {
-        // Check issuer
         if issuer != read_organization_did(&e) {
-            return CredentialStatus {
-                status: String::from_slice(&e, "invalid"),
-                expiration_date: OptionU64::None,
-                revocation_date: OptionU64::None,
-            };
+            return invalid_status(&e);
         }
 
-        // Check if revoked
-        let revoked_credentials: Map<String, RevokedCredential> = read_revoked_credentials(&e);
-        if let Some(revoked_credential_result) = revoked_credentials.get(recipient.clone()) {
-            if let Ok(revoked_credential) = revoked_credential_result {
-                if revoked_credential.credential_data.did == credential
-                    && revoked_credential.credential_data.signature == signature
-                {
-                    let expiration_date = read_expiration_time(&e);
-                    return CredentialStatus {
-                        status: String::from_slice(&e, "revoked"),
-                        expiration_date,
-                        revocation_date: OptionU64::Some(revoked_credential.revocation_date),
-                    };
-                }
+        if let Some(revoked_credential) = get_revoked_credential(&e, &recipient) {
+            if is_valid(&revoked_credential.credential_data, &credential, &signature) {
+                return revoked_status(&e, revoked_credential.revocation_date);
             }
         }
 
-        // Check if valid
-        let recipients_map: Map<String, Option<CredentialData>> = read_recipients(&e);
-        if let Some(recipient_data) = recipients_map.get(recipient) {
-            if let Some(data) = recipient_data.unwrap() {
-                if data.signature == signature && data.did == credential {
-                    let expiration_date = read_expiration_time(&e);
-                    return CredentialStatus {
-                        status: String::from_slice(&e, "valid"),
-                        expiration_date,
-                        revocation_date: OptionU64::None,
-                    };
-                }
+        if let Some(credential_data) = get_credential_data(&e, &recipient) {
+            if is_valid(&credential_data, &credential, &signature) {
+                return valid_status(&e);
             }
         }
 
-        // Invalid
-        CredentialStatus {
-            status: String::from_slice(&e, "invalid"),
-            expiration_date: OptionU64::None,
-            revocation_date: OptionU64::None,
-        }
+        invalid_status(&e)
     }
 
     /// Get the Chaincert name.

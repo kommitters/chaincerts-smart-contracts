@@ -10,7 +10,7 @@ use soroban_sdk::{contracttype, Env, String, Vec};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 #[contracttype]
-/// The `Method` verification process
+/// `DIDDocument` public info
 /// TODO! Add capability_invocation when acl gets updated
 pub struct DIDDocument {
     pub context: Vec<String>,
@@ -23,7 +23,7 @@ pub struct DIDDocument {
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 #[contracttype]
-/// The `Method` verification process
+/// The verification process `Method`
 pub struct Method {
     pub method_type: String,
     pub verified: bool,
@@ -34,7 +34,7 @@ pub struct Method {
 
 #[derive(Clone, PartialEq, PartialOrd, Eq, Ord, Debug)]
 #[contracttype]
-/// The `Method` verification process
+/// The verification process `MethodService`
 pub struct MethodService {
     pub name: String,
     pub url: String,

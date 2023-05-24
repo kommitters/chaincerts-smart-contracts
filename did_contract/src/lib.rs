@@ -8,6 +8,7 @@ mod storage_types;
 mod verifiable_credential;
 
 use crate::error::ContractError;
+use authentication::VerificationMethod;
 use did_document::{DIDDocument, Metadata, Method, Service};
 use option::OptionU64;
 use soroban_sdk::{contractimpl, panic_with_error, Address, Env, String, Vec};
@@ -42,14 +43,14 @@ impl DIDContract {
     }
 
     /// Add organizations to the ACL
-    pub fn add_organization(env: Env, issuer: String, address: Address) {
+    pub fn add_organization(env: Env, address: Address, issuer: String) {
         authentication::check_invocation_address(&env, &address);
         address.require_auth();
         access_control_list::add_organization(&env, &issuer)
     }
 
     /// Remove organizations from the ACL
-    pub fn remove_organization(env: Env, issuer: String, address: Address) {
+    pub fn remove_organization(env: Env, address: Address, issuer: String) {
         authentication::check_invocation_address(&env, &address);
         address.require_auth();
         access_control_list::remove_organization(&env, &issuer)
@@ -76,7 +77,7 @@ impl DIDContract {
     }
 
     /// Self-revoke a Credential.
-    pub fn revoke_credential(env: Env, credential_did: String, address: Address) {
+    pub fn revoke_credential(env: Env, address: Address, credential_did: String) {
         authentication::check_invocation_address(&env, &address);
         address.require_auth();
         verifiable_credential::revoke_credential(&env, &credential_did);
@@ -97,6 +98,47 @@ impl DIDContract {
     /// Get DID document public data
     pub fn public_did_document(env: Env) -> DIDDocument {
         did_document::retrieve_public_did_document(&env)
+    }
+
+    /// Add a new authentication to the authentication list
+    pub fn add_authentication(
+        env: Env,
+        address: Address,
+        new_key_id: String,
+        new_address: Address,
+    ) {
+        authentication::check_invocation_address(&env, &address);
+        address.require_auth();
+        authentication::write_authentication(&env, &new_key_id, &new_address)
+    }
+
+    /// Remove an authentication form the authentication list
+    pub fn remove_authentication(env: Env, address: Address, key_id: String) {
+        authentication::check_invocation_address(&env, &address);
+        address.require_auth();
+        authentication::remove_authentication(&env, &key_id)
+    }
+
+    /// Add a new verification_method to the verification_method list
+    pub fn add_verification_method(
+        env: Env,
+        address: Address,
+        key_id: String,
+        new_address: Address,
+    ) {
+        authentication::check_invocation_address(&env, &address);
+        address.require_auth();
+        let controller = did_document::read_id(&env);
+        let verification_method = VerificationMethod::new(&env, key_id, new_address, controller);
+        authentication::write_verification_method(&env, verification_method)
+    }
+
+    /// Remove an authentication form the authentication list,
+    /// also removes the associated authentication of the authentication list
+    pub fn remove_verification_method(env: Env, address: Address, key_id: String) {
+        authentication::check_invocation_address(&env, &address);
+        address.require_auth();
+        authentication::remove_verification_method(&env, &key_id)
     }
 }
 

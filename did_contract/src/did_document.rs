@@ -1,17 +1,44 @@
 //! Module DIDDocument
 //!
 //! Module responsible of managing the DID document data.
-use crate::storage_types::DataKey;
-use soroban_sdk::{contracttype, Env, String, Symbol, Vec};
+use crate::{
+    authentication::{read_authentication, read_verification_method, VerificationMethod},
+    option::OptionMethodService,
+    storage_types::DataKey,
+};
+use soroban_sdk::{contracttype, Env, String, Vec};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 #[contracttype]
-/// The `Method` verification process
+/// `DIDDocument` public info
+/// TODO! Add capability_invocation when acl gets updated
+pub struct DIDDocument {
+    pub context: Vec<String>,
+    pub id: String,
+    pub verification_method: Vec<VerificationMethod>,
+    pub authentication: Vec<String>,
+    pub services: Vec<Service>,
+    pub metadata: Metadata,
+}
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+#[contracttype]
+/// The verification process `Method`
 pub struct Method {
     pub method_type: String,
     pub verified: bool,
-    //Unix timestamp
+    /// Unix timestamp
     pub timestamp: u64,
+    pub service: OptionMethodService,
+}
+
+#[derive(Clone, PartialEq, PartialOrd, Eq, Ord, Debug)]
+#[contracttype]
+/// The verification process `MethodService`
+pub struct MethodService {
+    pub name: String,
+    pub url: String,
+    pub proof: String,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -24,14 +51,14 @@ pub struct Service {
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 #[contracttype]
-/// The DID `Service` information
+/// The DID `Metadata` information
 pub struct Metadata {
     /// Creation date in unix time stamp
     pub created: u64,
     /// Last update date in unix time stamp
     pub updated: u64,
     /// DID document version
-    pub version: Symbol,
+    pub version: String,
 }
 
 pub(crate) fn write_id(env: &Env, id: &String) {
@@ -49,6 +76,11 @@ pub(crate) fn write_context(env: &Env, context: &Vec<String>) {
     env.storage().set(&key, context);
 }
 
+pub(crate) fn read_context(env: &Env) -> Vec<String> {
+    let key: DataKey = DataKey::Context;
+    env.storage().get_unchecked(&key).unwrap()
+}
+
 pub(crate) fn write_verification_processes(env: &Env, verification_processes: &Vec<Method>) {
     let key: DataKey = DataKey::VerificationProcesses;
     env.storage().set(&key, verification_processes);
@@ -59,7 +91,35 @@ pub(crate) fn write_services(env: &Env, services: &Vec<Service>) {
     env.storage().set(&key, services);
 }
 
+pub(crate) fn read_services(env: &Env) -> Vec<Service> {
+    let key: DataKey = DataKey::Services;
+    env.storage().get_unchecked(&key).unwrap()
+}
+
 pub(crate) fn write_metadata(env: &Env, metadata: &Metadata) {
     let key: DataKey = DataKey::Metadata;
     env.storage().set(&key, metadata);
+}
+
+pub(crate) fn read_metadata(env: &Env) -> Metadata {
+    let key: DataKey = DataKey::Metadata;
+    env.storage().get(&key).unwrap().unwrap()
+}
+
+pub(crate) fn retrieve_public_did_document(env: &Env) -> DIDDocument {
+    let context = read_context(env);
+    let id = read_id(env);
+    let verification_method = read_verification_method(env);
+    let authentication = read_authentication(env);
+    let services = read_services(env);
+    let metadata = read_metadata(env);
+
+    DIDDocument {
+        context,
+        id,
+        verification_method,
+        authentication,
+        services,
+        metadata,
+    }
 }

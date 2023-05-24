@@ -8,7 +8,7 @@ mod storage_types;
 mod verifiable_credential;
 
 use crate::error::ContractError;
-use did_document::{Metadata, Method, Service};
+use did_document::{DIDDocument, Metadata, Method, Service};
 use option::OptionU64;
 use soroban_sdk::{contractimpl, panic_with_error, Address, Env, String, Vec};
 use verifiable_credential::VerifiableCredential;
@@ -37,8 +37,8 @@ impl DIDContract {
         );
         did_document::write_context(&env, &context);
         did_document::write_verification_processes(&env, &verification_processes);
-        did_document::write_services(&env, &services);
         did_document::write_metadata(&env, &metadata);
+        did_document::write_services(&env, &services);
     }
 
     /// Add organizations to the ACL
@@ -92,6 +92,11 @@ impl DIDContract {
         authentication::check_invocation_address(&env, &address);
         address.require_auth();
         access_control_list::get_access_control_list(&env)
+    }
+
+    /// Get DID document public data
+    pub fn public_did_document(env: Env) -> DIDDocument {
+        did_document::retrieve_public_did_document(&env)
     }
 }
 

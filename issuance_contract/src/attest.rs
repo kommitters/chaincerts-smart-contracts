@@ -12,21 +12,19 @@ use crate::{
 };
 
 pub fn get_credential_data(e: &Env, recipient: &String) -> Option<CredentialData> {
-    let recipients_map: Map<String, Option<CredentialData>> = read_recipients(&e);
+    let recipients_map: Map<String, Option<CredentialData>> = read_recipients(e);
     if let Some(recipient_data) = recipients_map.get(recipient.clone()) {
         if let Some(data) = recipient_data.unwrap() {
-            return Some(data.clone());
+            return Some(data);
         }
     }
     None
 }
 
 pub fn get_revoked_credential(e: &Env, recipient: &String) -> Option<RevokedCredential> {
-    let revoked_credentials: Map<String, RevokedCredential> = read_revoked_credentials(&e);
-    if let Some(revoked_credential_result) = revoked_credentials.get(recipient.clone()) {
-        if let Ok(revoked_credential) = revoked_credential_result {
-            return Some(revoked_credential.clone());
-        }
+    let revoked_credentials: Map<String, RevokedCredential> = read_revoked_credentials(e);
+    if let Some(Ok(revoked_credential)) = revoked_credentials.get(recipient.clone()) {
+        return Some(revoked_credential);
     }
     None
 }

@@ -32,9 +32,9 @@ pub struct VerifiableCredential {
 #[contracttype]
 #[derive(Clone, Debug, PartialEq)]
 pub struct CredentialStatus {
-  pub status: String,
-  pub expiration_date: OptionU64,
-  pub revocation_date: OptionU64,
+    pub status: String,
+    pub expiration_date: OptionU64,
+    pub revocation_date: OptionU64,
 }
 
 pub trait IssuanceTrait {

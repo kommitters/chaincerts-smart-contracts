@@ -34,6 +34,16 @@ pub struct Metadata {
     pub version: Symbol,
 }
 
+pub(crate) fn write_id(env: &Env, id: &String) {
+    let key: DataKey = DataKey::Id;
+    env.storage().set(&key, id);
+}
+
+pub(crate) fn read_id(env: &Env) -> String {
+    let key: DataKey = DataKey::Id;
+    env.storage().get_unchecked(&key).unwrap()
+}
+
 pub(crate) fn write_context(env: &Env, context: &Vec<String>) {
     let key: DataKey = DataKey::Context;
     env.storage().set(&key, context);

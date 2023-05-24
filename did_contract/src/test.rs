@@ -2,29 +2,37 @@
 use crate::{
     did_document::{Metadata, Method, Service},
     option::OptionU64,
-    owner::{Owner, VerificationMethod},
     DIDContract, DIDContractClient,
 };
 use soroban_sdk::{testutils::Address as _, vec, Address, Env, IntoVal, String, Symbol, Vec};
 
-fn create_wallet(
+fn create_did_contract(
     e: &Env,
-    owner: &Owner,
+    id: &String,
+    authentication_params: &(String, Address),
     context: &Vec<String>,
     verification_processes: &Vec<Method>,
     services: &Vec<Service>,
     metadata: &Metadata,
 ) -> DIDContractClient {
-    let wallet = DIDContractClient::new(e, &e.register_contract(None, DIDContract {}));
-    wallet.initialize(owner, context, verification_processes, services, metadata);
-    wallet
+    let did_contract = DIDContractClient::new(e, &e.register_contract(None, DIDContract {}));
+    did_contract.initialize(
+        id,
+        authentication_params,
+        context,
+        verification_processes,
+        services,
+        metadata,
+    );
+    did_contract
 }
 
 struct DIDContractTest {
     env: Env,
-    owner: Owner,
-    owner_address: Address,
-    wallet: DIDContractClient,
+    id: String,
+    authentication: String,
+    authentication_address: Address,
+    did_contract: DIDContractClient,
     credential_did: String,
     organizations: Vec<String>,
     cids: Vec<String>,
@@ -37,19 +45,9 @@ struct DIDContractTest {
 impl DIDContractTest {
     fn setup() -> Self {
         let env: Env = Default::default();
-        let authentications = vec![&env, String::from_slice(&env, "did:chaincerts::ABC#key1")];
-        let owner_address = Address::random(&env);
-        let verification_method = VerificationMethod {
-            id: String::from_slice(&env, "did:chaincerts:ABC123#key-1"),
-            verification_method_type: String::from_slice(&env, "Ed25519VerificationKey2020"),
-            controller: String::from_slice(&env, "did:chaincerts:ABC123"),
-            blockchain_account_id: owner_address.clone(),
-        };
-        let verification_methods = vec![&env, verification_method];
-        let owner = Owner {
-            authentications,
-            verification_methods,
-        };
+        let id = String::from_slice(&env, "did:chaincerts::ABC");
+        let authentication = String::from_slice(&env, "did:chaincerts::ABC#key1");
+        let authentication_address = Address::random(&env);
         let context = vec![
             &env,
             String::from_slice(&env, "https://www.w3.org/ns/did/v1"),
@@ -69,11 +67,12 @@ impl DIDContractTest {
         let metadata = Metadata {
             created: 1684872059,
             updated: 1684872059,
-            version: Symbol::short("1.0"),
+            version: Symbol::new(&env, "1.0"),
         };
-        let wallet = create_wallet(
+        let did_contract = create_did_contract(
             &env,
-            &owner,
+            &id,
+            &(authentication.clone(), authentication_address.clone()),
             &context,
             &verification_processes,
             &services,
@@ -88,9 +87,10 @@ impl DIDContractTest {
 
         DIDContractTest {
             env,
-            owner,
-            owner_address,
-            wallet,
+            id,
+            authentication,
+            authentication_address,
+            did_contract,
             credential_did,
             organizations,
             cids,
@@ -103,27 +103,27 @@ impl DIDContractTest {
 }
 
 #[test]
-fn test_successful_execution_of_wallet_capabilities() {
+fn test_successful_execution_of_did_contract_capabilities() {
     let test = DIDContractTest::setup();
     let new_credential_did = "did:chaincerts:".into_val(&test.env);
 
-    test.wallet.add_organization(
+    test.did_contract.add_organization(
         &test.organizations.get_unchecked(0).unwrap(),
-        &test.owner_address,
+        &test.authentication_address,
     );
-    test.wallet.add_organization(
+    test.did_contract.add_organization(
         &test.organizations.get_unchecked(1).unwrap(),
-        &test.owner_address,
+        &test.authentication_address,
     );
 
     assert_eq!(
-        test.wallet
-            .get_access_control_list(&test.owner_address)
+        test.did_contract
+            .get_access_control_list(&test.authentication_address)
             .len(),
         2
     );
 
-    test.wallet.deposit_credential(
+    test.did_contract.deposit_credential(
         &test.credential_did,
         &test.organizations.get_unchecked(0).unwrap(),
         &1680105831,
@@ -131,7 +131,7 @@ fn test_successful_execution_of_wallet_capabilities() {
         &test.cids.get_unchecked(0).unwrap(),
     );
 
-    test.wallet.deposit_credential(
+    test.did_contract.deposit_credential(
         &new_credential_did,
         &test.organizations.get_unchecked(0).unwrap(),
         &1680205831,
@@ -139,18 +139,18 @@ fn test_successful_execution_of_wallet_capabilities() {
         &test.cids.get_unchecked(0).unwrap(),
     );
 
-    assert_eq!(test.wallet.get_credentials().len(), 2);
+    assert_eq!(test.did_contract.get_credentials().len(), 2);
 
-    test.wallet
-        .revoke_credential(&test.credential_did, &test.owner_address);
+    test.did_contract
+        .revoke_credential(&test.credential_did, &test.authentication_address);
 
-    test.wallet.remove_organization(
+    test.did_contract.remove_organization(
         &test.organizations.get_unchecked(0).unwrap(),
-        &test.owner_address,
+        &test.authentication_address,
     );
     assert_eq!(
-        test.wallet
-            .get_access_control_list(&test.owner_address)
+        test.did_contract
+            .get_access_control_list(&test.authentication_address)
             .len(),
         1
     );
@@ -158,10 +158,11 @@ fn test_successful_execution_of_wallet_capabilities() {
 
 #[test]
 #[should_panic(expected = "Status(ContractError(1))")]
-fn test_initialize_an_already_initialized_wallet() {
+fn test_initialize_an_already_initialized_did_contract() {
     let test = DIDContractTest::setup();
-    test.wallet.initialize(
-        &test.owner,
+    test.did_contract.initialize(
+        &test.id,
+        &(test.authentication, test.authentication_address),
         &test.context,
         &test.verification_processes,
         &test.services,
@@ -175,10 +176,7 @@ fn test_when_invalid_address() {
     let test = DIDContractTest::setup();
     let invalid_address = Address::random(&test.env);
 
-    test.wallet.add_organization(
-        &test.organizations.get_unchecked(0).unwrap(),
-        &invalid_address,
-    );
+    test.did_contract.get_access_control_list(&invalid_address);
 }
 
 #[test]
@@ -186,13 +184,13 @@ fn test_when_invalid_address() {
 fn test_when_adding_an_already_added_org() {
     let test = DIDContractTest::setup();
 
-    test.wallet.add_organization(
+    test.did_contract.add_organization(
         &test.organizations.get_unchecked(0).unwrap(),
-        &test.owner_address,
+        &test.authentication_address,
     );
-    test.wallet.add_organization(
+    test.did_contract.add_organization(
         &test.organizations.get_unchecked(0).unwrap(),
-        &test.owner_address,
+        &test.authentication_address,
     );
 }
 
@@ -200,9 +198,9 @@ fn test_when_adding_an_already_added_org() {
 #[should_panic(expected = "Status(ContractError(6))")]
 fn test_remove_organization_when_not_organizations_already_set() {
     let test = DIDContractTest::setup();
-    test.wallet.remove_organization(
+    test.did_contract.remove_organization(
         &test.organizations.get_unchecked(0).unwrap(),
-        &test.owner_address,
+        &test.authentication_address,
     );
 }
 
@@ -210,13 +208,13 @@ fn test_remove_organization_when_not_organizations_already_set() {
 #[should_panic(expected = "Status(ContractError(8))")]
 fn test_remove_organization_when_organization_not_found() {
     let test = DIDContractTest::setup();
-    test.wallet.add_organization(
+    test.did_contract.add_organization(
         &test.organizations.get_unchecked(0).unwrap(),
-        &test.owner_address,
+        &test.authentication_address,
     );
-    test.wallet.remove_organization(
+    test.did_contract.remove_organization(
         &test.organizations.get_unchecked(1).unwrap(),
-        &test.owner_address,
+        &test.authentication_address,
     );
 }
 
@@ -225,12 +223,12 @@ fn test_remove_organization_when_organization_not_found() {
 fn test_deposit_credential_when_organization_is_not_in_the_acl() {
     let test = DIDContractTest::setup();
 
-    test.wallet.add_organization(
+    test.did_contract.add_organization(
         &test.organizations.get_unchecked(0).unwrap(),
-        &test.owner_address,
+        &test.authentication_address,
     );
 
-    test.wallet.deposit_credential(
+    test.did_contract.deposit_credential(
         &test.credential_did,
         &test.organizations.get_unchecked(1).unwrap(),
         &1680105831,
@@ -244,7 +242,7 @@ fn test_deposit_credential_when_organization_is_not_in_the_acl() {
 fn test_deposit_credential_when_no_organizations_in_the_acl() {
     let test = DIDContractTest::setup();
 
-    test.wallet.deposit_credential(
+    test.did_contract.deposit_credential(
         &test.credential_did,
         &test.organizations.get_unchecked(1).unwrap(),
         &1680105831,
@@ -255,19 +253,19 @@ fn test_deposit_credential_when_no_organizations_in_the_acl() {
 
 #[test]
 #[should_panic(expected = "Status(ContractError(9))")]
-fn test_deposit_credential_chaincert_is_already_in_the_wallet() {
+fn test_deposit_credential_chaincert_is_already_in_the_did_contract() {
     let test = DIDContractTest::setup();
 
-    test.wallet.add_organization(
+    test.did_contract.add_organization(
         &test.organizations.get_unchecked(0).unwrap(),
-        &test.owner_address,
+        &test.authentication_address,
     );
-    test.wallet.add_organization(
+    test.did_contract.add_organization(
         &test.organizations.get_unchecked(1).unwrap(),
-        &test.owner_address,
+        &test.authentication_address,
     );
 
-    test.wallet.deposit_credential(
+    test.did_contract.deposit_credential(
         &test.credential_did,
         &test.organizations.get_unchecked(0).unwrap(),
         &1680105831,
@@ -275,7 +273,7 @@ fn test_deposit_credential_chaincert_is_already_in_the_wallet() {
         &test.cids.get_unchecked(0).unwrap(),
     );
 
-    test.wallet.deposit_credential(
+    test.did_contract.deposit_credential(
         &test.credential_did,
         &test.organizations.get_unchecked(0).unwrap(),
         &1680105831,
@@ -286,15 +284,15 @@ fn test_deposit_credential_chaincert_is_already_in_the_wallet() {
 
 #[test]
 #[should_panic(expected = "Status(ContractError(11))")]
-fn test_revoke_credential_when_no_chaincerts_in_wallet() {
+fn test_revoke_credential_when_no_chaincerts_in_did_contract() {
     let test = DIDContractTest::setup();
 
-    test.wallet.add_organization(
+    test.did_contract.add_organization(
         &test.organizations.get_unchecked(0).unwrap(),
-        &test.owner_address,
+        &test.authentication_address,
     );
-    test.wallet
-        .revoke_credential(&test.credential_did, &test.owner_address)
+    test.did_contract
+        .revoke_credential(&test.credential_did, &test.authentication_address)
 }
 
 #[test]
@@ -304,8 +302,9 @@ fn test_revoke_credential_when_chaincert_not_found() {
     let org1 = test.organizations.get_unchecked(0).unwrap();
     let new_chaincert: String = "CHAINCERT2".into_val(&test.env);
 
-    test.wallet.add_organization(&org1, &test.owner_address);
-    test.wallet.deposit_credential(
+    test.did_contract
+        .add_organization(&org1, &test.authentication_address);
+    test.did_contract.deposit_credential(
         &test.credential_did,
         &org1,
         &1680105831,
@@ -313,8 +312,8 @@ fn test_revoke_credential_when_chaincert_not_found() {
         &test.cids.get(0).unwrap().unwrap(),
     );
 
-    test.wallet
-        .revoke_credential(&new_chaincert, &test.owner_address);
+    test.did_contract
+        .revoke_credential(&new_chaincert, &test.authentication_address);
 }
 
 #[test]
@@ -322,7 +321,7 @@ fn test_revoke_credential_when_chaincert_not_found() {
 fn test_request_chaincerts_when_no_chaincerts_set() {
     let test = DIDContractTest::setup();
 
-    test.wallet.get_credentials();
+    test.did_contract.get_credentials();
 }
 
 #[test]
@@ -330,5 +329,6 @@ fn test_request_chaincerts_when_no_chaincerts_set() {
 fn test_request_acl_when_no_organizations_set() {
     let test = DIDContractTest::setup();
 
-    test.wallet.get_access_control_list(&test.owner_address);
+    test.did_contract
+        .get_access_control_list(&test.authentication_address);
 }

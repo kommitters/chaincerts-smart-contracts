@@ -1,4 +1,5 @@
 #![no_std]
+mod attest;
 mod contract;
 mod error;
 mod issuance_trait;

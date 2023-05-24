@@ -5,7 +5,7 @@ use soroban_sdk::{contracttype, Address, Bytes, BytesN, Env, Map, String, Vec};
 
 use crate::{
     did_contract::OptionU64,
-    storage_types::{CredentialData, Info, Organization},
+    storage_types::{CredentialData, Info, Organization, RevokedCredential},
 };
 
 #[contracttype]
@@ -29,6 +29,14 @@ pub struct VerifiableCredential {
     pub issuance_date: u64,
 }
 
+#[contracttype]
+#[derive(Clone, Debug, PartialEq)]
+pub struct CredentialStatus {
+    pub status: String,
+    pub expiration_date: OptionU64,
+    pub revocation_date: OptionU64,
+}
+
 pub trait IssuanceTrait {
     /// Initialize the contract a list of recipients or with the limit of Chaincerts that can be distributed.
     fn initialize(
@@ -49,7 +57,7 @@ pub trait IssuanceTrait {
     );
 
     /// Revoke a Chaincert from a recipient.
-    fn revoke(e: Env, admin: Address, recipient: String);
+    fn revoke(e: Env, admin: Address, recipient: String, revocation_date: u64);
 
     /// Attest the authenticity and legitimacy of a credential.
     fn attest(
@@ -58,7 +66,7 @@ pub trait IssuanceTrait {
         issuer: Bytes,
         recipient: String,
         signature: String,
-    ) -> bool;
+    ) -> CredentialStatus;
 
     /// Get the Chaincert name.
     fn name(e: Env) -> Bytes;
@@ -85,5 +93,5 @@ pub trait IssuanceTrait {
     fn info(e: Env) -> Info;
 
     /// Get all revoked credentials.
-    fn revoked_credentials(e: Env, admin: Address) -> Vec<CredentialData>;
+    fn revoked_credentials(e: Env, admin: Address) -> Vec<RevokedCredential>;
 }

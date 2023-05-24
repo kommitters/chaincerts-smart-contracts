@@ -3,9 +3,9 @@
 //! Module for obtaining and modifying the metadata fields.
 use crate::{
     did_contract::OptionU64,
-    storage_types::{CredentialData, DataKey},
+    storage_types::{CredentialData, DataKey, RevokedCredential},
 };
-use soroban_sdk::{Bytes, Env, Map, String, Vec};
+use soroban_sdk::{Bytes, Env, Map, String};
 
 pub fn read_file_storage(e: &Env) -> Bytes {
     let key = DataKey::FileStorage;
@@ -37,14 +37,14 @@ pub fn write_revocable(e: &Env, revocable: bool) {
     e.storage().set(&key, &revocable)
 }
 
-pub fn read_revoked_credentials(e: &Env) -> Vec<CredentialData> {
+pub fn read_revoked_credentials(e: &Env) -> Map<String, RevokedCredential> {
     let key = DataKey::RevokedCredentials;
     e.storage().get_unchecked(&key).unwrap()
 }
 
-pub fn write_revoked_credential(e: &Env, credential_list: Vec<CredentialData>) {
+pub fn write_revoked_credentials(e: &Env, revoked_credentials: Map<String, RevokedCredential>) {
     let key = DataKey::RevokedCredentials;
-    e.storage().set(&key, &credential_list)
+    e.storage().set(&key, &revoked_credentials)
 }
 
 pub fn read_expiration_time(e: &Env) -> OptionU64 {

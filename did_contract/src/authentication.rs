@@ -45,10 +45,18 @@ pub(crate) fn write_authentication(env: &Env, key_id: &String, address: &Address
     write_verification_method(env, verification_method);
 }
 
+pub(crate) fn read_authentication(env: &Env) -> Vec<String> {
+    env.storage().get_unchecked(&AUTHENTICATION_KEY).unwrap()
+}
+
 pub(crate) fn write_verification_method(env: &Env, verification_method: VerificationMethod) {
     let verification_methods: Vec<VerificationMethod> = vec![env, verification_method];
 
     env.storage().set(&VER_METHODS_KEY, &verification_methods);
+}
+
+pub(crate) fn read_verification_method(env: &Env) -> Vec<VerificationMethod> {
+    env.storage().get_unchecked(&VER_METHODS_KEY).unwrap()
 }
 
 pub(crate) fn check_authentication(env: &Env, address: &Address) -> bool {

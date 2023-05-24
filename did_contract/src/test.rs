@@ -1,10 +1,11 @@
 #![cfg(test)]
 use crate::{
-    did_document::{Metadata, Method, Service},
-    option::OptionU64,
+    authentication::VerificationMethod,
+    did_document::{DIDDocument, Metadata, Method, Service},
+    option::{OptionMethodService, OptionU64},
     DIDContract, DIDContractClient,
 };
-use soroban_sdk::{testutils::Address as _, vec, Address, Env, IntoVal, String, Symbol, Vec};
+use soroban_sdk::{testutils::Address as _, vec, Address, Env, IntoVal, String, Vec};
 
 fn create_did_contract(
     e: &Env,
@@ -57,6 +58,7 @@ impl DIDContractTest {
             method_type: String::from_slice(&env, "otp"),
             verified: true,
             timestamp: 1684872059,
+            service: OptionMethodService::None,
         };
         let verification_processes = vec![&env, method];
         let service = Service {
@@ -67,7 +69,7 @@ impl DIDContractTest {
         let metadata = Metadata {
             created: 1684872059,
             updated: 1684872059,
-            version: Symbol::new(&env, "1.0"),
+            version: String::from_slice(&env, "1.0"),
         };
         let did_contract = create_did_contract(
             &env,
@@ -154,6 +156,30 @@ fn test_successful_execution_of_did_contract_capabilities() {
             .len(),
         1
     );
+}
+
+#[test]
+fn test_retrieve_did_public_document() {
+    let test = DIDContractTest::setup();
+
+    let verifiable_method = VerificationMethod {
+        id: test.authentication.clone(),
+        verification_method_type: String::from_slice(&test.env, "Ed25519VerificationKey2020"),
+        controller: test.id.clone(),
+        blockchain_account_id: test.authentication_address,
+    };
+
+    let public_did_document = DIDDocument {
+        context: test.context,
+        id: test.id,
+        verification_method: vec![&test.env, verifiable_method],
+        authentication: vec![&test.env, test.authentication],
+        services: test.services,
+        metadata: test.metadata.clone(),
+    };
+
+    test.did_contract.public_did_document();
+    assert_eq!(test.did_contract.public_did_document(), public_did_document)
 }
 
 #[test]

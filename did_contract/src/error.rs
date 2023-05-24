@@ -12,4 +12,6 @@ pub enum ContractError {
     VerifiableCredentialAlreadyInWallet = 9,
     VerifiableCredentialNotFound = 10,
     NoVerifiableCredential = 11,
+    CannotRemoveAuthentication = 12,
+    CannotRemoveVerificationMethod = 13,
 }

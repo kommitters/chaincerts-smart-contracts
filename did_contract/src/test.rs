@@ -110,12 +110,12 @@ fn test_successful_execution_of_did_contract_capabilities() {
     let new_credential_did = "did:chaincerts:".into_val(&test.env);
 
     test.did_contract.add_organization(
-        &test.organizations.get_unchecked(0).unwrap(),
         &test.authentication_address,
+        &test.organizations.get_unchecked(0).unwrap(),
     );
     test.did_contract.add_organization(
-        &test.organizations.get_unchecked(1).unwrap(),
         &test.authentication_address,
+        &test.organizations.get_unchecked(1).unwrap(),
     );
 
     assert_eq!(
@@ -144,17 +144,58 @@ fn test_successful_execution_of_did_contract_capabilities() {
     assert_eq!(test.did_contract.get_credentials().len(), 2);
 
     test.did_contract
-        .revoke_credential(&test.credential_did, &test.authentication_address);
+        .revoke_credential(&test.authentication_address, &test.credential_did);
 
     test.did_contract.remove_organization(
-        &test.organizations.get_unchecked(0).unwrap(),
         &test.authentication_address,
+        &test.organizations.get_unchecked(0).unwrap(),
     );
     assert_eq!(
         test.did_contract
             .get_access_control_list(&test.authentication_address)
             .len(),
         1
+    );
+
+    let key_id = String::from_slice(&test.env, "did:chaincerts::ABC#key2");
+    test.did_contract.add_authentication(
+        &test.authentication_address,
+        &key_id,
+        &Address::random(&test.env),
+    );
+    assert_eq!(
+        test.did_contract.public_did_document().authentication.len(),
+        2
+    );
+
+    test.did_contract
+        .remove_authentication(&test.authentication_address, &key_id);
+    assert_eq!(
+        test.did_contract.public_did_document().authentication.len(),
+        1
+    );
+
+    test.did_contract.add_verification_method(
+        &test.authentication_address,
+        &key_id,
+        &Address::random(&test.env),
+    );
+    assert_eq!(
+        test.did_contract
+            .public_did_document()
+            .verification_method
+            .len(),
+        3
+    );
+
+    test.did_contract
+        .remove_verification_method(&test.authentication_address, &key_id);
+    assert_eq!(
+        test.did_contract
+            .public_did_document()
+            .verification_method
+            .len(),
+        2
     );
 }
 
@@ -180,6 +221,22 @@ fn test_retrieve_did_public_document() {
 
     test.did_contract.public_did_document();
     assert_eq!(test.did_contract.public_did_document(), public_did_document)
+}
+
+#[test]
+fn test_remove_verification_method_when_remove_verification_with_auth() {
+    let test = DIDContractTest::setup();
+
+    let key_id = String::from_slice(&test.env, "did:chaincerts::ABC#key2");
+
+    test.did_contract.add_authentication(
+        &test.authentication_address,
+        &key_id,
+        &Address::random(&test.env),
+    );
+
+    test.did_contract
+        .remove_verification_method(&test.authentication_address, &key_id)
 }
 
 #[test]
@@ -211,12 +268,12 @@ fn test_when_adding_an_already_added_org() {
     let test = DIDContractTest::setup();
 
     test.did_contract.add_organization(
-        &test.organizations.get_unchecked(0).unwrap(),
         &test.authentication_address,
+        &test.organizations.get_unchecked(0).unwrap(),
     );
     test.did_contract.add_organization(
-        &test.organizations.get_unchecked(0).unwrap(),
         &test.authentication_address,
+        &test.organizations.get_unchecked(0).unwrap(),
     );
 }
 
@@ -225,8 +282,8 @@ fn test_when_adding_an_already_added_org() {
 fn test_remove_organization_when_not_organizations_already_set() {
     let test = DIDContractTest::setup();
     test.did_contract.remove_organization(
-        &test.organizations.get_unchecked(0).unwrap(),
         &test.authentication_address,
+        &test.organizations.get_unchecked(0).unwrap(),
     );
 }
 
@@ -235,12 +292,12 @@ fn test_remove_organization_when_not_organizations_already_set() {
 fn test_remove_organization_when_organization_not_found() {
     let test = DIDContractTest::setup();
     test.did_contract.add_organization(
-        &test.organizations.get_unchecked(0).unwrap(),
         &test.authentication_address,
+        &test.organizations.get_unchecked(0).unwrap(),
     );
     test.did_contract.remove_organization(
-        &test.organizations.get_unchecked(1).unwrap(),
         &test.authentication_address,
+        &test.organizations.get_unchecked(1).unwrap(),
     );
 }
 
@@ -250,8 +307,8 @@ fn test_deposit_credential_when_organization_is_not_in_the_acl() {
     let test = DIDContractTest::setup();
 
     test.did_contract.add_organization(
-        &test.organizations.get_unchecked(0).unwrap(),
         &test.authentication_address,
+        &test.organizations.get_unchecked(0).unwrap(),
     );
 
     test.did_contract.deposit_credential(
@@ -283,12 +340,12 @@ fn test_deposit_credential_chaincert_is_already_in_the_did_contract() {
     let test = DIDContractTest::setup();
 
     test.did_contract.add_organization(
-        &test.organizations.get_unchecked(0).unwrap(),
         &test.authentication_address,
+        &test.organizations.get_unchecked(0).unwrap(),
     );
     test.did_contract.add_organization(
-        &test.organizations.get_unchecked(1).unwrap(),
         &test.authentication_address,
+        &test.organizations.get_unchecked(1).unwrap(),
     );
 
     test.did_contract.deposit_credential(
@@ -314,11 +371,11 @@ fn test_revoke_credential_when_no_chaincerts_in_did_contract() {
     let test = DIDContractTest::setup();
 
     test.did_contract.add_organization(
-        &test.organizations.get_unchecked(0).unwrap(),
         &test.authentication_address,
+        &test.organizations.get_unchecked(0).unwrap(),
     );
     test.did_contract
-        .revoke_credential(&test.credential_did, &test.authentication_address)
+        .revoke_credential(&test.authentication_address, &test.credential_did)
 }
 
 #[test]
@@ -329,7 +386,7 @@ fn test_revoke_credential_when_chaincert_not_found() {
     let new_chaincert: String = "CHAINCERT2".into_val(&test.env);
 
     test.did_contract
-        .add_organization(&org1, &test.authentication_address);
+        .add_organization(&test.authentication_address, &org1);
     test.did_contract.deposit_credential(
         &test.credential_did,
         &org1,
@@ -339,7 +396,7 @@ fn test_revoke_credential_when_chaincert_not_found() {
     );
 
     test.did_contract
-        .revoke_credential(&new_chaincert, &test.authentication_address);
+        .revoke_credential(&test.authentication_address, &new_chaincert);
 }
 
 #[test]
@@ -357,4 +414,56 @@ fn test_request_acl_when_no_organizations_set() {
 
     test.did_contract
         .get_access_control_list(&test.authentication_address);
+}
+
+#[test]
+#[should_panic(expected = "Status(ContractError(12))")]
+fn test_remove_authentication_with_only_one_authentication() {
+    let test = DIDContractTest::setup();
+
+    test.did_contract
+        .remove_authentication(&test.authentication_address, &test.authentication);
+}
+
+#[test]
+#[should_panic(expected = "Status(ContractError(12))")]
+fn test_remove_authentication_with_non_existent_key() {
+    let test = DIDContractTest::setup();
+    let key_id = String::from_slice(&test.env, "did:chaincerts::ABC#key2");
+    let invalid_key_id = String::from_slice(&test.env, "did:chaincerts::ABC#key_invalid");
+
+    test.did_contract.add_authentication(
+        &test.authentication_address,
+        &key_id,
+        &Address::random(&test.env),
+    );
+
+    test.did_contract
+        .remove_authentication(&test.authentication_address, &invalid_key_id);
+}
+
+#[test]
+#[should_panic(expected = "Status(ContractError(13))")]
+fn test_remove_verification_method_with_only_one_authentication() {
+    let test = DIDContractTest::setup();
+
+    test.did_contract
+        .remove_verification_method(&test.authentication_address, &test.authentication);
+}
+
+#[test]
+#[should_panic(expected = "Status(ContractError(13))")]
+fn test_remove_verification_method_with_non_existent_key() {
+    let test = DIDContractTest::setup();
+    let key_id = String::from_slice(&test.env, "did:chaincerts::ABC#key2");
+    let invalid_key_id = String::from_slice(&test.env, "did:chaincerts::ABC#key_invalid");
+
+    test.did_contract.add_verification_method(
+        &test.authentication_address,
+        &key_id,
+        &Address::random(&test.env),
+    );
+
+    test.did_contract
+        .remove_verification_method(&test.authentication_address, &invalid_key_id);
 }

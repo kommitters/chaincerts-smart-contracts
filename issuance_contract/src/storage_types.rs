@@ -2,19 +2,19 @@
 //!
 //! Module where the DataKey of the contract and some necessary structs are defined.
 use crate::did_contract::OptionU64;
-use soroban_sdk::{contracttype, Address, Bytes, String};
+use soroban_sdk::{contracttype, Address, String};
 
 #[contracttype]
 #[derive(Clone, Debug, PartialEq)]
 pub struct Organization {
-    pub did: Bytes,
+    pub did: String,
     pub admin: Address,
 }
 
 #[contracttype]
 #[derive(Clone, Debug, PartialEq)]
 pub struct CredentialData {
-    pub did: Bytes,
+    pub did: String,
     pub recipient_did: String,
     pub credential_type: String,
     pub credential_title: String,
@@ -32,7 +32,7 @@ pub struct RevokedCredential {
 
 impl CredentialData {
     pub fn new(
-        did: Bytes,
+        did: String,
         recipient_did: String,
         credential_type: String,
         credential_title: String,
@@ -64,7 +64,7 @@ impl RevokedCredential {
 #[contracttype]
 #[derive(Clone, Debug, PartialEq)]
 pub struct Info {
-    pub name: Bytes,
+    pub name: String,
     pub revocable: bool,
     pub distribution_limit: u32,
     pub supply: u32,
@@ -75,8 +75,8 @@ pub struct Info {
 #[derive(Clone, Debug)]
 #[contracttype]
 pub enum DataKey {
-    FileStorage,        // Bytes
-    Name,               // Bytes
+    FileStorage,        // String
+    Name,               // String
     Revocable,          // bool
     RevokedCredentials, // Vec<CredentialData>
     Recipients,         // Map <String, Option<CredentialData>>

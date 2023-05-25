@@ -9,7 +9,7 @@ pub enum ContractError {
     AlreadyInCapInvocation = 4,
     NoCapabilityInvocation = 6,
     CapabilityInvocationNotFound = 8,
-    VerifiableCredentialAlreadyInWallet = 9,
+    VerifiableCredentialAlreadyInDID = 9,
     VerifiableCredentialNotFound = 10,
     NoVerifiableCredential = 11,
     CannotRemoveAuthentication = 12,

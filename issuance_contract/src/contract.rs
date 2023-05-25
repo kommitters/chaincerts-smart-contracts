@@ -5,7 +5,7 @@ use crate::attest::{
     get_credential_data, get_revoked_credential, invalid_status, is_valid, revoked_status,
     valid_status,
 };
-use crate::did_contract;
+use crate::did_contract::{self, CredentialSubject, VerifiableCredential};
 use crate::error::ContractError;
 use crate::issuance_trait::{
     CredentialParams, CredentialStatus, DistributeCredential, IssuanceTrait,
@@ -21,7 +21,7 @@ use crate::organization::{
 };
 use crate::recipients::{add_recipient, create_recipients, read_recipients};
 use crate::storage_types::{CredentialData, Info, Organization, RevokedCredential};
-use soroban_sdk::{contractimpl, panic_with_error, Address, Bytes, BytesN, Env, Map, String, Vec};
+use soroban_sdk::{contractimpl, panic_with_error, Address, BytesN, Env, Map, String, Vec};
 
 pub struct IssuanceContract;
 
@@ -30,7 +30,7 @@ impl IssuanceTrait for IssuanceContract {
     /// Initialize the contract a list of recipients or with the limit of Credentials that can be distributed.
     fn initialize(
         e: Env,
-        name: Bytes,
+        name: String,
         recipients: Option<Vec<String>>,
         distribution_limit: Option<u32>,
         organization: Organization,
@@ -55,14 +55,14 @@ impl IssuanceTrait for IssuanceContract {
     fn distribute(
         e: Env,
         admin: Address,
-        wallet_contract_id: BytesN<32>,
+        did_contract_id: BytesN<32>,
         credential: DistributeCredential,
     ) {
         check_admin(&e, &admin);
         admin.require_auth();
         check_amount(&e);
 
-        apply_distribution(e, wallet_contract_id, &credential);
+        apply_distribution(e, did_contract_id, &credential);
     }
 
     /// Revoke a Credential from a recipient.
@@ -93,8 +93,8 @@ impl IssuanceTrait for IssuanceContract {
     /// Attest the authenticity and legitimacy of a credential.
     fn attest(
         e: Env,
-        credential: Bytes,
-        issuer: Bytes,
+        credential: String,
+        issuer: String,
         recipient: String,
         signature: String,
     ) -> CredentialStatus {
@@ -118,7 +118,7 @@ impl IssuanceTrait for IssuanceContract {
     }
 
     /// Get the Credential name.
-    fn name(e: Env) -> Bytes {
+    fn name(e: Env) -> String {
         read_name(&e)
     }
 
@@ -138,7 +138,7 @@ impl IssuanceTrait for IssuanceContract {
     }
 
     /// Get the type of decentralized storage service.
-    fn file_storage(e: Env) -> Bytes {
+    fn file_storage(e: Env) -> String {
         read_file_storage(&e)
     }
 
@@ -168,18 +168,14 @@ impl IssuanceTrait for IssuanceContract {
 }
 
 /// Defines recipients and distribution_limit depending on the received ones.
-fn apply_distribution(
-    e: Env,
-    wallet_contract_id: BytesN<32>,
-    credential: &DistributeCredential,
-) {
+fn apply_distribution(e: Env, did_contract_id: BytesN<32>, credential: &DistributeCredential) {
     match read_recipients(&e).get(credential.recipient_did.clone()) {
         Some(_) => {
-            distribute_to_recipient(&e, wallet_contract_id, credential);
+            distribute_to_recipient(&e, did_contract_id, credential);
         }
         None => {
             add_recipient(&e, &credential.recipient_did);
-            distribute_to_recipient(&e, wallet_contract_id, credential);
+            distribute_to_recipient(&e, did_contract_id, credential);
         }
     };
 }
@@ -226,10 +222,10 @@ fn check_revocable(e: &Env) {
     }
 }
 
-/// Deposit a chaincert to a wallet and makes the necessary storage changes when successful.
+/// Deposit a chaincert to a DID and makes the necessary storage changes when successful.
 fn distribute_to_recipient(
     e: &Env,
-    wallet_contract_id: BytesN<32>,
+    did_contract_id: BytesN<32>,
     credential: &DistributeCredential,
 ) {
     let mut recipients: Map<String, Option<CredentialData>> = read_recipients(e);
@@ -241,7 +237,7 @@ fn distribute_to_recipient(
     let credential_type = read_credential_type(e);
     let credential_title = read_credential_title(e);
 
-    deposit_to_wallet(e, wallet_contract_id, credential);
+    deposit_to_did(e, did_contract_id, credential);
 
     credential_data = Some(CredentialData::new(
         credential.did.clone(),
@@ -258,21 +254,25 @@ fn distribute_to_recipient(
     increment_supply(e);
 }
 
-/// Invokes a wallet contract to make a chaincert deposit.
-fn deposit_to_wallet(
-    e: &Env,
-    wallet_contract_id: BytesN<32>,
-    credential: &DistributeCredential,
-) {
-    let wallet_client = did_contract::Client::new(e, &wallet_contract_id);
-    let distributor_contract = e.current_contract_address();
-    let org_did = read_organization_did(e);
-    wallet_client.deposit_chaincert(
-        &credential.did,
-        &credential.attestation,
-        &distributor_contract,
-        &org_did,
-        &credential.issuance_date,
-        &credential.expiration_date,
-    );
+/// Invokes a DID contract to make a credential deposit.
+fn deposit_to_did(e: &Env, did_contract_id: BytesN<32>, credential: &DistributeCredential) {
+    let did_client = did_contract::Client::new(e, &did_contract_id);
+    let issuer = read_organization_did(e);
+
+    let credential_subject = CredentialSubject {
+        id: credential.id.clone(),
+        type_: read_credential_type(e),
+        title: read_credential_title(e),
+    };
+
+    let verifiable_credential = VerifiableCredential {
+        id: credential.did.clone(),
+        issuer,
+        issuance_date: credential.issuance_date,
+        expiration_date: credential.expiration_date.clone(),
+        credential_subject,
+        attestation: credential.attestation.clone(),
+        revoked: false,
+    };
+    did_client.deposit_credential(&verifiable_credential);
 }

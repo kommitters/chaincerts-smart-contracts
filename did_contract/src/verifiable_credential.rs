@@ -30,27 +30,6 @@ pub struct VerifiableCredential {
     pub revoked: bool,
 }
 
-impl VerifiableCredential {
-    pub fn new(
-        id: String,
-        issuer: String,
-        issuance_date: u64,
-        expiration_date: OptionU64,
-        credential_subject: CredentialSubject,
-        attestation: String,
-    ) -> Self {
-        VerifiableCredential {
-            id,
-            issuer,
-            issuance_date,
-            expiration_date,
-            credential_subject,
-            attestation,
-            revoked: false,
-        }
-    }
-}
-
 #[derive(Clone, PartialEq, Eq, Debug)]
 #[contracttype]
 /// The `CredentialSubject` info stored in a `VerifiableCredential`
@@ -76,7 +55,7 @@ pub(crate) fn deposit_credential(env: &Env, verifiable_credential: VerifiableCre
                 credential_map.set(credential_did, verifiable_credential);
                 credential_map
             } else {
-                panic_with_error!(env, ContractError::VerifiableCredentialAlreadyInWallet)
+                panic_with_error!(env, ContractError::VerifiableCredentialAlreadyInDID)
             }
         }
         None => {

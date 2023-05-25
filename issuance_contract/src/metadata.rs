@@ -1,27 +1,25 @@
 //! Module MetaData
 //!
 //! Module for obtaining and modifying the metadata fields.
-use crate::{
-    storage_types::{CredentialData, DataKey, RevokedCredential},
-};
-use soroban_sdk::{Bytes, Env, Map, String};
+use crate::storage_types::{CredentialData, DataKey, RevokedCredential};
+use soroban_sdk::{Env, Map, String};
 
-pub fn read_file_storage(e: &Env) -> Bytes {
+pub fn read_file_storage(e: &Env) -> String {
     let key = DataKey::FileStorage;
     e.storage().get_unchecked(&key).unwrap()
 }
 
-pub fn write_file_storage(e: &Env, file_storage: Bytes) {
+pub fn write_file_storage(e: &Env, file_storage: String) {
     let key = DataKey::FileStorage;
     e.storage().set(&key, &file_storage);
 }
 
-pub fn read_name(e: &Env) -> Bytes {
+pub fn read_name(e: &Env) -> String {
     let key = DataKey::Name;
     e.storage().get_unchecked(&key).unwrap()
 }
 
-pub fn write_name(e: &Env, name: Bytes) {
+pub fn write_name(e: &Env, name: String) {
     let key = DataKey::Name;
     e.storage().set(&key, &name)
 }

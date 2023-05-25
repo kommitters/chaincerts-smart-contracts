@@ -1,7 +1,7 @@
 //! Module Attest
 //!
 //! Module that groups the functions required to attest a credential.
-use soroban_sdk::{Bytes, Env, Map, String};
+use soroban_sdk::{Env, Map, String};
 
 use crate::{
     did_contract::OptionU64,
@@ -29,7 +29,7 @@ pub fn get_revoked_credential(e: &Env, recipient: &String) -> Option<RevokedCred
     None
 }
 
-pub fn is_valid(data: &CredentialData, credential: &Bytes, signature: &String) -> bool {
+pub fn is_valid(data: &CredentialData, credential: &String, signature: &String) -> bool {
     data.signature == *signature && data.did == *credential
 }
 

@@ -2,8 +2,9 @@
 use crate::{
     authentication::VerificationMethod,
     capability_invocation::{CapType, CapabilityInvocation},
-    did_document::{DIDDocument, Metadata, Method, Service},
+    did_document::{DIDDocument, Method, Service},
     option::{OptionAddress, OptionMethodService, OptionString, OptionU64},
+    verifiable_credential::{CredentialSubject, VerifiableCredential},
     DIDContract, DIDContractClient,
 };
 use soroban_sdk::{testutils::Address as _, vec, Address, Env, IntoVal, String, Vec};
@@ -15,7 +16,6 @@ fn create_did_contract(
     context: &Vec<String>,
     verification_processes: &Vec<Method>,
     services: &Vec<Service>,
-    metadata: &Metadata,
 ) -> DIDContractClient {
     let did_contract = DIDContractClient::new(e, &e.register_contract(None, DIDContract {}));
     did_contract.initialize(
@@ -24,7 +24,6 @@ fn create_did_contract(
         context,
         verification_processes,
         services,
-        metadata,
     );
     did_contract
 }
@@ -42,8 +41,8 @@ struct DIDContractTest {
     context: Vec<String>,
     verification_processes: Vec<Method>,
     services: Vec<Service>,
-    metadata: Metadata,
     shared_address: Address,
+    credential_subject: CredentialSubject,
 }
 
 impl DIDContractTest {
@@ -70,11 +69,6 @@ impl DIDContractTest {
             service_endpoint: String::from_slice(&env, "https://did.chaincerts.co/ABC123"),
         };
         let services = vec![&env, service];
-        let metadata = Metadata {
-            created: 1684872059,
-            updated: 1684872059,
-            version: String::from_slice(&env, "1.0"),
-        };
         let did_contract = create_did_contract(
             &env,
             &id,
@@ -82,7 +76,6 @@ impl DIDContractTest {
             &context,
             &verification_processes,
             &services,
-            &metadata,
         );
         let credential_did: String = "did:chaincerts:ABC123#credential-xyz123".into_val(&env);
         let public_credential_did: String =
@@ -120,6 +113,11 @@ impl DIDContractTest {
         let capability_invocations = vec![&env, cap1, cap2, cap3_read, cap4_public_read];
         let cid1: String = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC".into_val(&env);
         let cids = vec![&env, cid1];
+        let credential_subject = CredentialSubject::new(
+            String::from_slice(&env, "c8b875a2-3f5d-4a63-b1c8-791be9b01c02"),
+            String::from_slice(&env, "Test"),
+            String::from_slice(&env, "Test subject"),
+        );
 
         DIDContractTest {
             env,
@@ -134,8 +132,8 @@ impl DIDContractTest {
             context,
             verification_processes,
             services,
-            metadata,
             shared_address,
+            credential_subject,
         }
     }
 }
@@ -143,8 +141,26 @@ impl DIDContractTest {
 #[test]
 fn test_successful_execution_of_did_contract_capabilities() {
     let test = DIDContractTest::setup();
-    let new_credential_did = "did:chaincerts:".into_val(&test.env);
+    let new_credential_did = String::from_slice(&test.env, "did:chaincerts:");
     let issuer = String::from_slice(&test.env, "did:chaincerts:ISSUER1");
+    let verifiable_credential1 = VerifiableCredential {
+        id: test.credential_did.clone(),
+        issuer: issuer.clone(),
+        issuance_date: 1680105831,
+        expiration_date: OptionU64::Some(1711662757),
+        credential_subject: test.credential_subject.clone(),
+        attestation: test.cids.get_unchecked(0).unwrap(),
+        revoked: false,
+    };
+    let verifiable_credential2 = VerifiableCredential {
+        id: new_credential_did,
+        issuer,
+        issuance_date: 1680205831,
+        expiration_date: OptionU64::None,
+        credential_subject: test.credential_subject,
+        attestation: test.cids.get_unchecked(0).unwrap(),
+        revoked: false,
+    };
 
     test.did_contract.add_capability(
         &test.authentication_address,
@@ -162,21 +178,11 @@ fn test_successful_execution_of_did_contract_capabilities() {
         2
     );
 
-    test.did_contract.deposit_credential(
-        &test.credential_did,
-        &issuer,
-        &1680105831,
-        &OptionU64::Some(1711662757),
-        &test.cids.get_unchecked(0).unwrap(),
-    );
+    test.did_contract
+        .deposit_credential(&verifiable_credential1);
 
-    test.did_contract.deposit_credential(
-        &new_credential_did,
-        &issuer,
-        &1680205831,
-        &OptionU64::None,
-        &test.cids.get_unchecked(0).unwrap(),
-    );
+    test.did_contract
+        .deposit_credential(&verifiable_credential2);
 
     assert_eq!(
         test.did_contract
@@ -245,6 +251,24 @@ fn test_successful_execution_of_did_contract_capabilities() {
 fn test_public_and_shared_credential_capability() {
     let test = DIDContractTest::setup();
     let invoker = String::from_slice(&test.env, "did:chaincerts:ISSUER1");
+    let verifiable_credential1 = VerifiableCredential {
+        id: test.credential_did,
+        issuer: invoker.clone(),
+        issuance_date: 1680105831,
+        expiration_date: OptionU64::Some(1711662757),
+        credential_subject: test.credential_subject.clone(),
+        attestation: test.cids.get_unchecked(0).unwrap(),
+        revoked: false,
+    };
+    let verifiable_credential2 = VerifiableCredential {
+        id: test.public_credential_did,
+        issuer: invoker.clone(),
+        issuance_date: 1680205831,
+        expiration_date: OptionU64::None,
+        credential_subject: test.credential_subject,
+        attestation: test.cids.get_unchecked(0).unwrap(),
+        revoked: false,
+    };
 
     test.did_contract.add_capability(
         &test.authentication_address,
@@ -263,21 +287,11 @@ fn test_public_and_shared_credential_capability() {
         &test.capability_invocations.get_unchecked(3).unwrap(),
     );
 
-    test.did_contract.deposit_credential(
-        &test.credential_did,
-        &invoker,
-        &1680105831,
-        &OptionU64::Some(1711662757),
-        &test.cids.get_unchecked(0).unwrap(),
-    );
+    test.did_contract
+        .deposit_credential(&verifiable_credential1);
 
-    test.did_contract.deposit_credential(
-        &test.public_credential_did,
-        &invoker,
-        &1680205831,
-        &OptionU64::None,
-        &test.cids.get_unchecked(0).unwrap(),
-    );
+    test.did_contract
+        .deposit_credential(&verifiable_credential2);
 
     let public_credentials = test.did_contract.get_public_credentials();
     let shared_credentials = test
@@ -305,7 +319,6 @@ fn test_retrieve_did_public_document() {
         verification_method: vec![&test.env, verifiable_method],
         authentication: vec![&test.env, test.authentication],
         services: test.services,
-        metadata: test.metadata.clone(),
     };
 
     test.did_contract.public_did_document();
@@ -338,7 +351,6 @@ fn test_initialize_an_already_initialized_did_contract() {
         &test.context,
         &test.verification_processes,
         &test.services,
-        &test.metadata,
     );
 }
 
@@ -395,19 +407,23 @@ fn test_remove_capability_when_organization_not_found() {
 #[should_panic(expected = "Status(ContractError(2))")]
 fn test_deposit_credential_when_not_share_cap_set() {
     let test = DIDContractTest::setup();
+    let verifiable_credential1 = VerifiableCredential {
+        id: test.credential_did,
+        issuer: test.capability_invocations.get_unchecked(1).unwrap().id,
+        issuance_date: 1680105831,
+        expiration_date: OptionU64::Some(1711662757),
+        credential_subject: test.credential_subject,
+        attestation: test.cids.get_unchecked(0).unwrap(),
+        revoked: false,
+    };
 
     test.did_contract.add_capability(
         &test.authentication_address,
         &test.capability_invocations.get_unchecked(0).unwrap(),
     );
 
-    test.did_contract.deposit_credential(
-        &test.credential_did,
-        &test.capability_invocations.get_unchecked(1).unwrap().id,
-        &1680105831,
-        &OptionU64::Some(1711662757),
-        &test.cids.get(0).unwrap().unwrap(),
-    );
+    test.did_contract
+        .deposit_credential(&verifiable_credential1);
 }
 
 #[test]
@@ -430,6 +446,15 @@ fn test_deposit_credential_when_no_shared_cap_set() {
 fn test_deposit_credential_already_in_the_did_contract() {
     let test = DIDContractTest::setup();
     let issuer = String::from_slice(&test.env, "did:chaincerts:ISSUER1");
+    let verifiable_credential1 = VerifiableCredential {
+        id: test.credential_did,
+        issuer,
+        issuance_date: 1680105831,
+        expiration_date: OptionU64::Some(1711662757),
+        credential_subject: test.credential_subject,
+        attestation: test.cids.get_unchecked(0).unwrap(),
+        revoked: false,
+    };
 
     test.did_contract.add_capability(
         &test.authentication_address,
@@ -440,21 +465,11 @@ fn test_deposit_credential_already_in_the_did_contract() {
         &test.capability_invocations.get_unchecked(1).unwrap(),
     );
 
-    test.did_contract.deposit_credential(
-        &test.credential_did,
-        &issuer,
-        &1680105831,
-        &OptionU64::Some(1711662757),
-        &test.cids.get_unchecked(0).unwrap(),
-    );
+    test.did_contract
+        .deposit_credential(&verifiable_credential1);
 
-    test.did_contract.deposit_credential(
-        &test.credential_did,
-        &issuer,
-        &1680105831,
-        &OptionU64::Some(1711662757),
-        &test.cids.get_unchecked(0).unwrap(),
-    );
+    test.did_contract
+        .deposit_credential(&verifiable_credential1);
 }
 
 #[test]
@@ -477,16 +492,20 @@ fn test_revoke_credential_when_chaincert_not_found() {
     let issuer_org1 = test.capability_invocations.get_unchecked(0).unwrap();
     let issuer = String::from_slice(&test.env, "did:chaincerts:ISSUER1");
     let new_chaincert: String = "did:chaincerts:abc123#credential-invalid".into_val(&test.env);
+    let verifiable_credential1 = VerifiableCredential {
+        id: test.credential_did,
+        issuer,
+        issuance_date: 1680105831,
+        expiration_date: OptionU64::Some(1711662757),
+        credential_subject: test.credential_subject,
+        attestation: test.cids.get_unchecked(0).unwrap(),
+        revoked: false,
+    };
 
     test.did_contract
         .add_capability(&test.authentication_address, &issuer_org1);
-    test.did_contract.deposit_credential(
-        &test.credential_did,
-        &issuer,
-        &1680105831,
-        &OptionU64::Some(1711662757),
-        &test.cids.get(0).unwrap().unwrap(),
-    );
+    test.did_contract
+        .deposit_credential(&verifiable_credential1);
 
     test.did_contract
         .revoke_credential(&test.authentication_address, &new_chaincert);

@@ -17,7 +17,6 @@ pub struct DIDDocument {
     pub verification_method: Vec<VerificationMethod>,
     pub authentication: Vec<String>,
     pub services: Vec<Service>,
-    pub metadata: Metadata,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -46,18 +45,6 @@ pub struct MethodService {
 pub struct Service {
     pub type_: String,
     pub service_endpoint: String,
-}
-
-#[derive(Clone, PartialEq, Eq, Debug)]
-#[contracttype]
-/// The DID `Metadata` information
-pub struct Metadata {
-    /// Creation date in unix time stamp
-    pub created: u64,
-    /// Last update date in unix time stamp
-    pub updated: u64,
-    /// DID document version
-    pub version: String,
 }
 
 pub(crate) fn read_id(env: &Env) -> String {
@@ -95,23 +82,12 @@ pub(crate) fn read_services(env: &Env) -> Vec<Service> {
     env.storage().get_unchecked(&key).unwrap()
 }
 
-pub(crate) fn write_metadata(env: &Env, metadata: &Metadata) {
-    let key: DataKey = DataKey::Metadata;
-    env.storage().set(&key, metadata);
-}
-
-pub(crate) fn read_metadata(env: &Env) -> Metadata {
-    let key: DataKey = DataKey::Metadata;
-    env.storage().get(&key).unwrap().unwrap()
-}
-
 pub(crate) fn retrieve_public_did_document(env: &Env) -> DIDDocument {
     let context = read_context(env);
     let id = read_id(env);
     let verification_method = read_verification_method(env);
     let authentication = read_authentication(env);
     let services = read_services(env);
-    let metadata = read_metadata(env);
 
     DIDDocument {
         context,
@@ -119,6 +95,5 @@ pub(crate) fn retrieve_public_did_document(env: &Env) -> DIDDocument {
         verification_method,
         authentication,
         services,
-        metadata,
     }
 }

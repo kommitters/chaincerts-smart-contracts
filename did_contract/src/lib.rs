@@ -10,8 +10,8 @@ mod verifiable_credential;
 use crate::error::ContractError;
 use authentication::VerificationMethod;
 use capability_invocation::CapabilityInvocation;
-use did_document::{DIDDocument, Metadata, Method, Service};
-use option::{OptionAddress, OptionU64};
+use did_document::{DIDDocument, Method, Service};
+use option::OptionAddress;
 use soroban_sdk::{contractimpl, panic_with_error, Address, Env, String, Vec};
 use verifiable_credential::VerifiableCredential;
 
@@ -26,7 +26,6 @@ impl DIDContract {
         context: Vec<String>,
         verification_processes: Vec<Method>,
         services: Vec<Service>,
-        metadata: Metadata,
     ) {
         if authentication::has_authentication(&env) {
             panic_with_error!(env, ContractError::AlreadyInit);
@@ -39,7 +38,6 @@ impl DIDContract {
         );
         did_document::write_context(&env, &context);
         did_document::write_verification_processes(&env, &verification_processes);
-        did_document::write_metadata(&env, &metadata);
         did_document::write_services(&env, &services);
         capability_invocation::write_capability_invocation(
             &env,
@@ -62,27 +60,13 @@ impl DIDContract {
     }
 
     /// Deposit a `VerifiableCredential` to the DID contract
-    pub fn deposit_credential(
-        env: Env,
-        credential_did: String,
-        issuer: String,
-        issuance_date: u64,
-        expiration_date: OptionU64,
-        attestation: String,
-    ) {
+    pub fn deposit_credential(env: Env, verifiable_credential: VerifiableCredential) {
         if let OptionAddress::Some(address) =
-            capability_invocation::check_capability_to_deposit(&env, &issuer)
+            capability_invocation::check_capability_to_deposit(&env, &verifiable_credential.issuer)
         {
             address.require_auth()
         };
-        verifiable_credential::deposit_credential(
-            &env,
-            credential_did,
-            issuer,
-            issuance_date,
-            expiration_date,
-            attestation,
-        )
+        verifiable_credential::deposit_credential(&env, verifiable_credential)
     }
 
     /// Self-revoke a Credential.

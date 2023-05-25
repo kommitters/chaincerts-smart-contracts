@@ -21,6 +21,4 @@ pub enum DataKey {
     VerificationProcesses,
     /// Vec<Service> that stored DID services
     Services,
-    /// Stores the DID `Metadata`
-    Metadata,
 }

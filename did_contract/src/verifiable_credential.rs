@@ -22,61 +22,45 @@ pub struct VerifiableCredential {
     pub issuance_date: u64,
     /// The expiration date in Unix Timestamp format
     pub expiration_date: OptionU64,
+    /// CredentialSubject information
+    pub credential_subject: CredentialSubject,
     /// Content identifier
     pub attestation: String,
     /// A logical indicator that lets know if a `VerifiableCredential` is self-revoked or not
     pub revoked: bool,
 }
 
-impl VerifiableCredential {
-    fn new(
-        id: String,
-        issuer: String,
-        issuance_date: u64,
-        expiration_date: OptionU64,
-        attestation: String,
-        revoked: bool,
-    ) -> VerifiableCredential {
-        VerifiableCredential {
-            id,
-            attestation,
-            issuer,
-            issuance_date,
-            expiration_date,
-            revoked,
-        }
+#[derive(Clone, PartialEq, Eq, Debug)]
+#[contracttype]
+/// The `CredentialSubject` info stored in a `VerifiableCredential`
+pub struct CredentialSubject {
+    pub id: String,
+    pub type_: String,
+    pub title: String,
+}
+
+impl CredentialSubject {
+    pub fn new(id: String, type_: String, title: String) -> Self {
+        CredentialSubject { id, type_, title }
     }
 }
 
-pub(crate) fn deposit_credential(
-    env: &Env,
-    credential_did: String,
-    issuer: String,
-    issuance_date: u64,
-    expiration_date: OptionU64,
-    attestation: String,
-) {
-    let credential = VerifiableCredential::new(
-        credential_did.clone(),
-        issuer,
-        issuance_date,
-        expiration_date,
-        attestation,
-        false,
-    );
+pub(crate) fn deposit_credential(env: &Env, verifiable_credential: VerifiableCredential) {
+    let credential_did = verifiable_credential.clone().id;
 
     let credentials = match env.storage().get(&VERIFIABLE_CREDENTIAL_KEY) {
         Some(credential_map) => {
             let mut credential_map: Map<String, VerifiableCredential> = credential_map.unwrap();
             if !credential_map.contains_key(credential_did.clone()) {
-                credential_map.set(credential_did, credential);
+                credential_map.set(credential_did, verifiable_credential);
                 credential_map
             } else {
-                panic_with_error!(env, ContractError::VerifiableCredentialAlreadyInWallet)
+                panic_with_error!(env, ContractError::VerifiableCredentialAlreadyInDID)
             }
         }
         None => {
-            let map: Map<String, VerifiableCredential> = map![env, (credential_did, credential)];
+            let map: Map<String, VerifiableCredential> =
+                map![env, (credential_did, verifiable_credential)];
             map
         }
     };

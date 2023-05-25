@@ -1,28 +1,25 @@
 //! Module MetaData
 //!
 //! Module for obtaining and modifying the metadata fields.
-use crate::{
-    did_contract::OptionU64,
-    storage_types::{CredentialData, DataKey, RevokedCredential},
-};
-use soroban_sdk::{Bytes, Env, Map, String};
+use crate::storage_types::{CredentialData, DataKey, RevokedCredential};
+use soroban_sdk::{Env, Map, String};
 
-pub fn read_file_storage(e: &Env) -> Bytes {
+pub fn read_file_storage(e: &Env) -> String {
     let key = DataKey::FileStorage;
     e.storage().get_unchecked(&key).unwrap()
 }
 
-pub fn write_file_storage(e: &Env, file_storage: Bytes) {
+pub fn write_file_storage(e: &Env, file_storage: String) {
     let key = DataKey::FileStorage;
     e.storage().set(&key, &file_storage);
 }
 
-pub fn read_name(e: &Env) -> Bytes {
+pub fn read_name(e: &Env) -> String {
     let key = DataKey::Name;
     e.storage().get_unchecked(&key).unwrap()
 }
 
-pub fn write_name(e: &Env, name: Bytes) {
+pub fn write_name(e: &Env, name: String) {
     let key = DataKey::Name;
     e.storage().set(&key, &name)
 }
@@ -45,16 +42,6 @@ pub fn read_revoked_credentials(e: &Env) -> Map<String, RevokedCredential> {
 pub fn write_revoked_credentials(e: &Env, revoked_credentials: Map<String, RevokedCredential>) {
     let key = DataKey::RevokedCredentials;
     e.storage().set(&key, &revoked_credentials)
-}
-
-pub fn read_expiration_time(e: &Env) -> OptionU64 {
-    let key = DataKey::ExpirationTime;
-    e.storage().get_unchecked(&key).unwrap()
-}
-
-pub fn write_expiration_time(e: &Env, expiration_time: OptionU64) {
-    let key = DataKey::ExpirationTime;
-    e.storage().set(&key, &expiration_time)
 }
 
 pub fn write_recipients(e: &Env, recipients: Map<String, Option<CredentialData>>) {

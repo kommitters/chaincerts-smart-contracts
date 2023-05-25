@@ -1,8 +1,8 @@
 <img src="https://user-images.githubusercontent.com/1649973/235795202-02794303-b462-43bd-bb06-2e2dbf783d14.png" width="400">
 
-[**Chaincerts**][chaincerts.co] is a cutting-edge platform that revolutionizes the way certifications are issued, verified, and showcased.
+[**Chaincerts**][chaincerts.co] is a cutting-edge platform that revolutionizes the way digital credentials are issued, verified, and showcased.
 
-**Chaincerts** issues certifications as secure, non-transferable, and verifiable Soulbound Tokens (SBTs) on the Stellar network. These SBTs, managed through Soroban smart contracts, serve as unique identity tokens that showcase an individual or entity's characteristics, features, traits, and accomplishments in a visually appealing format.
+**Chaincerts** issues secure, non-transferable, and verifiable digital credentials on the Stellar network. Managed through Soroban smart contracts, serve as unique identity credentials that showcase an individual or entity's characteristics, features, traits, and accomplishments in a visually appealing format.
 
 # Chaincerts Smart Contracts
 
@@ -11,7 +11,7 @@
 [![Coverage Status](https://img.shields.io/coveralls/github/kommitters/chaincerts-smart-contracts?style=for-the-badge)](https://coveralls.io/github/kommitters/chaincerts-smart-contracts)
 [![OpenSSF Scorecard](https://img.shields.io/ossf-scorecard/github.com/kommitters/chaincerts-smart-contracts?label=openssf%20scorecard&style=for-the-badge)](https://api.securityscorecards.dev/projects/github.com/kommitters/chaincerts-smart-contracts)
 
-This repository hosts a collection of smart contracts, specifically developed for the purpose of creating, distributing, and revoking digital certificates on the blockchain. The objective of this project is to provide a decentralized, secure, and tamper-proof solution for issuing and managing digital certificates, utilizing the power of Soroban smart contracts.
+This repository hosts a collection of smart contracts, specifically developed for the purpose of creating, distributing, and revoking digital credentials using Decentralized Identifiers (DIDs) on the blockchain. The objective of this project is to provide a decentralized, secure, and tamper-proof solution for issuing and managing digital credentials, utilizing the power of Soroban smart contracts.
 
 📖 As part of our commitment to transparency in the Chaincerts system, we encourage the use of a **"build in the open"** approach when developing these smart contracts. This approach allows anyone to easily review and examine the underlying code of the smart contracts, ensuring that they function as intended and do not contain any hidden vulnerabilities or malicious code. By using this approach, we can build trust in the system and promote greater confidence in the use of Chaincerts. Check the Open Source [LICENSE][license] for details.
 

@@ -6,7 +6,7 @@ use soroban_sdk::{Bytes, Env, Map, String};
 use crate::{
     did_contract::OptionU64,
     issuance_trait::CredentialStatus,
-    metadata::{read_expiration_time, read_revoked_credentials},
+    metadata::read_revoked_credentials,
     recipients::read_recipients,
     storage_types::{CredentialData, RevokedCredential},
 };
@@ -33,16 +33,18 @@ pub fn is_valid(data: &CredentialData, credential: &Bytes, signature: &String) -
     data.signature == *signature && data.did == *credential
 }
 
-pub fn valid_status(e: &Env) -> CredentialStatus {
-    let expiration_date = read_expiration_time(e);
+pub fn valid_status(e: &Env, credential_data: CredentialData) -> CredentialStatus {
+    let expiration_date = credential_data.expiration_date;
     CredentialStatus {
         status: String::from_slice(e, "valid"),
         expiration_date,
         revocation_date: OptionU64::None,
     }
 }
-pub fn revoked_status(e: &Env, revocation_date: u64) -> CredentialStatus {
-    let expiration_date = read_expiration_time(e);
+
+pub fn revoked_status(e: &Env, revoked_credential: RevokedCredential) -> CredentialStatus {
+    let expiration_date = revoked_credential.credential_data.expiration_date;
+    let revocation_date = revoked_credential.revocation_date;
     CredentialStatus {
         status: String::from_slice(e, "revoked"),
         expiration_date,

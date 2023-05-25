@@ -2,7 +2,6 @@
 //!
 //! Module for obtaining and modifying the metadata fields.
 use crate::{
-    did_contract::OptionU64,
     storage_types::{CredentialData, DataKey, RevokedCredential},
 };
 use soroban_sdk::{Bytes, Env, Map, String};
@@ -45,16 +44,6 @@ pub fn read_revoked_credentials(e: &Env) -> Map<String, RevokedCredential> {
 pub fn write_revoked_credentials(e: &Env, revoked_credentials: Map<String, RevokedCredential>) {
     let key = DataKey::RevokedCredentials;
     e.storage().set(&key, &revoked_credentials)
-}
-
-pub fn read_expiration_time(e: &Env) -> OptionU64 {
-    let key = DataKey::ExpirationTime;
-    e.storage().get_unchecked(&key).unwrap()
-}
-
-pub fn write_expiration_time(e: &Env, expiration_time: OptionU64) {
-    let key = DataKey::ExpirationTime;
-    e.storage().set(&key, &expiration_time)
 }
 
 pub fn write_recipients(e: &Env, recipients: Map<String, Option<CredentialData>>) {

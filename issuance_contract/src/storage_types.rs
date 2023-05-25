@@ -18,7 +18,8 @@ pub struct CredentialData {
     pub recipient_did: String,
     pub credential_type: String,
     pub credential_title: String,
-    pub issuance_date: OptionU64,
+    pub issuance_date: u64,
+    pub expiration_date: OptionU64,
     pub signature: String,
 }
 
@@ -35,7 +36,8 @@ impl CredentialData {
         recipient_did: String,
         credential_type: String,
         credential_title: String,
-        issuance_date: OptionU64,
+        issuance_date: u64,
+        expiration_date: OptionU64,
         signature: String,
     ) -> CredentialData {
         CredentialData {
@@ -44,6 +46,7 @@ impl CredentialData {
             credential_type,
             credential_title,
             issuance_date,
+            expiration_date,
             signature,
         }
     }
@@ -63,7 +66,6 @@ impl RevokedCredential {
 pub struct Info {
     pub name: Bytes,
     pub revocable: bool,
-    pub expiration_time: OptionU64,
     pub distribution_limit: u32,
     pub supply: u32,
     pub credential_type: String,
@@ -77,7 +79,6 @@ pub enum DataKey {
     Name,               // Bytes
     Revocable,          // bool
     RevokedCredentials, // Vec<CredentialData>
-    ExpirationTime,     // OptionU64
     Recipients,         // Map <String, Option<CredentialData>>
     Organization,       // Organization
     DistributionLimit,  // u32

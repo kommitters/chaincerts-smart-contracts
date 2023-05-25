@@ -13,20 +13,20 @@ use crate::{
 pub struct CredentialParams {
     pub file_storage: Bytes,
     pub revocable: bool,
-    pub expiration_time: OptionU64,
     pub credential_type: String,
     pub credential_title: String,
 }
 
 #[contracttype]
 #[derive(Clone, Debug, PartialEq)]
-pub struct VerifiableCredential {
+pub struct DistributeCredential {
     pub did: Bytes,
     pub id: Bytes,
     pub recipient_did: String,
     pub signature: String,
     pub attestation: Bytes,
     pub issuance_date: u64,
+    pub expiration_date: OptionU64,
 }
 
 #[contracttype]
@@ -53,7 +53,7 @@ pub trait IssuanceTrait {
         e: Env,
         admin: Address,
         wallet_contract_id: BytesN<32>,
-        verifiable_credential: VerifiableCredential,
+        verifiable_credential: DistributeCredential,
     );
 
     /// Revoke a Credential from a recipient.
@@ -73,9 +73,6 @@ pub trait IssuanceTrait {
 
     /// Get if the Credential can be revoked or not.
     fn is_revocable(e: Env) -> bool;
-
-    /// Get the Credential expiration time (Unix time).
-    fn expiration_time(e: Env) -> OptionU64;
 
     /// Get the maximum number of Credentials that can be distributed by this contract.
     fn distribution_limit(e: Env) -> u32;

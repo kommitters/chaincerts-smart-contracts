@@ -2,7 +2,7 @@
 use crate::{
     authentication::VerificationMethod,
     capability_invocation::{CapType, CapabilityInvocation},
-    did_document::{DIDDocument, Metadata, Method, Service},
+    did_document::{DIDDocument, Method, Service},
     option::{OptionAddress, OptionMethodService, OptionString, OptionU64},
     verifiable_credential::{CredentialSubject, VerifiableCredential},
     DIDContract, DIDContractClient,
@@ -16,7 +16,6 @@ fn create_did_contract(
     context: &Vec<String>,
     verification_processes: &Vec<Method>,
     services: &Vec<Service>,
-    metadata: &Metadata,
 ) -> DIDContractClient {
     let did_contract = DIDContractClient::new(e, &e.register_contract(None, DIDContract {}));
     did_contract.initialize(
@@ -25,7 +24,6 @@ fn create_did_contract(
         context,
         verification_processes,
         services,
-        metadata,
     );
     did_contract
 }
@@ -43,7 +41,6 @@ struct DIDContractTest {
     context: Vec<String>,
     verification_processes: Vec<Method>,
     services: Vec<Service>,
-    metadata: Metadata,
     shared_address: Address,
     credential_subject: CredentialSubject,
 }
@@ -72,11 +69,6 @@ impl DIDContractTest {
             service_endpoint: String::from_slice(&env, "https://did.chaincerts.co/ABC123"),
         };
         let services = vec![&env, service];
-        let metadata = Metadata {
-            created: 1684872059,
-            updated: 1684872059,
-            version: String::from_slice(&env, "1.0"),
-        };
         let did_contract = create_did_contract(
             &env,
             &id,
@@ -84,7 +76,6 @@ impl DIDContractTest {
             &context,
             &verification_processes,
             &services,
-            &metadata,
         );
         let credential_did: String = "did:chaincerts:ABC123#credential-xyz123".into_val(&env);
         let public_credential_did: String =
@@ -141,7 +132,6 @@ impl DIDContractTest {
             context,
             verification_processes,
             services,
-            metadata,
             shared_address,
             credential_subject,
         }
@@ -329,7 +319,6 @@ fn test_retrieve_did_public_document() {
         verification_method: vec![&test.env, verifiable_method],
         authentication: vec![&test.env, test.authentication],
         services: test.services,
-        metadata: test.metadata.clone(),
     };
 
     test.did_contract.public_did_document();
@@ -362,7 +351,6 @@ fn test_initialize_an_already_initialized_did_contract() {
         &test.context,
         &test.verification_processes,
         &test.services,
-        &test.metadata,
     );
 }
 

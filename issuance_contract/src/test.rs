@@ -1,7 +1,7 @@
 #![cfg(test)]
 use crate::did_contract::{
-    self, CapType, CapabilityInvocation, Metadata, Method, OptionAddress, OptionMethodService,
-    OptionString, OptionU64, Service,
+    self, CapType, CapabilityInvocation, Method, OptionAddress, OptionMethodService, OptionString,
+    OptionU64, Service,
 };
 use crate::issuance_trait::{CredentialParams, CredentialStatus, DistributeCredential};
 use crate::storage_types::{CredentialData, Info, Organization, RevokedCredential};
@@ -34,11 +34,6 @@ fn create_did_contract(
         service_endpoint: String::from_slice(env, "https://did.chaincerts.co/ABC123"),
     };
     let services = vec![env, service];
-    let metadata = Metadata {
-        created: 1684872059,
-        updated: 1684872059,
-        version: String::from_slice(env, "1.0"),
-    };
     let issuer_id1: String = "did:chaincerts:org123".into_val(env);
     let cap1 = CapabilityInvocation {
         id: String::from_slice(env, "did:chaincerts:ABC123#capability-1"),
@@ -54,7 +49,6 @@ fn create_did_contract(
         &context,
         &verification_processes,
         &services,
-        &metadata,
     );
     did_contract.add_capability(&authentication_params.1, &cap1);
     did_contract

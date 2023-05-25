@@ -15,8 +15,8 @@ This repository hosts a collection of smart contracts, specifically developed fo
 
 📖 As part of our commitment to transparency in the Chaincerts system, we encourage the use of a **"build in the open"** approach when developing these smart contracts. This approach allows anyone to easily review and examine the underlying code of the smart contracts, ensuring that they function as intended and do not contain any hidden vulnerabilities or malicious code. By using this approach, we can build trust in the system and promote greater confidence in the use of Chaincerts. Check the Open Source [LICENSE][license] for details.
 
-### Certificate Issuance Contract
-The Issuance Contract defines the rules for issuing and managing Chaincerts. With this contract, issuing entities can set the revocability and expiration of certificates, define the eligible recipients, and restrict the distribution of certificates. Additionally, the Issuance Contract is responsible for executing the distribution and revocation actions for certificates to different recipients.
+### Issuance Contract
+The Issuance Contract defines the rules for issuing and managing digital credentials within the Chaincerts ecosystem. With this contract, issuing entities can set the revocability and expiration of credentials, define the eligible recipients, and restrict the distribution of credentials. Additionally, the Issuance Contract is responsible for executing the distribution and revocation actions for digital credentials to different recipients.
 
 ### Certificate Wallet Contract
 The Wallet Contract stores the Chaincerts of a specific recipient, and each recipient must have their own certificate wallet. This contract allows recipients to add authorized entities to issue certificates to them and execute distribution and revocation actions on their certificates. Only functions that can be executed by the issuance contract are authorized to modify certificates in a certificate wallet.

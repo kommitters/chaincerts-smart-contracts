@@ -28,7 +28,7 @@ pub struct IssuanceContract;
 
 #[contractimpl]
 impl IssuanceTrait for IssuanceContract {
-    /// Initialize the contract a list of recipients or with the limit of Chaincerts that can be distributed.
+    /// Initialize the contract a list of recipients or with the limit of Credentials that can be distributed.
     fn initialize(
         e: Env,
         name: Bytes,
@@ -53,7 +53,7 @@ impl IssuanceTrait for IssuanceContract {
         define_limit_and_recipients(e, recipients, distribution_limit);
     }
 
-    /// Distribute a Chaincert to a recipient.
+    /// Distribute a Credential to a recipient.
     fn distribute(
         e: Env,
         admin: Address,
@@ -67,7 +67,7 @@ impl IssuanceTrait for IssuanceContract {
         apply_distribution(e, wallet_contract_id, &verifiable_credential);
     }
 
-    /// Revoke a Chaincert from a recipient.
+    /// Revoke a Credential from a recipient.
     fn revoke(e: Env, admin: Address, recipient_did: String, revocation_date: u64) {
         check_revocable(&e);
         check_admin(&e, &admin);
@@ -119,27 +119,27 @@ impl IssuanceTrait for IssuanceContract {
         invalid_status(&e)
     }
 
-    /// Get the Chaincert name.
+    /// Get the Credential name.
     fn name(e: Env) -> Bytes {
         read_name(&e)
     }
 
-    /// Get if the Chaincert can be revoked or not.
+    /// Get if the Credential can be revoked or not.
     fn is_revocable(e: Env) -> bool {
         read_revocable(&e)
     }
 
-    /// Get the Chaincert expiration time (Epoch time).
+    /// Get the Credential expiration time (Epoch time).
     fn expiration_time(e: Env) -> OptionU64 {
         read_expiration_time(&e)
     }
 
-    /// Get the maximum number of Chaincerts that can be distributed by this contract.
+    /// Get the maximum number of Credentials that can be distributed by this contract.
     fn distribution_limit(e: Env) -> u32 {
         read_distribution_limit(&e)
     }
 
-    /// Get number of Chaincerts that have been distributed.
+    /// Get number of Credentials that have been distributed.
     fn supply(e: Env) -> u32 {
         read_supply(&e)
     }
@@ -214,7 +214,7 @@ fn define_limit_and_recipients(
     };
 }
 
-/// Calculates the expiration date of a distributed Chaincert (using Epoch Unix Timestamp, and Epoch time).
+/// Calculates the expiration date of a distributed Credential (using Epoch Unix Timestamp, and Epoch time).
 fn expiration_date(e: &Env, issuance_date: u64) -> OptionU64 {
     match read_expiration_time(e) {
         OptionU64::Some(value) => OptionU64::Some(issuance_date + value),

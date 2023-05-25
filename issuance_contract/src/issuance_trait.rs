@@ -38,7 +38,7 @@ pub struct CredentialStatus {
 }
 
 pub trait IssuanceTrait {
-    /// Initialize the contract a list of recipients or with the limit of Chaincerts that can be distributed.
+    /// Initialize the contract a list of recipients or with the limit of Credentials that can be distributed.
     fn initialize(
         e: Env,
         name: Bytes,
@@ -48,7 +48,7 @@ pub trait IssuanceTrait {
         credential_params: CredentialParams,
     );
 
-    /// Distribute a Chaincert to a recipient.
+    /// Distribute a Credential to a recipient.
     fn distribute(
         e: Env,
         admin: Address,
@@ -56,7 +56,7 @@ pub trait IssuanceTrait {
         verifiable_credential: VerifiableCredential,
     );
 
-    /// Revoke a Chaincert from a recipient.
+    /// Revoke a Credential from a recipient.
     fn revoke(e: Env, admin: Address, recipient: String, revocation_date: u64);
 
     /// Attest the authenticity and legitimacy of a credential.
@@ -68,19 +68,19 @@ pub trait IssuanceTrait {
         signature: String,
     ) -> CredentialStatus;
 
-    /// Get the Chaincert name.
+    /// Get the Credential name.
     fn name(e: Env) -> Bytes;
 
-    /// Get if the Chaincert can be revoked or not.
+    /// Get if the Credential can be revoked or not.
     fn is_revocable(e: Env) -> bool;
 
-    /// Get the Chaincert expiration time (Unix time).
+    /// Get the Credential expiration time (Unix time).
     fn expiration_time(e: Env) -> OptionU64;
 
-    /// Get the maximum number of Chaincerts that can be distributed by this contract.
+    /// Get the maximum number of Credentials that can be distributed by this contract.
     fn distribution_limit(e: Env) -> u32;
 
-    /// Get number of Chaincerts that have been distributed.
+    /// Get number of Credentials that have been distributed.
     fn supply(e: Env) -> u32;
 
     /// Get the type of decentralized storage service.

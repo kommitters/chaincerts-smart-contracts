@@ -1,8 +1,9 @@
 #![cfg(test)]
 use crate::{
     authentication::VerificationMethod,
+    capability_invocation::{CapType, CapabilityInvocation},
     did_document::{DIDDocument, Metadata, Method, Service},
-    option::{OptionMethodService, OptionU64},
+    option::{OptionAddress, OptionMethodService, OptionString, OptionU64},
     DIDContract, DIDContractClient,
 };
 use soroban_sdk::{testutils::Address as _, vec, Address, Env, IntoVal, String, Vec};
@@ -35,34 +36,37 @@ struct DIDContractTest {
     authentication_address: Address,
     did_contract: DIDContractClient,
     credential_did: String,
-    organizations: Vec<String>,
+    public_credential_did: String,
+    capability_invocations: Vec<CapabilityInvocation>,
     cids: Vec<String>,
     context: Vec<String>,
     verification_processes: Vec<Method>,
     services: Vec<Service>,
     metadata: Metadata,
+    shared_address: Address,
 }
 
 impl DIDContractTest {
     fn setup() -> Self {
         let env: Env = Default::default();
-        let id = String::from_slice(&env, "did:chaincerts::ABC");
-        let authentication = String::from_slice(&env, "did:chaincerts::ABC#key1");
+        let id = String::from_slice(&env, "did:chaincerts::ABC123");
+        let authentication = String::from_slice(&env, "did:chaincerts:ABC123#key1");
         let authentication_address = Address::random(&env);
+        let shared_address = Address::random(&env);
         let context = vec![
             &env,
             String::from_slice(&env, "https://www.w3.org/ns/did/v1"),
             String::from_slice(&env, "https://www.example.com/context/v1"),
         ];
         let method = Method {
-            method_type: String::from_slice(&env, "otp"),
+            type_: String::from_slice(&env, "otp"),
             verified: true,
             timestamp: 1684872059,
             service: OptionMethodService::None,
         };
         let verification_processes = vec![&env, method];
         let service = Service {
-            service_type: String::from_slice(&env, "VerifiableCredential"),
+            type_: String::from_slice(&env, "VerifiableCredential"),
             service_endpoint: String::from_slice(&env, "https://did.chaincerts.co/ABC123"),
         };
         let services = vec![&env, service];
@@ -80,10 +84,40 @@ impl DIDContractTest {
             &services,
             &metadata,
         );
-        let credential_did: String = "did:chaincerts:abc123#credential-xyz123".into_val(&env);
+        let credential_did: String = "did:chaincerts:ABC123#credential-xyz123".into_val(&env);
+        let public_credential_did: String =
+            "did:chaincerts:ABC123#credential-dfg123".into_val(&env);
         let issuer_id1: String = "did:chaincerts:ISSUER1".into_val(&env);
         let issuer_id2: String = "did:chaincerts:ISSUER2".into_val(&env);
-        let organizations = vec![&env, issuer_id1, issuer_id2];
+        let cap1 = CapabilityInvocation {
+            id: String::from_slice(&env, "did:chaincerts:ABC123#capability-1"),
+            type_: CapType::AddCredential,
+            invoker: OptionString::Some(issuer_id1.clone()),
+            invoker_address: OptionAddress::Some(Address::random(&env)),
+            credential: OptionString::None,
+        };
+        let cap2 = CapabilityInvocation {
+            id: String::from_slice(&env, "did:chaincerts:ABC123#capability-2"),
+            type_: CapType::AddCredential,
+            invoker: OptionString::Some(issuer_id2),
+            invoker_address: OptionAddress::Some(Address::random(&env)),
+            credential: OptionString::None,
+        };
+        let cap3_read = CapabilityInvocation {
+            id: String::from_slice(&env, "did:chaincerts:ABC123#capability-3"),
+            type_: CapType::ReadCredential,
+            invoker: OptionString::Some(issuer_id1),
+            invoker_address: OptionAddress::Some(shared_address.clone()),
+            credential: OptionString::Some(credential_did.clone()),
+        };
+        let cap4_public_read = CapabilityInvocation {
+            id: String::from_slice(&env, "did:chaincerts:ABC123#capability-4"),
+            type_: CapType::PublicRead,
+            invoker: OptionString::None,
+            invoker_address: OptionAddress::None,
+            credential: OptionString::Some(public_credential_did.clone()),
+        };
+        let capability_invocations = vec![&env, cap1, cap2, cap3_read, cap4_public_read];
         let cid1: String = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC".into_val(&env);
         let cids = vec![&env, cid1];
 
@@ -94,12 +128,14 @@ impl DIDContractTest {
             authentication_address,
             did_contract,
             credential_did,
-            organizations,
+            public_credential_did,
+            capability_invocations,
             cids,
             context,
             verification_processes,
             services,
             metadata,
+            shared_address,
         }
     }
 }
@@ -108,26 +144,27 @@ impl DIDContractTest {
 fn test_successful_execution_of_did_contract_capabilities() {
     let test = DIDContractTest::setup();
     let new_credential_did = "did:chaincerts:".into_val(&test.env);
+    let issuer = String::from_slice(&test.env, "did:chaincerts:ISSUER1");
 
-    test.did_contract.add_organization(
+    test.did_contract.add_capability(
         &test.authentication_address,
-        &test.organizations.get_unchecked(0).unwrap(),
+        &test.capability_invocations.get_unchecked(0).unwrap(),
     );
-    test.did_contract.add_organization(
+    test.did_contract.add_capability(
         &test.authentication_address,
-        &test.organizations.get_unchecked(1).unwrap(),
+        &test.capability_invocations.get_unchecked(1).unwrap(),
     );
 
     assert_eq!(
         test.did_contract
-            .get_access_control_list(&test.authentication_address)
+            .get_capability_invocation(&test.authentication_address)
             .len(),
         2
     );
 
     test.did_contract.deposit_credential(
         &test.credential_did,
-        &test.organizations.get_unchecked(0).unwrap(),
+        &issuer,
         &1680105831,
         &OptionU64::Some(1711662757),
         &test.cids.get_unchecked(0).unwrap(),
@@ -135,24 +172,29 @@ fn test_successful_execution_of_did_contract_capabilities() {
 
     test.did_contract.deposit_credential(
         &new_credential_did,
-        &test.organizations.get_unchecked(0).unwrap(),
+        &issuer,
         &1680205831,
         &OptionU64::None,
         &test.cids.get_unchecked(0).unwrap(),
     );
 
-    assert_eq!(test.did_contract.get_credentials().len(), 2);
+    assert_eq!(
+        test.did_contract
+            .get_credentials(&test.authentication_address)
+            .len(),
+        2
+    );
 
     test.did_contract
         .revoke_credential(&test.authentication_address, &test.credential_did);
 
-    test.did_contract.remove_organization(
+    test.did_contract.remove_capability(
         &test.authentication_address,
-        &test.organizations.get_unchecked(0).unwrap(),
+        &test.capability_invocations.get_unchecked(0).unwrap().id,
     );
     assert_eq!(
         test.did_contract
-            .get_access_control_list(&test.authentication_address)
+            .get_capability_invocation(&test.authentication_address)
             .len(),
         1
     );
@@ -200,12 +242,59 @@ fn test_successful_execution_of_did_contract_capabilities() {
 }
 
 #[test]
+fn test_public_and_shared_credential_capability() {
+    let test = DIDContractTest::setup();
+    let invoker = String::from_slice(&test.env, "did:chaincerts:ISSUER1");
+
+    test.did_contract.add_capability(
+        &test.authentication_address,
+        &test.capability_invocations.get_unchecked(0).unwrap(),
+    );
+    test.did_contract.add_capability(
+        &test.authentication_address,
+        &test.capability_invocations.get_unchecked(1).unwrap(),
+    );
+    test.did_contract.add_capability(
+        &test.authentication_address,
+        &test.capability_invocations.get_unchecked(2).unwrap(),
+    );
+    test.did_contract.add_capability(
+        &test.authentication_address,
+        &test.capability_invocations.get_unchecked(3).unwrap(),
+    );
+
+    test.did_contract.deposit_credential(
+        &test.credential_did,
+        &invoker,
+        &1680105831,
+        &OptionU64::Some(1711662757),
+        &test.cids.get_unchecked(0).unwrap(),
+    );
+
+    test.did_contract.deposit_credential(
+        &test.public_credential_did,
+        &invoker,
+        &1680205831,
+        &OptionU64::None,
+        &test.cids.get_unchecked(0).unwrap(),
+    );
+
+    let public_credentials = test.did_contract.get_public_credentials();
+    let shared_credentials = test
+        .did_contract
+        .get_shared_credentials(&test.shared_address, &invoker);
+
+    assert_eq!(public_credentials.len(), 1);
+    assert_eq!(shared_credentials.len(), 1);
+}
+
+#[test]
 fn test_retrieve_did_public_document() {
     let test = DIDContractTest::setup();
 
     let verifiable_method = VerificationMethod {
         id: test.authentication.clone(),
-        verification_method_type: String::from_slice(&test.env, "Ed25519VerificationKey2020"),
+        type_: String::from_slice(&test.env, "Ed25519VerificationKey2020"),
         controller: test.id.clone(),
         blockchain_account_id: test.authentication_address,
     };
@@ -259,7 +348,8 @@ fn test_when_invalid_address() {
     let test = DIDContractTest::setup();
     let invalid_address = Address::random(&test.env);
 
-    test.did_contract.get_access_control_list(&invalid_address);
+    test.did_contract
+        .get_capability_invocation(&invalid_address);
 }
 
 #[test]
@@ -267,53 +357,53 @@ fn test_when_invalid_address() {
 fn test_when_adding_an_already_added_org() {
     let test = DIDContractTest::setup();
 
-    test.did_contract.add_organization(
+    test.did_contract.add_capability(
         &test.authentication_address,
-        &test.organizations.get_unchecked(0).unwrap(),
+        &test.capability_invocations.get_unchecked(0).unwrap(),
     );
-    test.did_contract.add_organization(
+    test.did_contract.add_capability(
         &test.authentication_address,
-        &test.organizations.get_unchecked(0).unwrap(),
+        &test.capability_invocations.get_unchecked(0).unwrap(),
     );
 }
 
 #[test]
 #[should_panic(expected = "Status(ContractError(6))")]
-fn test_remove_organization_when_not_organizations_already_set() {
+fn test_remove_capability_when_no_capability_invocations_already_set() {
     let test = DIDContractTest::setup();
-    test.did_contract.remove_organization(
+    test.did_contract.remove_capability(
         &test.authentication_address,
-        &test.organizations.get_unchecked(0).unwrap(),
+        &test.capability_invocations.get_unchecked(0).unwrap().id,
     );
 }
 
 #[test]
 #[should_panic(expected = "Status(ContractError(8))")]
-fn test_remove_organization_when_organization_not_found() {
+fn test_remove_capability_when_organization_not_found() {
     let test = DIDContractTest::setup();
-    test.did_contract.add_organization(
+    test.did_contract.add_capability(
         &test.authentication_address,
-        &test.organizations.get_unchecked(0).unwrap(),
+        &test.capability_invocations.get_unchecked(0).unwrap(),
     );
-    test.did_contract.remove_organization(
+    test.did_contract.remove_capability(
         &test.authentication_address,
-        &test.organizations.get_unchecked(1).unwrap(),
+        &test.capability_invocations.get_unchecked(1).unwrap().id,
     );
 }
 
 #[test]
 #[should_panic(expected = "Status(ContractError(2))")]
-fn test_deposit_credential_when_organization_is_not_in_the_acl() {
+fn test_deposit_credential_when_not_share_cap_set() {
     let test = DIDContractTest::setup();
 
-    test.did_contract.add_organization(
+    test.did_contract.add_capability(
         &test.authentication_address,
-        &test.organizations.get_unchecked(0).unwrap(),
+        &test.capability_invocations.get_unchecked(0).unwrap(),
     );
 
     test.did_contract.deposit_credential(
         &test.credential_did,
-        &test.organizations.get_unchecked(1).unwrap(),
+        &test.capability_invocations.get_unchecked(1).unwrap().id,
         &1680105831,
         &OptionU64::Some(1711662757),
         &test.cids.get(0).unwrap().unwrap(),
@@ -321,36 +411,38 @@ fn test_deposit_credential_when_organization_is_not_in_the_acl() {
 }
 
 #[test]
-#[should_panic(expected = "Status(ContractError(6))")]
-fn test_deposit_credential_when_no_organizations_in_the_acl() {
+#[should_panic(expected = "Status(ContractError(2))")]
+fn test_deposit_credential_when_no_shared_cap_set() {
     let test = DIDContractTest::setup();
+    let issuer = String::from_slice(&test.env, "did:chaincerts:ISSUER1");
 
-    test.did_contract.deposit_credential(
-        &test.credential_did,
-        &test.organizations.get_unchecked(1).unwrap(),
-        &1680105831,
-        &OptionU64::Some(1711662757),
-        &test.cids.get(0).unwrap().unwrap(),
+    test.did_contract.add_capability(
+        &test.authentication_address,
+        &test.capability_invocations.get_unchecked(0).unwrap(),
     );
+
+    test.did_contract
+        .get_shared_credentials(&Address::random(&test.env), &issuer);
 }
 
 #[test]
 #[should_panic(expected = "Status(ContractError(9))")]
-fn test_deposit_credential_chaincert_is_already_in_the_did_contract() {
+fn test_deposit_credential_already_in_the_did_contract() {
     let test = DIDContractTest::setup();
+    let issuer = String::from_slice(&test.env, "did:chaincerts:ISSUER1");
 
-    test.did_contract.add_organization(
+    test.did_contract.add_capability(
         &test.authentication_address,
-        &test.organizations.get_unchecked(0).unwrap(),
+        &test.capability_invocations.get_unchecked(0).unwrap(),
     );
-    test.did_contract.add_organization(
+    test.did_contract.add_capability(
         &test.authentication_address,
-        &test.organizations.get_unchecked(1).unwrap(),
+        &test.capability_invocations.get_unchecked(1).unwrap(),
     );
 
     test.did_contract.deposit_credential(
         &test.credential_did,
-        &test.organizations.get_unchecked(0).unwrap(),
+        &issuer,
         &1680105831,
         &OptionU64::Some(1711662757),
         &test.cids.get_unchecked(0).unwrap(),
@@ -358,7 +450,7 @@ fn test_deposit_credential_chaincert_is_already_in_the_did_contract() {
 
     test.did_contract.deposit_credential(
         &test.credential_did,
-        &test.organizations.get_unchecked(0).unwrap(),
+        &issuer,
         &1680105831,
         &OptionU64::Some(1711662757),
         &test.cids.get_unchecked(0).unwrap(),
@@ -370,9 +462,9 @@ fn test_deposit_credential_chaincert_is_already_in_the_did_contract() {
 fn test_revoke_credential_when_no_chaincerts_in_did_contract() {
     let test = DIDContractTest::setup();
 
-    test.did_contract.add_organization(
+    test.did_contract.add_capability(
         &test.authentication_address,
-        &test.organizations.get_unchecked(0).unwrap(),
+        &test.capability_invocations.get_unchecked(0).unwrap(),
     );
     test.did_contract
         .revoke_credential(&test.authentication_address, &test.credential_did)
@@ -382,14 +474,15 @@ fn test_revoke_credential_when_no_chaincerts_in_did_contract() {
 #[should_panic(expected = "Status(ContractError(10))")]
 fn test_revoke_credential_when_chaincert_not_found() {
     let test = DIDContractTest::setup();
-    let org1 = test.organizations.get_unchecked(0).unwrap();
-    let new_chaincert: String = "CHAINCERT2".into_val(&test.env);
+    let issuer_org1 = test.capability_invocations.get_unchecked(0).unwrap();
+    let issuer = String::from_slice(&test.env, "did:chaincerts:ISSUER1");
+    let new_chaincert: String = "did:chaincerts:abc123#credential-invalid".into_val(&test.env);
 
     test.did_contract
-        .add_organization(&test.authentication_address, &org1);
+        .add_capability(&test.authentication_address, &issuer_org1);
     test.did_contract.deposit_credential(
         &test.credential_did,
-        &org1,
+        &issuer,
         &1680105831,
         &OptionU64::Some(1711662757),
         &test.cids.get(0).unwrap().unwrap(),
@@ -404,16 +497,8 @@ fn test_revoke_credential_when_chaincert_not_found() {
 fn test_request_chaincerts_when_no_chaincerts_set() {
     let test = DIDContractTest::setup();
 
-    test.did_contract.get_credentials();
-}
-
-#[test]
-#[should_panic(expected = "Status(ContractError(6))")]
-fn test_request_acl_when_no_organizations_set() {
-    let test = DIDContractTest::setup();
-
     test.did_contract
-        .get_access_control_list(&test.authentication_address);
+        .get_credentials(&test.authentication_address);
 }
 
 #[test]
@@ -466,4 +551,50 @@ fn test_remove_verification_method_with_non_existent_key() {
 
     test.did_contract
         .remove_verification_method(&test.authentication_address, &invalid_key_id);
+}
+
+#[test]
+#[should_panic(expected = "Status(ContractError(14))")]
+fn test_add_invalid_public_read_cap() {
+    let test = DIDContractTest::setup();
+    let invalid_cap = CapabilityInvocation {
+        id: String::from_slice(&test.env, "did:chaincerts:ABC123#capability-11"),
+        type_: CapType::PublicRead,
+        invoker: OptionString::None,
+        invoker_address: OptionAddress::Some(Address::random(&test.env)),
+        credential: OptionString::Some(test.public_credential_did),
+    };
+
+    test.did_contract
+        .add_capability(&test.authentication_address, &invalid_cap);
+}
+#[test]
+#[should_panic(expected = "Status(ContractError(14))")]
+fn test_add_invalid_read_credential_cap() {
+    let test = DIDContractTest::setup();
+    let invalid_cap = CapabilityInvocation {
+        id: String::from_slice(&test.env, "did:chaincerts:ABC123#capability-11"),
+        type_: CapType::ReadCredential,
+        invoker: OptionString::None,
+        invoker_address: OptionAddress::None,
+        credential: OptionString::None,
+    };
+
+    test.did_contract
+        .add_capability(&test.authentication_address, &invalid_cap);
+}
+#[test]
+#[should_panic(expected = "Status(ContractError(14))")]
+fn test_add_invalid_add_credential_cap() {
+    let test = DIDContractTest::setup();
+    let invalid_cap = CapabilityInvocation {
+        id: String::from_slice(&test.env, "did:chaincerts:ABC123#capability-11"),
+        type_: CapType::AddCredential,
+        invoker: OptionString::None,
+        invoker_address: OptionAddress::None,
+        credential: OptionString::None,
+    };
+
+    test.did_contract
+        .add_capability(&test.authentication_address, &invalid_cap);
 }

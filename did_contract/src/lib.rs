@@ -1,6 +1,6 @@
 #![no_std]
-mod access_control_list;
 mod authentication;
+mod capability_invocation;
 mod did_document;
 mod error;
 mod option;
@@ -9,8 +9,9 @@ mod verifiable_credential;
 
 use crate::error::ContractError;
 use authentication::VerificationMethod;
+use capability_invocation::CapabilityInvocation;
 use did_document::{DIDDocument, Metadata, Method, Service};
-use option::OptionU64;
+use option::{OptionAddress, OptionU64};
 use soroban_sdk::{contractimpl, panic_with_error, Address, Env, String, Vec};
 use verifiable_credential::VerifiableCredential;
 
@@ -40,20 +41,24 @@ impl DIDContract {
         did_document::write_verification_processes(&env, &verification_processes);
         did_document::write_metadata(&env, &metadata);
         did_document::write_services(&env, &services);
+        capability_invocation::write_capability_invocation(
+            &env,
+            &Vec::<CapabilityInvocation>::new(&env),
+        );
     }
 
-    /// Add organizations to the ACL
-    pub fn add_organization(env: Env, address: Address, issuer: String) {
+    /// Add capability invocation
+    pub fn add_capability(env: Env, address: Address, capability_invocation: CapabilityInvocation) {
         authentication::check_invocation_address(&env, &address);
         address.require_auth();
-        access_control_list::add_organization(&env, &issuer)
+        capability_invocation::add_capability(&env, &capability_invocation)
     }
 
-    /// Remove organizations from the ACL
-    pub fn remove_organization(env: Env, address: Address, issuer: String) {
+    /// Remove capability invocation
+    pub fn remove_capability(env: Env, address: Address, cap_id: String) {
         authentication::check_invocation_address(&env, &address);
         address.require_auth();
-        access_control_list::remove_organization(&env, &issuer)
+        capability_invocation::remove_capability(&env, &cap_id)
     }
 
     /// Deposit a `VerifiableCredential` to the DID contract
@@ -65,7 +70,11 @@ impl DIDContract {
         expiration_date: OptionU64,
         attestation: String,
     ) {
-        access_control_list::check_access_control_list(&env, &issuer);
+        if let OptionAddress::Some(address) =
+            capability_invocation::check_capability_to_deposit(&env, &issuer)
+        {
+            address.require_auth()
+        };
         verifiable_credential::deposit_credential(
             &env,
             credential_did,
@@ -83,16 +92,32 @@ impl DIDContract {
         verifiable_credential::revoke_credential(&env, &credential_did);
     }
 
-    /// Get the list of the `VerifiableCredential` stored in the DID contract
-    pub fn get_credentials(env: Env) -> Vec<VerifiableCredential> {
+    /// Get the list of the `VerifiableCredential` stored in the DID contract. Only the owner can call this function.
+    pub fn get_credentials(env: Env, address: Address) -> Vec<VerifiableCredential> {
+        authentication::check_invocation_address(&env, &address);
+        address.require_auth();
         verifiable_credential::get_credentials(&env)
     }
 
-    /// Get the ACL stored in the DID contract
-    pub fn get_access_control_list(env: Env, address: Address) -> Vec<String> {
+    pub fn get_public_credentials(env: Env) -> Vec<VerifiableCredential> {
+        verifiable_credential::get_public_credentials(&env)
+    }
+
+    pub fn get_shared_credentials(
+        env: Env,
+        address: Address,
+        invoker: String,
+    ) -> Vec<VerifiableCredential> {
+        capability_invocation::check_capability_to_read_credentials(&env, &address, &invoker);
+        address.require_auth();
+        verifiable_credential::get_shared_credentials(&env, &invoker)
+    }
+
+    /// Get the capability invocation list
+    pub fn get_capability_invocation(env: Env, address: Address) -> Vec<CapabilityInvocation> {
         authentication::check_invocation_address(&env, &address);
         address.require_auth();
-        access_control_list::get_access_control_list(&env)
+        capability_invocation::read_capability_invocation(&env)
     }
 
     /// Get DID document public data

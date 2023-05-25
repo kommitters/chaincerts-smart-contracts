@@ -57,7 +57,7 @@ pub(crate) fn add_capability(env: &Env, capability: &CapabilityInvocation) {
 pub(crate) fn remove_capability(env: &Env, cap_id: &String) {
     let mut cap_list: Vec<CapabilityInvocation> =
         env.storage().get_unchecked(&CAP_INVOCATION_KEY).unwrap();
-    if cap_list.len() == 0 {
+    if cap_list.is_empty() {
         panic_with_error!(env, ContractError::NoCapabilityInvocation);
     }
     remove_from_cap_invocation_list(env, cap_id, &mut cap_list);

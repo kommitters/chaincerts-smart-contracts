@@ -6,12 +6,13 @@ use soroban_sdk::contracterror;
 pub enum ContractError {
     AlreadyInit = 1,
     NotAuthorized = 2,
-    AlreadyInACL = 4,
-    NoOrganizationsInACL = 6,
-    OrganizationNotFound = 8,
+    AlreadyInCapInvocation = 4,
+    NoCapabilityInvocation = 6,
+    CapabilityInvocationNotFound = 8,
     VerifiableCredentialAlreadyInWallet = 9,
     VerifiableCredentialNotFound = 10,
     NoVerifiableCredential = 11,
     CannotRemoveAuthentication = 12,
     CannotRemoveVerificationMethod = 13,
+    InvalidCapabilityInvocation = 14,
 }

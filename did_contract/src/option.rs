@@ -2,7 +2,7 @@
 //!
 //! Module to create new Option types if necessary since Rust Option doesn't works when using `contracttype` for now
 //! as well as generics. Replace this logic with generic Option when supported
-use soroban_sdk::contracttype;
+use soroban_sdk::{contracttype, Address, String};
 
 use crate::did_document::MethodService;
 
@@ -19,4 +19,18 @@ pub enum OptionU64 {
 pub enum OptionMethodService {
     None,
     Some(MethodService),
+}
+
+#[contracttype]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
+pub enum OptionAddress {
+    None,
+    Some(Address),
+}
+
+#[contracttype]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
+pub enum OptionString {
+    None,
+    Some(String),
 }

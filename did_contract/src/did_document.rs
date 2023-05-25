@@ -11,7 +11,6 @@ use soroban_sdk::{contracttype, Env, String, Vec};
 #[derive(Clone, PartialEq, Eq, Debug)]
 #[contracttype]
 /// `DIDDocument` public info
-/// TODO! Add capability_invocation when acl gets updated
 pub struct DIDDocument {
     pub context: Vec<String>,
     pub id: String,
@@ -25,7 +24,7 @@ pub struct DIDDocument {
 #[contracttype]
 /// The verification process `Method`
 pub struct Method {
-    pub method_type: String,
+    pub type_: String,
     pub verified: bool,
     /// Unix timestamp
     pub timestamp: u64,
@@ -45,7 +44,7 @@ pub struct MethodService {
 #[contracttype]
 /// The DID `Service` information
 pub struct Service {
-    pub service_type: String,
+    pub type_: String,
     pub service_endpoint: String,
 }
 
@@ -61,14 +60,14 @@ pub struct Metadata {
     pub version: String,
 }
 
-pub(crate) fn write_id(env: &Env, id: &String) {
-    let key: DataKey = DataKey::Id;
-    env.storage().set(&key, id);
-}
-
 pub(crate) fn read_id(env: &Env) -> String {
     let key: DataKey = DataKey::Id;
     env.storage().get_unchecked(&key).unwrap()
+}
+
+pub(crate) fn write_id(env: &Env, id: &String) {
+    let key: DataKey = DataKey::Id;
+    env.storage().set(&key, id);
 }
 
 pub(crate) fn write_context(env: &Env, context: &Vec<String>) {

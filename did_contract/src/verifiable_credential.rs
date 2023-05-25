@@ -1,9 +1,13 @@
 //! Module VerifiableCredential
 //!
 //! Module responsible of managing `VerifiableCredential` information and defining its corresponding struct.
-use crate::{error::ContractError, option::OptionU64, storage_types::DataKey};
+use crate::{
+    capability_invocation::{read_capability_invocation, CapType},
+    error::ContractError,
+    option::{OptionString, OptionU64},
+    storage_types::DataKey,
+};
 use soroban_sdk::{contracttype, map, panic_with_error, Env, Map, String, Vec};
-
 const VERIFIABLE_CREDENTIAL_KEY: DataKey = DataKey::VerifiableCredential;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -94,6 +98,55 @@ pub(crate) fn revoke_credential(env: &Env, credential_did: &String) {
 
 pub(crate) fn get_credentials(env: &Env) -> Vec<VerifiableCredential> {
     read_credentials(env).values()
+}
+
+pub(crate) fn get_public_credentials(env: &Env) -> Vec<VerifiableCredential> {
+    let mut credentials: Vec<VerifiableCredential> = Vec::new(env);
+
+    let verifiable_credentials_map = read_credentials(env);
+
+    // Look for the capability invocation type and get the credential (did)
+    let capability_invocation = read_capability_invocation(env);
+    for cap in capability_invocation {
+        let cap = cap.unwrap();
+        if cap.type_ == CapType::PublicRead {
+            if let OptionString::Some(credential_did) = cap.credential {
+                let verifiable_credential = verifiable_credentials_map
+                    .get_unchecked(credential_did)
+                    .unwrap();
+
+                credentials.push_front(verifiable_credential);
+            }
+        }
+    }
+
+    credentials
+}
+
+pub(crate) fn get_shared_credentials(env: &Env, invoker: &String) -> Vec<VerifiableCredential> {
+    let mut credentials: Vec<VerifiableCredential> = Vec::new(env);
+
+    let verifiable_credentials_map = read_credentials(env);
+
+    // Look for the capability invocation type and get the credential (did)
+    let capability_invocation = read_capability_invocation(env);
+    for cap in capability_invocation {
+        let cap = cap.unwrap();
+        if cap.type_ == CapType::ReadCredential {
+            if let (OptionString::Some(credential_did), OptionString::Some(cap_invoker)) =
+                (cap.credential, cap.invoker)
+            {
+                if cap_invoker == invoker.clone() {
+                    let verifiable_credential = verifiable_credentials_map
+                        .get_unchecked(credential_did)
+                        .unwrap();
+                    credentials.push_front(verifiable_credential)
+                }
+            }
+        }
+    }
+
+    credentials
 }
 
 fn revoke_credential_from_map(

@@ -13,7 +13,7 @@ const VER_METHODS_KEY: DataKey = DataKey::VerificationMethods;
 /// The DID `VerificationMethod` information
 pub struct VerificationMethod {
     pub id: String,
-    pub verification_method_type: String,
+    pub type_: String,
     pub controller: String,
     pub blockchain_account_id: Address,
 }
@@ -22,7 +22,7 @@ impl VerificationMethod {
     pub fn new(env: &Env, id: String, blockchain_account_id: Address, controller: String) -> Self {
         VerificationMethod {
             id,
-            verification_method_type: String::from_slice(env, "Ed25519VerificationKey2020"),
+            type_: String::from_slice(env, "Ed25519VerificationKey2020"),
             controller,
             blockchain_account_id,
         }

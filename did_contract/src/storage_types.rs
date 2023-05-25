@@ -11,8 +11,8 @@ pub enum DataKey {
     Authentication,
     /// Vec<VerificationMethod> with the verification methods of the DID
     VerificationMethods,
-    /// Access Control List
-    AccessControlList,
+    /// Capability Invocation List
+    CapabilityInvocation,
     /// A map that stores the VerifiableCredential, identified by a credential_id `Map<String, VerifiableCredential>`
     VerifiableCredential,
     /// Vec<String> that stores DID context urls

@@ -22,9 +22,9 @@ The Issuance Contract defines the rules for issuing and managing digital credent
 The DID Contract allows to manage a digital identity within the Chaincerts ecosystem. By following the guidelines set forth in the [W3C DID Core specification][w3c-did-core-spec], this contract empowers users to take control of their digital credentials, enabling self-revocation, customizable access capabilities, and streamlined credential issuance authorization.
 
 ## Contracts Workflow
-The diagram bellow illustrates how the smart contracts manage the certificate issuance, revocation, display, and verification processes.
+The diagram bellow illustrates how the smart contracts manage the credential issuance, revocation, display, and verification processes.
 
-![Chaincerts - Pitch](https://user-images.githubusercontent.com/1649973/235801719-845b9bc5-5daf-46de-8eaf-266435396535.jpeg)
+![Chaincerts - Contracts Workflow](https://i.imgur.com/NpaBjsT.jpg)
 
 ## Development
 
@@ -58,7 +58,7 @@ cargo build --target wasm32-unknown-unknown --release
 ```
 soroban contract deploy \
     --source-account SOURCE_ACCOUNT_SECRET_KEY \
-    --rpc-url https://rpc-futurenet.stellar.org:443 \
+    --rpc-url https://rpc-futurenet.stellar.org \
     --network-passphrase 'Test SDF Future Network ; October 2022' \
     --wasm target/wasm32-unknown-unknown/release/issuance_contract.wasm
 SUCCESS
@@ -70,7 +70,7 @@ ISSUANCE_CONTRACT_ID
 ```
 soroban contract deploy \
     --source-account SOURCE_ACCOUNT_SECRET_KEY \
-    --rpc-url https://rpc-futurenet.stellar.org:443 \
+    --rpc-url https://rpc-futurenet.stellar.org \
     --network-passphrase 'Test SDF Future Network ; October 2022' \
     --wasm target/wasm32-unknown-unknown/release/did_contract.wasm
 SUCCESS

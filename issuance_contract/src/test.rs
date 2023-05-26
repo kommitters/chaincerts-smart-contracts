@@ -11,11 +11,11 @@ use soroban_sdk::{vec, Address, Env, IntoVal, Map, String, Vec};
 
 const WASM: &[u8] = include_bytes!("../did_contract.wasm");
 
-fn create_did_contract(
+fn create_did_contract<'a>(
     env: &Env,
     id: &String,
     authentication_params: &(String, Address),
-) -> did_contract::Client {
+) -> did_contract::Client<'a> {
     let did_contract = did_contract::Client::new(env, &env.register_contract_wasm(None, WASM));
     let context = vec![
         env,
@@ -54,13 +54,13 @@ fn create_did_contract(
     did_contract
 }
 
-fn create_issuance_contract(
+fn create_issuance_contract<'a>(
     e: &Env,
     limit: &Option<u32>,
     recipient_dids: &Option<Vec<String>>,
     organization: &Organization,
     credential_params: &CredentialParams,
-) -> IssuanceContractClient {
+) -> IssuanceContractClient<'a> {
     let issuance_contract =
         IssuanceContractClient::new(e, &e.register_contract(None, IssuanceContract {}));
 
@@ -81,13 +81,14 @@ fn create_random_recipient_dids(e: &Env) -> Vec<String> {
     vec![e, recipient_1, recipient_2, recipient_3]
 }
 
-fn setup_initialized_and_distributed_contract() -> (
+fn setup_initialized_and_distributed_contract<'a>() -> (
     Env,
     Organization,
     DistributeCredential,
-    IssuanceContractClient,
+    IssuanceContractClient<'a>,
 ) {
     let e: Env = Default::default();
+    e.mock_all_auths();
     let recipient_address = Address::random(&e);
     let recipient_did = String::from_slice(&e, "did:chaincerts:abc123");
     let organization: Organization = Organization {
@@ -104,6 +105,7 @@ fn setup_initialized_and_distributed_contract() -> (
         credential_type: String::from_slice(&e, "Work"),
         credential_title: String::from_slice(&e, "Software Engineer"),
     };
+
     let issuance_contract = create_issuance_contract(
         &e,
         &distribution_limit,
@@ -124,17 +126,14 @@ fn setup_initialized_and_distributed_contract() -> (
         expiration_date: OptionU64::None,
     };
 
-    issuance_contract.distribute(
-        &organization.admin,
-        &did.contract_id,
-        &verifiable_credential,
-    );
+    issuance_contract.distribute(&organization.admin, &did.address, &verifiable_credential);
     (e, organization, verifiable_credential, issuance_contract)
 }
 
 #[test]
 fn test_create_cert_data() {
     let e: Env = Default::default();
+    e.mock_all_auths();
     let did: String = "did:chaincerts:abc123#credential-xyz123".into_val(&e);
     let issuance_date = 1711195200;
     let cert_data = CredentialData::new(
@@ -153,6 +152,7 @@ fn test_create_cert_data() {
 #[test]
 fn test_initialize_contract_with_recipients() {
     let e: Env = Default::default();
+    e.mock_all_auths();
     let recipients: Option<Vec<String>> = Option::Some(create_random_recipient_dids(&e));
     let organization: Organization = Organization {
         admin: Address::random(&e),
@@ -189,6 +189,7 @@ fn test_initialize_contract_with_recipients() {
 #[test]
 fn test_initialize_with_limit_contract() {
     let e: Env = Default::default();
+    e.mock_all_auths();
     let organization: Organization = Organization {
         admin: Address::random(&e),
         did: "did:chaincerts:org123".into_val(&e),
@@ -223,6 +224,7 @@ fn test_initialize_with_limit_contract() {
 #[test]
 fn test_initialize_without_limit_contract_and_recipients() {
     let e: Env = Default::default();
+    e.mock_all_auths();
     let organization: Organization = Organization {
         admin: Address::random(&e),
         did: "did:chaincerts:org123".into_val(&e),
@@ -256,6 +258,7 @@ fn test_initialize_without_limit_contract_and_recipients() {
 #[test]
 fn test_get_contract_info() {
     let e: Env = Default::default();
+    e.mock_all_auths();
     let organization: Organization = Organization {
         admin: Address::random(&e),
         did: "did:chaincerts:org123".into_val(&e),
@@ -318,6 +321,7 @@ fn test_get_contract_info() {
 #[test]
 fn test_distribute_with_distribution_limit_contract() {
     let e: Env = Default::default();
+    e.mock_all_auths();
     let recipient1_address = Address::random(&e);
     let recipient1_did = String::from_slice(&e, "did:chaincerts:abc123");
     let organization: Organization = Organization {
@@ -354,11 +358,7 @@ fn test_distribute_with_distribution_limit_contract() {
         expiration_date: OptionU64::None,
     };
 
-    issuance_contract.distribute(
-        &organization.admin,
-        &did.contract_id,
-        &verifiable_credential,
-    );
+    issuance_contract.distribute(&organization.admin, &did.address, &verifiable_credential);
     let recipients: Map<String, Option<CredentialData>> = issuance_contract.recipients();
 
     assert_eq!(issuance_contract.supply(), 1);
@@ -369,6 +369,7 @@ fn test_distribute_with_distribution_limit_contract() {
 #[test]
 fn test_distribute_with_initial_recipients() {
     let e: Env = Default::default();
+    e.mock_all_auths();
     let recipients = Option::Some(create_random_recipient_dids(&e));
     let recipient1_address = Address::random(&e);
     let recipient1_did = recipients
@@ -413,11 +414,7 @@ fn test_distribute_with_initial_recipients() {
         expiration_date: OptionU64::Some(31556926),
     };
 
-    issuance_contract.distribute(
-        &organization.admin,
-        &did.contract_id,
-        &verifiable_credential,
-    );
+    issuance_contract.distribute(&organization.admin, &did.address, &verifiable_credential);
 
     recipients = issuance_contract.recipients();
 
@@ -429,6 +426,7 @@ fn test_distribute_with_initial_recipients() {
 #[test]
 fn test_revoke_chaincert() {
     let e: Env = Default::default();
+    e.mock_all_auths();
     let recipients: Option<Vec<String>> = Option::Some(create_random_recipient_dids(&e));
     let recipient_address = Address::random(&e);
     let recipient_did = recipients
@@ -474,11 +472,7 @@ fn test_revoke_chaincert() {
 
     let revocation_date: u64 = 1684875611;
 
-    issuance_contract.distribute(
-        &organization.admin,
-        &did.contract_id,
-        &verifiable_credential,
-    );
+    issuance_contract.distribute(&organization.admin, &did.address, &verifiable_credential);
 
     let recipients = issuance_contract.recipients();
     let cert_data = recipients
@@ -521,6 +515,7 @@ fn test_revoke_chaincert() {
 #[should_panic(expected = "Status(ContractError(1))")]
 fn test_initialize_contract_with_recipients_error() {
     let e: Env = Default::default();
+    e.mock_all_auths();
     let recipient_dids: Option<Vec<String>> = Option::Some(create_random_recipient_dids(&e));
     let organization: Organization = Organization {
         admin: Address::random(&e),
@@ -555,6 +550,7 @@ fn test_initialize_contract_with_recipients_error() {
 #[should_panic(expected = "Status(ContractError(1))")]
 fn test_initialize_with_limit_contract_error() {
     let e: Env = Default::default();
+    e.mock_all_auths();
     let organization: Organization = Organization {
         admin: Address::random(&e),
         did: "did:chaincerts:org123".into_val(&e),
@@ -590,6 +586,7 @@ fn test_initialize_with_limit_contract_error() {
 fn test_distribute_admin_error() {
     const ATTESTATION1: &str = "ipfs://QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
     let e: Env = Default::default();
+    e.mock_all_auths();
     let invalid_admin = Address::random(&e);
     let recipient_address = Address::random(&e);
     let recipient_dids = Option::Some(create_random_recipient_dids(&e));
@@ -632,13 +629,14 @@ fn test_distribute_admin_error() {
         expiration_date: OptionU64::None,
     };
 
-    issuance_contract.distribute(&invalid_admin, &did.contract_id, &verifiable_credential);
+    issuance_contract.distribute(&invalid_admin, &did.address, &verifiable_credential);
 }
 
 #[test]
 #[should_panic(expected = "Status(ContractError(3))")]
 fn test_distribute_limit_error() {
     let e: Env = Default::default();
+    e.mock_all_auths();
     let recipients = Option::Some(create_random_recipient_dids(&e));
     let address1 = Address::random(&e);
     let address2 = Address::random(&e);
@@ -684,11 +682,7 @@ fn test_distribute_limit_error() {
         expiration_date: OptionU64::None,
     };
 
-    issuance_contract.distribute(
-        &organization.admin,
-        &did1.contract_id,
-        &verifiable_credential,
-    );
+    issuance_contract.distribute(&organization.admin, &did1.address, &verifiable_credential);
 
     verifiable_credential.recipient_did = recipients
         .expect("Vec of recipients")
@@ -696,17 +690,14 @@ fn test_distribute_limit_error() {
         .unwrap()
         .unwrap();
     verifiable_credential.attestation = ATTESTATION2.into_val(&e);
-    issuance_contract.distribute(
-        &organization.admin,
-        &did2.contract_id,
-        &verifiable_credential,
-    );
+    issuance_contract.distribute(&organization.admin, &did2.address, &verifiable_credential);
 }
 
 #[test]
 #[should_panic(expected = "Status(ContractError(5))")]
 fn test_distribute_status_error() {
     let e: Env = Default::default();
+    e.mock_all_auths();
     let did_owner = Address::random(&e);
     let recipients = Option::Some(create_random_recipient_dids(&e));
     let organization: Organization = Organization {
@@ -748,23 +739,16 @@ fn test_distribute_status_error() {
         expiration_date: OptionU64::None,
     };
 
-    issuance_contract.distribute(
-        &organization.admin,
-        &did.contract_id,
-        &verifiable_credential,
-    );
+    issuance_contract.distribute(&organization.admin, &did.address, &verifiable_credential);
 
-    issuance_contract.distribute(
-        &organization.admin,
-        &did.contract_id,
-        &verifiable_credential,
-    );
+    issuance_contract.distribute(&organization.admin, &did.address, &verifiable_credential);
 }
 
 #[test]
 #[should_panic(expected = "Status(ContractError(2))")]
 fn test_revoke_admin_error() {
     let e: Env = Default::default();
+    e.mock_all_auths();
     let recipients: Option<Vec<String>> = Option::Some(create_random_recipient_dids(&e));
     let recipient_address = Address::random(&e);
     let recipient_did = recipients
@@ -810,7 +794,7 @@ fn test_revoke_admin_error() {
 
     let revocation_date: u64 = 1684875611;
 
-    issuance_contract.distribute(&organization.admin, &did.contract_id, &credential);
+    issuance_contract.distribute(&organization.admin, &did.address, &credential);
 
     issuance_contract.revoke(
         &Address::random(&e),
@@ -823,6 +807,7 @@ fn test_revoke_admin_error() {
 #[should_panic(expected = "Status(ContractError(7))")]
 fn test_revoke_credential_data_none_error() {
     let e: Env = Default::default();
+    e.mock_all_auths();
     let recipients: Option<Vec<String>> = Option::Some(create_random_recipient_dids(&e));
     let recipient_did = recipients
         .clone()
@@ -859,6 +844,7 @@ fn test_revoke_credential_data_none_error() {
 #[should_panic(expected = "Status(ContractError(7))")]
 fn test_revoke_status_revoked_error() {
     let e: Env = Default::default();
+    e.mock_all_auths();
     let recipients: Option<Vec<String>> = Option::Some(create_random_recipient_dids(&e));
     let recipient_did = recipients
         .clone()
@@ -904,11 +890,7 @@ fn test_revoke_status_revoked_error() {
 
     let revocation_date: u64 = 1684875611;
 
-    issuance_contract.distribute(
-        &organization.admin,
-        &did.contract_id,
-        &verifiable_credential,
-    );
+    issuance_contract.distribute(&organization.admin, &did.address, &verifiable_credential);
 
     issuance_contract.revoke(
         &organization.admin,
@@ -926,6 +908,7 @@ fn test_revoke_status_revoked_error() {
 #[should_panic(expected = "Status(ContractError(7))")]
 fn test_revoke_no_revocable_cert() {
     let e: Env = Default::default();
+    e.mock_all_auths();
     let recipients: Option<Vec<String>> = Option::Some(create_random_recipient_dids(&e));
     let recipient_did = recipients
         .clone()
@@ -996,7 +979,6 @@ fn test_attest_revoked() {
         &credential.recipient_did,
         &revocation_date,
     );
-
     let attest = issuance_contract.attest(
         &credential.did,
         &organization.did,

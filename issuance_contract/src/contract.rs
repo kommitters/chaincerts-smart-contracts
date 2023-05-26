@@ -21,7 +21,7 @@ use crate::organization::{
 };
 use crate::recipients::{add_recipient, create_recipients, read_recipients};
 use crate::storage_types::{CredentialData, Info, Organization, RevokedCredential};
-use soroban_sdk::{contractimpl, panic_with_error, Address, BytesN, Env, Map, String, Vec};
+use soroban_sdk::{contractimpl, panic_with_error, Address, Env, Map, String, Vec};
 
 pub struct IssuanceContract;
 
@@ -55,7 +55,7 @@ impl IssuanceTrait for IssuanceContract {
     fn distribute(
         e: Env,
         admin: Address,
-        did_contract_id: BytesN<32>,
+        did_contract_id: Address,
         credential: DistributeCredential,
     ) {
         check_admin(&e, &admin);
@@ -168,7 +168,7 @@ impl IssuanceTrait for IssuanceContract {
 }
 
 /// Defines recipients and distribution_limit depending on the received ones.
-fn apply_distribution(e: Env, did_contract_id: BytesN<32>, credential: &DistributeCredential) {
+fn apply_distribution(e: Env, did_contract_id: Address, credential: &DistributeCredential) {
     match read_recipients(&e).get(credential.recipient_did.clone()) {
         Some(_) => {
             distribute_to_recipient(&e, did_contract_id, credential);
@@ -223,11 +223,7 @@ fn check_revocable(e: &Env) {
 }
 
 /// Deposit a chaincert to a DID and makes the necessary storage changes when successful.
-fn distribute_to_recipient(
-    e: &Env,
-    did_contract_id: BytesN<32>,
-    credential: &DistributeCredential,
-) {
+fn distribute_to_recipient(e: &Env, did_contract_id: Address, credential: &DistributeCredential) {
     let mut recipients: Map<String, Option<CredentialData>> = read_recipients(e);
     let mut credential_data: Option<CredentialData> = recipients
         .get(credential.recipient_did.clone())
@@ -255,7 +251,7 @@ fn distribute_to_recipient(
 }
 
 /// Invokes a DID contract to make a credential deposit.
-fn deposit_to_did(e: &Env, did_contract_id: BytesN<32>, credential: &DistributeCredential) {
+fn deposit_to_did(e: &Env, did_contract_id: Address, credential: &DistributeCredential) {
     let did_client = did_contract::Client::new(e, &did_contract_id);
     let issuer = read_organization_did(e);
 
@@ -274,5 +270,6 @@ fn deposit_to_did(e: &Env, did_contract_id: BytesN<32>, credential: &DistributeC
         attestation: credential.attestation.clone(),
         revoked: false,
     };
+
     did_client.deposit_credential(&verifiable_credential);
 }

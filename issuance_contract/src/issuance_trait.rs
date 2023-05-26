@@ -1,7 +1,7 @@
 //! Module IssuanceTrait
 //!
 //! Interface that defines the behavior of a Issuance contract.
-use soroban_sdk::{contracttype, Address, BytesN, Env, Map, String, Vec};
+use soroban_sdk::{contracttype, Address, Env, Map, String, Vec};
 
 use crate::{
     did_contract::OptionU64,
@@ -52,7 +52,7 @@ pub trait IssuanceTrait {
     fn distribute(
         e: Env,
         admin: Address,
-        did_contract_id: BytesN<32>,
+        did_contract_id: Address,
         verifiable_credential: DistributeCredential,
     );
 

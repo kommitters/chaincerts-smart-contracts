@@ -25,18 +25,18 @@ jobs:
       - name: Code Tests
         run: |
           cargo test
-      - run: cargo install --locked --version 0.6.0 soroban-cli
+      - run: cargo install --locked --version 0.8.0 soroban-cli
       - name: Contract Deployment issuance-contract to futurenet
         run: |
           soroban contract deploy \
-          --wasm target/wasm32-unknown-unknown/release/cert_issuance.wasm \
-          --secret-key ${{ secrets.DEPLOYER_SECRET }} \
-          --rpc-url https://horizon-futurenet.stellar.cash:443/soroban/rpc \
+          --wasm target/wasm32-unknown-unknown/release/issuance_contract.wasm \
+          --source ${{ secrets.DEPLOYER_SECRET }} \
+          --rpc-url https://rpc-futurenet.stellar.org:443/ \
           --network-passphrase 'Test SDF Future Network ; October 2022'
-      - name: Contract Deployment wallet-contract to futurenet
+      - name: Contract Deployment did-contract to futurenet
         run: |
           soroban contract deploy \
-          --wasm target/wasm32-unknown-unknown/release/cert_wallet.wasm \
-          --secret-key ${{ secrets.DEPLOYER_SECRET }} \
-          --rpc-url https://horizon-futurenet.stellar.cash:443/soroban/rpc \
+          --wasm target/wasm32-unknown-unknown/release/did_contract.wasm \
+          --source ${{ secrets.DEPLOYER_SECRET }} \
+          --rpc-url https://rpc-futurenet.stellar.org:443/ \
           --network-passphrase 'Test SDF Future Network ; October 2022'

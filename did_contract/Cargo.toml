@@ -1,6 +1,6 @@
 [package]
-name = "cert_issuance"
-version = "0.5.0"
+name = "did_contract"
+version = "0.6.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -10,11 +10,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 soroban-sdk = { workspace = true }
-
-[dependencies.uuid]
-version = "1.3.0"
-default-features = false
-features = ["v5"]
 
 [dev_dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }

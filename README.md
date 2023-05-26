@@ -1,8 +1,8 @@
 <img src="https://user-images.githubusercontent.com/1649973/235795202-02794303-b462-43bd-bb06-2e2dbf783d14.png" width="400">
 
-[**Chaincerts**][chaincerts.co] is a cutting-edge platform that revolutionizes the way certifications are issued, verified, and showcased.
+[**Chaincerts**][chaincerts.co] is a cutting-edge platform that revolutionizes the way digital credentials are issued, verified, and showcased.
 
-**Chaincerts** issues certifications as secure, non-transferable, and verifiable Soulbound Tokens (SBTs) on the Stellar network. These SBTs, managed through Soroban smart contracts, serve as unique identity tokens that showcase an individual or entity's characteristics, features, traits, and accomplishments in a visually appealing format.
+**Chaincerts** issues secure, non-transferable, and verifiable digital credentials on the Stellar network. Managed through Soroban smart contracts, serve as unique identity credentials that showcase an individual or entity's characteristics, features, traits, and accomplishments in a visually appealing format.
 
 # Chaincerts Smart Contracts
 
@@ -11,20 +11,20 @@
 [![Coverage Status](https://img.shields.io/coveralls/github/kommitters/chaincerts-smart-contracts?style=for-the-badge)](https://coveralls.io/github/kommitters/chaincerts-smart-contracts)
 [![OpenSSF Scorecard](https://img.shields.io/ossf-scorecard/github.com/kommitters/chaincerts-smart-contracts?label=openssf%20scorecard&style=for-the-badge)](https://api.securityscorecards.dev/projects/github.com/kommitters/chaincerts-smart-contracts)
 
-This repository hosts a collection of smart contracts, specifically developed for the purpose of creating, distributing, and revoking digital certificates on the blockchain. The objective of this project is to provide a decentralized, secure, and tamper-proof solution for issuing and managing digital certificates, utilizing the power of Soroban smart contracts.
+This repository hosts a collection of smart contracts, specifically developed for the purpose of creating, distributing, and revoking digital credentials using Decentralized Identifiers (DIDs) on the blockchain. The objective of this project is to provide a decentralized, secure, and tamper-proof solution for issuing and managing digital credentials, utilizing the power of Soroban smart contracts.
 
 📖 As part of our commitment to transparency in the Chaincerts system, we encourage the use of a **"build in the open"** approach when developing these smart contracts. This approach allows anyone to easily review and examine the underlying code of the smart contracts, ensuring that they function as intended and do not contain any hidden vulnerabilities or malicious code. By using this approach, we can build trust in the system and promote greater confidence in the use of Chaincerts. Check the Open Source [LICENSE][license] for details.
 
-### Certificate Issuance Contract
-The Issuance Contract defines the rules for issuing and managing Chaincerts. With this contract, issuing entities can set the revocability and expiration of certificates, define the eligible recipients, and restrict the distribution of certificates. Additionally, the Issuance Contract is responsible for executing the distribution and revocation actions for certificates to different recipients.
+### Issuance Contract
+The Issuance Contract defines the rules for issuing and managing digital credentials within the Chaincerts ecosystem. With this contract, issuing entities can set the revocability and expiration of credentials, define the eligible recipients, and restrict the distribution of credentials. Additionally, the Issuance Contract is responsible for executing the distribution action to different recipients, and it can revoke credentials making them invalid.
 
-### Certificate Wallet Contract
-The Wallet Contract stores the Chaincerts of a specific recipient, and each recipient must have their own certificate wallet. This contract allows recipients to add authorized entities to issue certificates to them and execute distribution and revocation actions on their certificates. Only functions that can be executed by the issuance contract are authorized to modify certificates in a certificate wallet.
+### DID Contract
+The DID Contract allows to manage a digital identity within the Chaincerts ecosystem. By following the guidelines set forth in the [W3C DID Core specification][w3c-did-core-spec], this contract empowers users to take control of their digital credentials, enabling self-revocation, customizable access capabilities, and streamlined credential issuance authorization.
 
 ## Contracts Workflow
-The diagram bellow illustrates how the smart contracts manage the certificate issuance, revocation, display, and verification processes.
+The diagram bellow illustrates how the smart contracts manage the credential issuance, revocation, display, and verification processes.
 
-![Chaincerts - Pitch](https://user-images.githubusercontent.com/1649973/235801719-845b9bc5-5daf-46de-8eaf-266435396535.jpeg)
+![Chaincerts - Contracts Workflow](https://i.imgur.com/NpaBjsT.jpg)
 
 ## Development
 
@@ -58,7 +58,7 @@ cargo build --target wasm32-unknown-unknown --release
 ```
 soroban contract deploy \
     --source-account SOURCE_ACCOUNT_SECRET_KEY \
-    --rpc-url https://rpc-futurenet.stellar.org:443 \
+    --rpc-url https://rpc-futurenet.stellar.org \
     --network-passphrase 'Test SDF Future Network ; October 2022' \
     --wasm target/wasm32-unknown-unknown/release/issuance_contract.wasm
 SUCCESS
@@ -70,7 +70,7 @@ ISSUANCE_CONTRACT_ID
 ```
 soroban contract deploy \
     --source-account SOURCE_ACCOUNT_SECRET_KEY \
-    --rpc-url https://rpc-futurenet.stellar.org:443 \
+    --rpc-url https://rpc-futurenet.stellar.org \
     --network-passphrase 'Test SDF Future Network ; October 2022' \
     --wasm target/wasm32-unknown-unknown/release/did_contract.wasm
 SUCCESS
@@ -105,3 +105,4 @@ Made with 💙 by [kommitters Open Source](https://kommit.co)
 [coc]: https://github.com/kommitters/chaincerts-smart-contracts/blob/main/CODE_OF_CONDUCT.md
 [changelog]: https://github.com/kommitters/chaincerts-smart-contracts/blob/main/CHANGELOG.md
 [contributing]: https://github.com/kommitters/chaincerts-smart-contracts/blob/main/CONTRIBUTING.md
+[w3c-did-core-spec]: https://www.w3.org/TR/did-core/

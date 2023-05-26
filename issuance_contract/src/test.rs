@@ -153,7 +153,6 @@ fn test_create_cert_data() {
 fn test_initialize_contract_with_recipients() {
     let e: Env = Default::default();
     e.mock_all_auths();
-    e.mock_all_auths();
     let recipients: Option<Vec<String>> = Option::Some(create_random_recipient_dids(&e));
     let organization: Organization = Organization {
         admin: Address::random(&e),
@@ -190,7 +189,6 @@ fn test_initialize_contract_with_recipients() {
 #[test]
 fn test_initialize_with_limit_contract() {
     let e: Env = Default::default();
-    e.mock_all_auths();
     e.mock_all_auths();
     let organization: Organization = Organization {
         admin: Address::random(&e),

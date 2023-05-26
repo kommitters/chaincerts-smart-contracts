@@ -9,14 +9,14 @@ use crate::{
 };
 use soroban_sdk::{testutils::Address as _, vec, Address, Env, IntoVal, String, Vec};
 
-fn create_did_contract(
+fn create_did_contract<'a>(
     e: &Env,
     id: &String,
     authentication_params: &(String, Address),
     context: &Vec<String>,
     verification_processes: &Vec<Method>,
     services: &Vec<Service>,
-) -> DIDContractClient {
+) -> DIDContractClient<'a> {
     let did_contract = DIDContractClient::new(e, &e.register_contract(None, DIDContract {}));
     did_contract.initialize(
         id,
@@ -28,12 +28,12 @@ fn create_did_contract(
     did_contract
 }
 
-struct DIDContractTest {
+struct DIDContractTest<'a> {
     env: Env,
     id: String,
     authentication: String,
     authentication_address: Address,
-    did_contract: DIDContractClient,
+    did_contract: DIDContractClient<'a>,
     credential_did: String,
     public_credential_did: String,
     capability_invocations: Vec<CapabilityInvocation>,
@@ -45,9 +45,10 @@ struct DIDContractTest {
     credential_subject: CredentialSubject,
 }
 
-impl DIDContractTest {
+impl<'a> DIDContractTest<'a> {
     fn setup() -> Self {
         let env: Env = Default::default();
+        env.mock_all_auths();
         let id = String::from_slice(&env, "did:chaincerts::ABC123");
         let authentication = String::from_slice(&env, "did:chaincerts:ABC123#key1");
         let authentication_address = Address::random(&env);
@@ -161,7 +162,6 @@ fn test_successful_execution_of_did_contract_capabilities() {
         attestation: test.cids.get_unchecked(0).unwrap(),
         revoked: false,
     };
-
     test.did_contract.add_capability(
         &test.authentication_address,
         &test.capability_invocations.get_unchecked(0).unwrap(),

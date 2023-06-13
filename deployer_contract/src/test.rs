@@ -65,12 +65,9 @@ fn test() {
 
 fn did_init_args(env: &Env, address: &Address) -> Vec<RawVal> {
     let id = String::from_slice(env, "did:chaincerts:ABC123");
-    let authentication_params = RawVal::from_val(
-        env,
-        &(
-            String::from_slice(env, "did:chaincerts:ABC123#key-1"),
-            address,
-        ),
+    let authentication_params = (
+        String::from_slice(env, "did:chaincerts:ABC123#key-1"),
+        address,
     );
     let context = vec![
         env,
@@ -92,10 +89,10 @@ fn did_init_args(env: &Env, address: &Address) -> Vec<RawVal> {
 
     vec![
         env,
-        RawVal::from(id),
-        RawVal::from(authentication_params),
-        RawVal::from(context),
-        RawVal::from(verification_processes),
-        RawVal::from(services),
+        RawVal::from_val(env, &id),
+        RawVal::from_val(env, &authentication_params),
+        RawVal::from_val(env, &context),
+        RawVal::from_val(env, &verification_processes),
+        RawVal::from_val(env, &services),
     ]
 }

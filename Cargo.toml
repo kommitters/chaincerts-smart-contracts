@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 
-members = ["issuance_contract", "did_contract"]
+members = ["issuance_contract", "did_contract", "deployer_contract"]
 
 [profile.release-with-logs]
 inherits = "release"

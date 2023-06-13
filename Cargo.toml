@@ -21,4 +21,4 @@ lto = true
 version = "0.8.4"
 
 [workspace.dependencies.soroban-auth]
-version = "0.8.4"
+version = "0.8.3"

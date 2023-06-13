@@ -16,10 +16,7 @@ impl DeployerContract {
         init_args: Vec<RawVal>,
     ) -> (Address, RawVal) {
         // Deploy the contract using the installed WASM code with given hash.
-        let contract_id = env
-            .deployer()
-            .with_current_contract(&salt)
-            .deploy(&wasm_id);
+        let contract_id = env.deployer().with_current_contract(&salt).deploy(&wasm_id);
 
         let init_fn = Symbol::new(&env, "initialize");
         // Invoke the init function with the given arguments.

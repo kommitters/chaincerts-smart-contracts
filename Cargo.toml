@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 
-members = ["issuance_contract", "did_contract"]
+members = ["issuance_contract", "did_contract", "deployer_contract"]
 
 [profile.release-with-logs]
 inherits = "release"
@@ -21,4 +21,4 @@ lto = true
 version = "0.8.4"
 
 [workspace.dependencies.soroban-auth]
-version = "0.8.4"
+version = "0.8.3"

@@ -21,6 +21,9 @@ The Issuance Contract defines the rules for issuing and managing digital credent
 ### DID Contract
 The DID Contract allows to manage a digital identity within the Chaincerts ecosystem. By following the guidelines set forth in the [W3C DID Core specification][w3c-did-core-spec], this contract empowers users to take control of their digital credentials, enabling self-revocation, customizable access capabilities, and streamlined credential issuance authorization.
 
+### Deployer Contract
+The Deployer Contract is a simple wrapper that allows the Issuance and DID contracts to be deployed and initialized through one function, requiring the user to sign a single transaction instead of two.
+
 ## Contracts Workflow
 The diagram bellow illustrates how the smart contracts manage the credential issuance, revocation, display, and verification processes.
 

@@ -211,7 +211,7 @@ fn check_amount(e: &Env) {
 
 /// Checks that the status of the CredentialData of the recipient_data to distribute is Unassigned.
 fn check_recipient_status_for_distribute(e: &Env, recipient_data: &Option<CredentialData>) {
-    if !matches!(recipient_data, None) {
+    if recipient_data.is_some() {
         panic_with_error!(e, ContractError::AlreadyIssued);
     }
 }

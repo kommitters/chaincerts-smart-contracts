@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.0 (13.06.2023)
+
+- [Implement a Deployer Contract](https://github.com/kommitters/chaincerts-smart-contracts/issues/106)
+
 ## 0.6.0 (26.05.2023)
 
 - [Decentralized Identifier (DID) transformation](https://github.com/kommitters/chaincerts-smart-contracts/milestone/5)

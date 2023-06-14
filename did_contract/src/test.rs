@@ -16,6 +16,7 @@ fn create_did_contract<'a>(
     context: &Vec<String>,
     verification_processes: &Vec<Method>,
     services: &Vec<Service>,
+    public_add_cap: &Option<CapabilityInvocation>,
 ) -> DIDContractClient<'a> {
     let did_contract = DIDContractClient::new(e, &e.register_contract(None, DIDContract {}));
     did_contract.initialize(
@@ -24,6 +25,7 @@ fn create_did_contract<'a>(
         context,
         verification_processes,
         services,
+        public_add_cap,
     );
     did_contract
 }
@@ -33,6 +35,7 @@ struct DIDContractTest<'a> {
     id: String,
     authentication: String,
     authentication_address: Address,
+    authentication_params: (String, Address),
     did_contract: DIDContractClient<'a>,
     credential_did: String,
     public_credential_did: String,
@@ -41,6 +44,7 @@ struct DIDContractTest<'a> {
     context: Vec<String>,
     verification_processes: Vec<Method>,
     services: Vec<Service>,
+    public_add_cap: Option<CapabilityInvocation>,
     shared_address: Address,
     credential_subject: CredentialSubject,
 }
@@ -52,6 +56,7 @@ impl<'a> DIDContractTest<'a> {
         let id = String::from_slice(&env, "did:chaincerts::ABC123");
         let authentication = String::from_slice(&env, "did:chaincerts:ABC123#key1");
         let authentication_address = Address::random(&env);
+        let authentication_params = (authentication.clone(), authentication_address.clone());
         let shared_address = Address::random(&env);
         let context = vec![
             &env,
@@ -70,13 +75,15 @@ impl<'a> DIDContractTest<'a> {
             service_endpoint: String::from_slice(&env, "https://did.chaincerts.co/ABC123"),
         };
         let services = vec![&env, service];
+        let public_add_cap = Option::None;
         let did_contract = create_did_contract(
             &env,
             &id,
-            &(authentication.clone(), authentication_address.clone()),
+            &authentication_params,
             &context,
             &verification_processes,
             &services,
+            &public_add_cap,
         );
         let credential_did: String = "did:chaincerts:ABC123#credential-xyz123".into_val(&env);
         let public_credential_did: String =
@@ -125,6 +132,7 @@ impl<'a> DIDContractTest<'a> {
             id,
             authentication,
             authentication_address,
+            authentication_params,
             did_contract,
             credential_did,
             public_credential_did,
@@ -133,6 +141,7 @@ impl<'a> DIDContractTest<'a> {
             context,
             verification_processes,
             services,
+            public_add_cap,
             shared_address,
             credential_subject,
         }
@@ -351,6 +360,7 @@ fn test_initialize_an_already_initialized_did_contract() {
         &test.context,
         &test.verification_processes,
         &test.services,
+        &test.public_add_cap,
     );
 }
 
@@ -616,4 +626,59 @@ fn test_add_invalid_add_credential_cap() {
 
     test.did_contract
         .add_capability(&test.authentication_address, &invalid_cap);
+}
+
+#[test]
+fn test_initialize_with_public_add_cap() {
+    let test = DIDContractTest::setup();
+    let public_add_cap = Option::Some(CapabilityInvocation {
+        id: String::from_slice(&test.env, "did:chaincerts:ABC123#capability-1"),
+        type_: CapType::PublicAdd,
+        invoker: OptionString::None,
+        invoker_address: OptionAddress::None,
+        credential: OptionString::None,
+    });
+    let did_contract = create_did_contract(
+        &test.env,
+        &test.id,
+        &test.authentication_params,
+        &test.context,
+        &test.verification_processes,
+        &test.services,
+        &public_add_cap,
+    );
+
+    // Check that the public add cap is set in storage
+    assert!(did_contract.has_public_add_cap());
+
+    // Check that the public add cap is added to the CapabilityInvocations
+    let caps = did_contract.get_capability_invocation(&test.authentication_address);
+    let first_cap = caps.get_unchecked(0).unwrap();
+    assert_eq!(first_cap, public_add_cap.unwrap());
+
+    // Let's remove the public add cap
+    did_contract.remove_capability(&test.authentication_address, &first_cap.id);
+    assert!(!did_contract.has_public_add_cap());
+}
+
+#[test]
+#[should_panic(expected = "Status(ContractError(14))")]
+fn test_initialize_with_invalid_public_add_cap() {
+    let test = DIDContractTest::setup();
+    let invalid_public_add_cap = Option::Some(CapabilityInvocation {
+        id: String::from_slice(&test.env, "did:chaincerts:ABC123#capability-1"),
+        type_: CapType::AddCredential,
+        invoker: OptionString::None,
+        invoker_address: OptionAddress::None,
+        credential: OptionString::None,
+    });
+    let did_contract = create_did_contract(
+        &test.env,
+        &test.id,
+        &test.authentication_params,
+        &test.context,
+        &test.verification_processes,
+        &test.services,
+        &invalid_public_add_cap,
+    );
 }

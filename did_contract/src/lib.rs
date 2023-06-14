@@ -26,6 +26,7 @@ impl DIDContract {
         context: Vec<String>,
         verification_processes: Vec<Method>,
         services: Vec<Service>,
+        public_add_cap: Option<CapabilityInvocation>,
     ) {
         if authentication::has_authentication(&env) {
             panic_with_error!(env, ContractError::AlreadyInit);
@@ -43,6 +44,15 @@ impl DIDContract {
             &env,
             &Vec::<CapabilityInvocation>::new(&env),
         );
+        if let Some(cap) = public_add_cap {
+            if cap.type_ != capability_invocation::CapType::PublicAdd {
+                panic_with_error!(env, ContractError::InvalidCapabilityInvocation);
+            }
+            capability_invocation::add_capability(&env, &cap);
+            capability_invocation::write_public_add_cap(&env, true);
+        } else {
+            capability_invocation::write_public_add_cap(&env, false);
+        }
     }
 
     /// Add capability invocation
@@ -61,11 +71,15 @@ impl DIDContract {
 
     /// Deposit a `VerifiableCredential` to the DID contract
     pub fn deposit_credential(env: Env, verifiable_credential: VerifiableCredential) {
-        if let OptionAddress::Some(address) =
-            capability_invocation::check_capability_to_deposit(&env, &verifiable_credential.issuer)
-        {
-            address.require_auth()
-        };
+        if !capability_invocation::has_public_add_cap(&env) {
+            if let OptionAddress::Some(address) = capability_invocation::check_capability_to_deposit(
+                &env,
+                &verifiable_credential.issuer,
+            ) {
+                address.require_auth()
+            };
+        }
+
         verifiable_credential::deposit_credential(&env, verifiable_credential)
     }
 
@@ -102,6 +116,11 @@ impl DIDContract {
         authentication::check_invocation_address(&env, &address);
         address.require_auth();
         capability_invocation::read_capability_invocation(&env)
+    }
+
+    /// Return boolean indicating if the DID document has a public add capability
+    pub fn has_public_add_cap(env: Env) -> bool {
+        capability_invocation::has_public_add_cap(&env)
     }
 
     /// Get DID document public data

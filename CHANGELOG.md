@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.0 (14.06.2023)
+
+- [Add `PublicAdd` capability invocation](https://github.com/kommitters/chaincerts-smart-contracts/issues/110)
+
 ## 0.7.0 (13.06.2023)
 
 - [Implement a Deployer Contract](https://github.com/kommitters/chaincerts-smart-contracts/issues/106)

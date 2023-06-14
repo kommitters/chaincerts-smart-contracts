@@ -672,7 +672,7 @@ fn test_initialize_with_invalid_public_add_cap() {
         invoker_address: OptionAddress::None,
         credential: OptionString::None,
     });
-    let did_contract = create_did_contract(
+    create_did_contract(
         &test.env,
         &test.id,
         &test.authentication_params,

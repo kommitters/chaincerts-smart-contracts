@@ -4,7 +4,9 @@ use crate::{DeployerContract, DeployerContractClient};
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{vec, Address, BytesN, Env, FromVal, RawVal, String, Vec};
 
-use self::contract::{DIDDocument, Method, OptionMethodService, Service, VerificationMethod};
+use self::contract::{
+    CapabilityInvocation, DIDDocument, Method, OptionMethodService, Service, VerificationMethod,
+};
 
 // The contract that will be deployed by the deployer contract.
 mod contract {
@@ -86,6 +88,7 @@ fn did_init_args(env: &Env, address: &Address) -> Vec<RawVal> {
         service_endpoint: String::from_slice(env, "https://did.chaincerts.co/ABC123"),
     };
     let services = vec![env, service];
+    let public_add_cap: Option<CapabilityInvocation> = Option::None;
 
     vec![
         env,
@@ -94,5 +97,6 @@ fn did_init_args(env: &Env, address: &Address) -> Vec<RawVal> {
         RawVal::from_val(env, &context),
         RawVal::from_val(env, &verification_processes),
         RawVal::from_val(env, &services),
+        RawVal::from_val(env, &public_add_cap),
     ]
 }

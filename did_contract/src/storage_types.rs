@@ -21,4 +21,6 @@ pub enum DataKey {
     VerificationProcesses,
     /// Vec<Service> that stored DID services
     Services,
+    /// Boolean indicating that any organization can issue VerifiableCredentials to it.
+    PublicAdd,
 }

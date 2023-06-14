@@ -27,6 +27,7 @@ pub struct CapabilityInvocation {
 #[contracttype]
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub enum CapType {
+    PublicAdd,
     AddCredential,
     ReadCredential,
     PublicRead,
@@ -40,6 +41,14 @@ pub(crate) fn read_capability_invocation(env: &Env) -> Vec<CapabilityInvocation>
     env.storage().get_unchecked(&CAP_INVOCATION_KEY).unwrap()
 }
 
+pub(crate) fn write_public_add_cap(env: &Env, public_add: bool) {
+    env.storage().set(&DataKey::PublicAdd, &public_add)
+}
+
+pub(crate) fn has_public_add_cap(env: &Env) -> bool {
+    env.storage().get_unchecked(&DataKey::PublicAdd).unwrap()
+}
+
 pub(crate) fn add_capability(env: &Env, capability: &CapabilityInvocation) {
     let mut cap_invocation: Vec<CapabilityInvocation> =
         env.storage().get_unchecked(&CAP_INVOCATION_KEY).unwrap();
@@ -48,6 +57,9 @@ pub(crate) fn add_capability(env: &Env, capability: &CapabilityInvocation) {
         && !is_capability_in_list(&capability.id, &cap_invocation)
     {
         cap_invocation.push_front(capability.clone());
+        if capability.type_ == CapType::PublicAdd {
+            write_public_add_cap(env, true);
+        }
         write_capability_invocation(env, &cap_invocation);
     } else {
         panic_with_error!(env, ContractError::AlreadyInCapInvocation)
@@ -97,28 +109,16 @@ pub(crate) fn check_capability_to_read_credentials(env: &Env, address: &Address,
     panic_with_error!(env, ContractError::NotAuthorized)
 }
 
-fn remove_from_cap_invocation_list(
-    env: &Env,
-    cap_id: &String,
-    cap_invocation: &mut Vec<CapabilityInvocation>,
-) {
-    let index = cap_invocation
-        .iter()
-        .position(|cap| cap.unwrap().id == cap_id.clone());
-    match index {
-        Some(val) => cap_invocation.remove(val as u32).unwrap(),
-        None => panic_with_error!(env, ContractError::CapabilityInvocationNotFound),
-    }
-}
-
-fn is_capability_in_list(cap_id: &String, cap_invocation: &Vec<CapabilityInvocation>) -> bool {
-    cap_invocation
-        .iter()
-        .any(|cap| cap.unwrap().id == cap_id.clone())
-}
-
-fn is_valid_capability(env: &Env, capability_invocation: &CapabilityInvocation) -> bool {
+pub(crate) fn is_valid_capability(env: &Env, capability_invocation: &CapabilityInvocation) -> bool {
     match capability_invocation.type_ {
+        CapType::PublicAdd => {
+            if capability_invocation.invoker == OptionString::None
+                && capability_invocation.invoker_address == OptionAddress::None
+                && capability_invocation.credential == OptionString::None
+            {
+                return true;
+            }
+        }
         CapType::AddCredential => {
             if capability_invocation.invoker != OptionString::None
                 && capability_invocation.invoker_address != OptionAddress::None
@@ -146,4 +146,30 @@ fn is_valid_capability(env: &Env, capability_invocation: &CapabilityInvocation) 
     }
 
     panic_with_error!(env, ContractError::InvalidCapabilityInvocation)
+}
+
+fn remove_from_cap_invocation_list(
+    env: &Env,
+    cap_id: &String,
+    cap_invocation: &mut Vec<CapabilityInvocation>,
+) {
+    let index = cap_invocation
+        .iter()
+        .position(|cap| cap.unwrap().id == cap_id.clone());
+    match index {
+        Some(val) => {
+            let cap = cap_invocation.get_unchecked(val as u32).unwrap();
+            if cap.type_ == CapType::PublicAdd {
+                write_public_add_cap(env, false);
+            }
+            cap_invocation.remove(val as u32).unwrap();
+        }
+        None => panic_with_error!(env, ContractError::CapabilityInvocationNotFound),
+    }
+}
+
+fn is_capability_in_list(cap_id: &String, cap_invocation: &Vec<CapabilityInvocation>) -> bool {
+    cap_invocation
+        .iter()
+        .any(|cap| cap.unwrap().id == cap_id.clone())
 }

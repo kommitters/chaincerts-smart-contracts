@@ -49,6 +49,7 @@ fn create_did_contract<'a>(
         &context,
         &verification_processes,
         &services,
+        &Option::None,
     );
     did_contract.add_capability(&authentication_params.1, &cap1);
     did_contract

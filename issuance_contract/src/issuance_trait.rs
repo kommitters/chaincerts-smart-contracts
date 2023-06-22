@@ -47,12 +47,10 @@ pub trait IssuanceTrait {
         distribution_limit: Option<u32>,
         organization: Organization,
         credential_params: CredentialParams,
+        distribute_credentials: Option<Vec<DistributeCredential>>,
     );
 
-    /// Distribute a Credential to a recipient.
-    fn distribute(e: Env, admin: Address, verifiable_credential: DistributeCredential);
-
-    /// Distribute Credentials to the recipients.
+    /// Distribute Credentials to recipients.
     fn batch_distribute(e: Env, admin: Address, credentials: Vec<DistributeCredential>);
 
     /// Revoke a Credential from a recipient.

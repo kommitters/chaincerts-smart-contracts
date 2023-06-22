@@ -125,9 +125,10 @@ fn setup_initialized_and_distributed_contract<'a>() -> (
         attestation: ATTESTATION1.into_val(&e),
         issuance_date: 1679918400,
         expiration_date: OptionU64::None,
+        did_contract_id: did.address,
     };
 
-    issuance_contract.distribute(&organization.admin, &did.address, &verifiable_credential);
+    issuance_contract.distribute(&organization.admin, &verifiable_credential);
     (e, organization, verifiable_credential, issuance_contract)
 }
 
@@ -357,14 +358,83 @@ fn test_distribute_with_distribution_limit_contract() {
         attestation: ATTESTATION1.into_val(&e),
         issuance_date: 1679918400,
         expiration_date: OptionU64::None,
+        did_contract_id: did.address.clone(),
     };
 
-    issuance_contract.distribute(&organization.admin, &did.address, &verifiable_credential);
+    issuance_contract.distribute(&organization.admin, &verifiable_credential);
     let recipients: Map<String, Option<CredentialData>> = issuance_contract.recipients();
 
     assert_eq!(issuance_contract.supply(), 1);
     assert_eq!(recipients.len(), 1);
     assert_eq!(did.get_credentials(&recipient1_address).len(), 1);
+}
+
+#[test]
+fn test_batch_distribute_with_distribution_limit_contract() {
+    let e: Env = Default::default();
+    e.mock_all_auths();
+    let recipient1_address = Address::random(&e);
+    let recipient2_address = Address::random(&e);
+    let recipient1_did = String::from_slice(&e, "did:chaincerts:abc123");
+    let recipient2_did = String::from_slice(&e, "did:chaincerts:abc321");
+    let organization: Organization = Organization {
+        admin: Address::random(&e),
+        did: "did:chaincerts:org123".into_val(&e),
+    };
+    let id1 = String::from_slice(&e, "did:chaincerts::ABC123");
+    let id2 = String::from_slice(&e, "did:chaincerts::ABC321");
+    let authentication1 = String::from_slice(&e, "did:chaincerts:ABC123#key1");
+    let authentication2 = String::from_slice(&e, "did:chaincerts:ABC123#key2");
+    let did1 = create_did_contract(&e, &id1, &(authentication1, recipient1_address.clone()));
+    let did2 = create_did_contract(&e, &id2, &(authentication2, recipient2_address.clone()));
+    let distribution_limit: Option<u32> = Option::Some(6);
+    let credential_params = CredentialParams {
+        file_storage: "FileBase".into_val(&e),
+        revocable: true,
+        credential_type: String::from_slice(&e, "Work"),
+        credential_title: String::from_slice(&e, "Software Engineer"),
+    };
+    let issuance_contract = create_issuance_contract(
+        &e,
+        &distribution_limit,
+        &Option::None,
+        &organization,
+        &credential_params,
+    );
+
+    const ATTESTATION1: &str = "ipfs://QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
+
+    let verifiable_credential = DistributeCredential {
+        did: "did:chaincerts:abc123#credential-xyz123".into_val(&e),
+        id: "c8b875a2-3f5d-4a63-b1c8-791be9b01c02".into_val(&e),
+        recipient_did: recipient1_did,
+        signature: String::from_slice(&e, "MEUCIFZ5o9zSYiC9d0hvN6V73Y8yBm9n3MF8Hj"),
+        attestation: ATTESTATION1.into_val(&e),
+        issuance_date: 1679918400,
+        expiration_date: OptionU64::None,
+        did_contract_id: did1.address.clone(),
+    };
+
+    let verifiable_credential2 = DistributeCredential {
+        did: "did:chaincerts:abc123#credential-xyz123".into_val(&e),
+        id: "c8b875a2-3f5d-4a63-b1c8-791be9b01c02".into_val(&e),
+        recipient_did: recipient2_did,
+        signature: String::from_slice(&e, "MEUCIFZ5o9zSYiC9d0hvN6V73Y8yBm9n3MF8Hj"),
+        attestation: ATTESTATION1.into_val(&e),
+        issuance_date: 1679918400,
+        expiration_date: OptionU64::None,
+        did_contract_id: did2.address.clone(),
+    };
+
+    let verifiable_credentials = vec![&e, verifiable_credential, verifiable_credential2];
+
+    issuance_contract.batch_distribute(&organization.admin, &verifiable_credentials);
+    let recipients: Map<String, Option<CredentialData>> = issuance_contract.recipients();
+
+    assert_eq!(issuance_contract.supply(), 2);
+    assert_eq!(recipients.len(), 2);
+    assert_eq!(did1.get_credentials(&recipient1_address).len(), 1);
+    assert_eq!(did2.get_credentials(&recipient2_address).len(), 1);
 }
 
 #[test]
@@ -413,9 +483,10 @@ fn test_distribute_with_initial_recipients() {
         attestation: ATTESTATION1.into_val(&e),
         issuance_date: 1679918400,
         expiration_date: OptionU64::Some(31556926),
+        did_contract_id: did.address.clone(),
     };
 
-    issuance_contract.distribute(&organization.admin, &did.address, &verifiable_credential);
+    issuance_contract.distribute(&organization.admin, &verifiable_credential);
 
     recipients = issuance_contract.recipients();
 
@@ -469,11 +540,12 @@ fn test_revoke_chaincert() {
         attestation: ATTESTATION1.into_val(&e),
         issuance_date: 1679918400,
         expiration_date: OptionU64::None,
+        did_contract_id: did.address,
     };
 
     let revocation_date: u64 = 1684875611;
 
-    issuance_contract.distribute(&organization.admin, &did.address, &verifiable_credential);
+    issuance_contract.distribute(&organization.admin, &verifiable_credential);
 
     let recipients = issuance_contract.recipients();
     let cert_data = recipients
@@ -628,9 +700,10 @@ fn test_distribute_admin_error() {
         attestation: ATTESTATION1.into_val(&e),
         issuance_date: 1679918400,
         expiration_date: OptionU64::None,
+        did_contract_id: did.address,
     };
 
-    issuance_contract.distribute(&invalid_admin, &did.address, &verifiable_credential);
+    issuance_contract.distribute(&invalid_admin, &verifiable_credential);
 }
 
 #[test]
@@ -681,17 +754,19 @@ fn test_distribute_limit_error() {
         attestation: ATTESTATION1.into_val(&e),
         issuance_date: 1679918400,
         expiration_date: OptionU64::None,
+        did_contract_id: did1.address,
     };
 
-    issuance_contract.distribute(&organization.admin, &did1.address, &verifiable_credential);
+    issuance_contract.distribute(&organization.admin, &verifiable_credential);
 
     verifiable_credential.recipient_did = recipients
         .expect("Vec of recipients")
         .get(1)
         .unwrap()
         .unwrap();
+    verifiable_credential.did_contract_id = did2.address;
     verifiable_credential.attestation = ATTESTATION2.into_val(&e);
-    issuance_contract.distribute(&organization.admin, &did2.address, &verifiable_credential);
+    issuance_contract.distribute(&organization.admin, &verifiable_credential);
 }
 
 #[test]
@@ -738,11 +813,12 @@ fn test_distribute_status_error() {
         attestation: ATTESTATION1.into_val(&e),
         issuance_date: 1679918400,
         expiration_date: OptionU64::None,
+        did_contract_id: did.address,
     };
 
-    issuance_contract.distribute(&organization.admin, &did.address, &verifiable_credential);
+    issuance_contract.distribute(&organization.admin, &verifiable_credential);
 
-    issuance_contract.distribute(&organization.admin, &did.address, &verifiable_credential);
+    issuance_contract.distribute(&organization.admin, &verifiable_credential);
 }
 
 #[test]
@@ -791,11 +867,12 @@ fn test_revoke_admin_error() {
         attestation: ATTESTATION1.into_val(&e),
         issuance_date: 1679918400,
         expiration_date: OptionU64::None,
+        did_contract_id: did.address,
     };
 
     let revocation_date: u64 = 1684875611;
 
-    issuance_contract.distribute(&organization.admin, &did.address, &credential);
+    issuance_contract.distribute(&organization.admin, &credential);
 
     issuance_contract.revoke(
         &Address::random(&e),
@@ -887,11 +964,12 @@ fn test_revoke_status_revoked_error() {
         attestation: ATTESTATION1.into_val(&e),
         issuance_date: 1679918400,
         expiration_date: OptionU64::None,
+        did_contract_id: did.address,
     };
 
     let revocation_date: u64 = 1684875611;
 
-    issuance_contract.distribute(&organization.admin, &did.address, &verifiable_credential);
+    issuance_contract.distribute(&organization.admin, &verifiable_credential);
 
     issuance_contract.revoke(
         &organization.admin,

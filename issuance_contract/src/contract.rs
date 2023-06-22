@@ -52,17 +52,23 @@ impl IssuanceTrait for IssuanceContract {
     }
 
     /// Distribute a Credential to a recipient.
-    fn distribute(
-        e: Env,
-        admin: Address,
-        did_contract_id: Address,
-        credential: DistributeCredential,
-    ) {
+    fn distribute(e: Env, admin: Address, credential: DistributeCredential) {
         check_admin(&e, &admin);
         admin.require_auth();
         check_amount(&e);
 
-        apply_distribution(e, did_contract_id, &credential);
+        apply_distribution(&e, &credential);
+    }
+
+    /// Distribute a Credential to a recipient.
+    fn batch_distribute(e: Env, admin: Address, credentials: Vec<DistributeCredential>) {
+        check_admin(&e, &admin);
+        admin.require_auth();
+        check_amount(&e);
+
+        credentials
+            .iter()
+            .for_each(|credential| apply_distribution(&e, &credential.unwrap().clone()));
     }
 
     /// Revoke a Credential from a recipient.
@@ -168,14 +174,14 @@ impl IssuanceTrait for IssuanceContract {
 }
 
 /// Defines recipients and distribution_limit depending on the received ones.
-fn apply_distribution(e: Env, did_contract_id: Address, credential: &DistributeCredential) {
+fn apply_distribution(e: &Env, credential: &DistributeCredential) {
     match read_recipients(&e).get(credential.recipient_did.clone()) {
         Some(_) => {
-            distribute_to_recipient(&e, did_contract_id, credential);
+            distribute_to_recipient(&e, credential);
         }
         None => {
             add_recipient(&e, &credential.recipient_did);
-            distribute_to_recipient(&e, did_contract_id, credential);
+            distribute_to_recipient(&e, credential);
         }
     };
 }
@@ -223,7 +229,7 @@ fn check_revocable(e: &Env) {
 }
 
 /// Deposit a chaincert to a DID and makes the necessary storage changes when successful.
-fn distribute_to_recipient(e: &Env, did_contract_id: Address, credential: &DistributeCredential) {
+fn distribute_to_recipient(e: &Env, credential: &DistributeCredential) {
     let mut recipients: Map<String, Option<CredentialData>> = read_recipients(e);
     let mut credential_data: Option<CredentialData> = recipients
         .get(credential.recipient_did.clone())
@@ -233,7 +239,7 @@ fn distribute_to_recipient(e: &Env, did_contract_id: Address, credential: &Distr
     let credential_type = read_credential_type(e);
     let credential_title = read_credential_title(e);
 
-    deposit_to_did(e, did_contract_id, credential);
+    deposit_to_did(e, credential);
 
     credential_data = Some(CredentialData::new(
         credential.did.clone(),
@@ -251,8 +257,8 @@ fn distribute_to_recipient(e: &Env, did_contract_id: Address, credential: &Distr
 }
 
 /// Invokes a DID contract to make a credential deposit.
-fn deposit_to_did(e: &Env, did_contract_id: Address, credential: &DistributeCredential) {
-    let did_client = did_contract::Client::new(e, &did_contract_id);
+fn deposit_to_did(e: &Env, credential: &DistributeCredential) {
+    let did_client = did_contract::Client::new(e, &credential.did_contract_id);
     let issuer = read_organization_did(e);
 
     let credential_subject = CredentialSubject {

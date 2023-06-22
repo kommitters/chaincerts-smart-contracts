@@ -156,7 +156,7 @@ fn test_create_cert_data() {
 }
 
 #[test]
-fn test_initialize_contract_with_distribute_credentials() {
+fn test_initialize_contract_with_credentials_distribution() {
     let e: Env = Default::default();
     e.mock_all_auths();
     let recipient_address = Address::random(&e);

@@ -27,6 +27,7 @@ pub struct DistributeCredential {
     pub attestation: String,
     pub issuance_date: u64,
     pub expiration_date: OptionU64,
+    pub did_contract_id: Address,
 }
 
 #[contracttype]
@@ -46,15 +47,11 @@ pub trait IssuanceTrait {
         distribution_limit: Option<u32>,
         organization: Organization,
         credential_params: CredentialParams,
+        distribute_credentials: Option<Vec<DistributeCredential>>,
     );
 
-    /// Distribute a Credential to a recipient.
-    fn distribute(
-        e: Env,
-        admin: Address,
-        did_contract_id: Address,
-        verifiable_credential: DistributeCredential,
-    );
+    /// Distribute Credentials to recipients.
+    fn batch_distribute(e: Env, admin: Address, credentials: Vec<DistributeCredential>);
 
     /// Revoke a Credential from a recipient.
     fn revoke(e: Env, admin: Address, recipient: String, revocation_date: u64);

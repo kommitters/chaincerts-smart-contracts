@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.0 (23.06.2023)
+
+- [Allow batch issuance of credentials](https://github.com/kommitters/chaincerts-smart-contracts/issues/113)
+
 ## 0.8.0 (14.06.2023)
 
 - [Add `PublicAdd` capability invocation](https://github.com/kommitters/chaincerts-smart-contracts/issues/110)

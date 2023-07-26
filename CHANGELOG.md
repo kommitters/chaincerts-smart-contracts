@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.0 (26.07.2023)
+
+- [Upgrade Soroban SDK to Preview 10](https://github.com/kommitters/chaincerts-smart-contracts/issues/119)
+
 ## 0.9.0 (23.06.2023)
 
 - [Allow batch issuance of credentials](https://github.com/kommitters/chaincerts-smart-contracts/issues/113)

@@ -379,6 +379,7 @@ fn test_get_contract_info() {
 fn test_distribute_with_distribution_limit_contract() {
     let e: Env = Default::default();
     e.mock_all_auths();
+    e.budget().reset_unlimited();
     let recipient1_address = Address::random(&e);
     let recipient1_did = String::from_slice(&e, "did:chaincerts:abc123");
     let organization: Organization = Organization {
@@ -430,6 +431,7 @@ fn test_distribute_with_distribution_limit_contract() {
 fn test_batch_distribute_with_distribution_limit_contract() {
     let e: Env = Default::default();
     e.mock_all_auths();
+    e.budget().reset_unlimited();
     let recipient1_address = Address::random(&e);
     let recipient2_address = Address::random(&e);
     let recipient1_did = String::from_slice(&e, "did:chaincerts:abc123");
@@ -499,13 +501,13 @@ fn test_batch_distribute_with_distribution_limit_contract() {
 fn test_distribute_with_initial_recipients() {
     let e: Env = Default::default();
     e.mock_all_auths();
+    e.budget().reset_unlimited();
     let recipients = Option::Some(create_random_recipient_dids(&e));
     let recipient1_address = Address::random(&e);
     let recipient1_did = recipients
         .clone()
         .expect("Vec of recipients")
         .get(0)
-        .unwrap()
         .unwrap();
     let organization: Organization = Organization {
         admin: Address::random(&e),
@@ -531,7 +533,7 @@ fn test_distribute_with_initial_recipients() {
     );
 
     let mut recipients = issuance_contract.recipients();
-    let cert_data = recipients.get(recipient1_did.clone()).unwrap().unwrap();
+    let cert_data = recipients.get(recipient1_did.clone()).unwrap();
     assert_eq!(cert_data, Option::None);
 
     let verifiable_credential = DistributeCredential {
@@ -565,7 +567,6 @@ fn test_revoke_chaincert() {
         .clone()
         .expect("Vec of recipients")
         .get(0)
-        .unwrap()
         .unwrap();
     let organization: Organization = Organization {
         admin: Address::random(&e),
@@ -611,7 +612,6 @@ fn test_revoke_chaincert() {
     let recipients = issuance_contract.recipients();
     let cert_data = recipients
         .get(verifiable_credential.recipient_did.clone())
-        .unwrap()
         .unwrap();
     assert!(cert_data.is_some());
 
@@ -639,14 +639,11 @@ fn test_revoke_chaincert() {
     };
 
     assert_eq!(revoked_credentials.len(), 1);
-    assert_eq!(
-        revoked_credentials.get_unchecked(0).unwrap(),
-        revoked_credential
-    );
+    assert_eq!(revoked_credentials.get_unchecked(0), revoked_credential);
 }
 
 #[test]
-#[should_panic(expected = "Status(ContractError(1))")]
+#[should_panic(expected = "HostError: Error(Contract, #1)")]
 fn test_initialize_contract_with_recipients_error() {
     let e: Env = Default::default();
     e.mock_all_auths();
@@ -683,7 +680,7 @@ fn test_initialize_contract_with_recipients_error() {
 }
 
 #[test]
-#[should_panic(expected = "Status(ContractError(1))")]
+#[should_panic(expected = "HostError: Error(Contract, #1)")]
 fn test_initialize_with_limit_contract_error() {
     let e: Env = Default::default();
     e.mock_all_auths();
@@ -720,7 +717,7 @@ fn test_initialize_with_limit_contract_error() {
 }
 
 #[test]
-#[should_panic(expected = "Status(ContractError(2))")]
+#[should_panic(expected = "HostError: Error(Contract, #2)")]
 fn test_distribute_admin_error() {
     const ATTESTATION1: &str = "ipfs://QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
     let e: Env = Default::default();
@@ -732,7 +729,6 @@ fn test_distribute_admin_error() {
         .clone()
         .expect("Vec of recipients")
         .get(0)
-        .unwrap()
         .unwrap();
     let organization: Organization = Organization {
         admin: Address::random(&e),
@@ -774,10 +770,11 @@ fn test_distribute_admin_error() {
 }
 
 #[test]
-#[should_panic(expected = "Status(ContractError(3))")]
+#[should_panic(expected = "HostError: Error(Contract, #3)")]
 fn test_distribute_limit_error() {
     let e: Env = Default::default();
     e.mock_all_auths();
+    e.budget().reset_unlimited();
     let recipients = Option::Some(create_random_recipient_dids(&e));
     let address1 = Address::random(&e);
     let address2 = Address::random(&e);
@@ -816,7 +813,6 @@ fn test_distribute_limit_error() {
             .clone()
             .expect("Vec of recipients")
             .get(0)
-            .unwrap()
             .unwrap(),
         signature: String::from_slice(&e, "MEUCIFZ5o9zSYiC9d0hvN6V73Y8yBm9n3MF8Hj"),
         attestation: ATTESTATION1.into_val(&e),
@@ -828,11 +824,7 @@ fn test_distribute_limit_error() {
     let verifiable_credentials = vec![&e, verifiable_credential.clone()];
     issuance_contract.batch_distribute(&organization.admin, &verifiable_credentials);
 
-    verifiable_credential.recipient_did = recipients
-        .expect("Vec of recipients")
-        .get(1)
-        .unwrap()
-        .unwrap();
+    verifiable_credential.recipient_did = recipients.expect("Vec of recipients").get(1).unwrap();
     verifiable_credential.did_contract_id = did2.address;
     verifiable_credential.attestation = ATTESTATION2.into_val(&e);
 
@@ -841,7 +833,7 @@ fn test_distribute_limit_error() {
 }
 
 #[test]
-#[should_panic(expected = "Status(ContractError(5))")]
+#[should_panic(expected = "HostError: Error(Contract, #5)")]
 fn test_distribute_status_error() {
     let e: Env = Default::default();
     e.mock_all_auths();
@@ -876,11 +868,7 @@ fn test_distribute_status_error() {
     let verifiable_credential = DistributeCredential {
         did: "did:chaincerts:abc123#credential-xyz123".into_val(&e),
         id: "c8b875a2-3f5d-4a63-b1c8-791be9b01c02".into_val(&e),
-        recipient_did: recipients
-            .expect("Vec of recipients")
-            .get(0)
-            .unwrap()
-            .unwrap(),
+        recipient_did: recipients.expect("Vec of recipients").get(0).unwrap(),
         signature: String::from_slice(&e, "MEUCIFZ5o9zSYiC9d0hvN6V73Y8yBm9n3MF8Hj"),
         attestation: ATTESTATION1.into_val(&e),
         issuance_date: 1679918400,
@@ -896,7 +884,7 @@ fn test_distribute_status_error() {
 }
 
 #[test]
-#[should_panic(expected = "Status(ContractError(2))")]
+#[should_panic(expected = "HostError: Error(Contract, #2)")]
 fn test_revoke_admin_error() {
     let e: Env = Default::default();
     e.mock_all_auths();
@@ -906,7 +894,6 @@ fn test_revoke_admin_error() {
         .clone()
         .expect("Vec of recipients")
         .get(0)
-        .unwrap()
         .unwrap();
     let organization: Organization = Organization {
         admin: Address::random(&e),
@@ -958,7 +945,7 @@ fn test_revoke_admin_error() {
 }
 
 #[test]
-#[should_panic(expected = "Status(ContractError(7))")]
+#[should_panic(expected = "HostError: Error(Contract, #7)")]
 fn test_revoke_credential_data_none_error() {
     let e: Env = Default::default();
     e.mock_all_auths();
@@ -967,7 +954,6 @@ fn test_revoke_credential_data_none_error() {
         .clone()
         .expect("Vec of recipients")
         .get(0)
-        .unwrap()
         .unwrap();
     let organization: Organization = Organization {
         admin: Address::random(&e),
@@ -996,7 +982,7 @@ fn test_revoke_credential_data_none_error() {
 }
 
 #[test]
-#[should_panic(expected = "Status(ContractError(7))")]
+#[should_panic(expected = "HostError: Error(Contract, #7)")]
 fn test_revoke_status_revoked_error() {
     let e: Env = Default::default();
     e.mock_all_auths();
@@ -1005,7 +991,6 @@ fn test_revoke_status_revoked_error() {
         .clone()
         .expect("Vec of recipients")
         .get(0)
-        .unwrap()
         .unwrap();
 
     let organization: Organization = Organization {
@@ -1063,7 +1048,7 @@ fn test_revoke_status_revoked_error() {
 }
 
 #[test]
-#[should_panic(expected = "Status(ContractError(7))")]
+#[should_panic(expected = "HostError: Error(Contract, #7)")]
 fn test_revoke_no_revocable_cert() {
     let e: Env = Default::default();
     e.mock_all_auths();
@@ -1072,7 +1057,6 @@ fn test_revoke_no_revocable_cert() {
         .clone()
         .expect("Vec of recipients")
         .get(0)
-        .unwrap()
         .unwrap();
     let organization: Organization = Organization {
         admin: Address::random(&e),

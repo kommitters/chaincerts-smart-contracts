@@ -3,7 +3,7 @@
 //! Module responsible of managing `VerifiableCredential` information and defining its corresponding struct.
 use crate::{
     capability_invocation::{read_capability_invocation, CapType},
-    error::ContractError,
+    error::{ContractError, DIDContractError},
     option::{OptionString, OptionU64},
     storage_types::DataKey,
 };
@@ -48,9 +48,9 @@ impl CredentialSubject {
 pub(crate) fn deposit_credential(env: &Env, verifiable_credential: VerifiableCredential) {
     let credential_did = verifiable_credential.clone().id;
 
-    let credentials = match env.storage().get(&VERIFIABLE_CREDENTIAL_KEY) {
+    let credentials = match env.storage().instance().get(&VERIFIABLE_CREDENTIAL_KEY) {
         Some(credential_map) => {
-            let mut credential_map: Map<String, VerifiableCredential> = credential_map.unwrap();
+            let mut credential_map: Map<String, VerifiableCredential> = credential_map;
             if !credential_map.contains_key(credential_did.clone()) {
                 credential_map.set(credential_did, verifiable_credential);
                 credential_map
@@ -68,14 +68,13 @@ pub(crate) fn deposit_credential(env: &Env, verifiable_credential: VerifiableCre
 }
 
 pub(crate) fn revoke_credential(env: &Env, credential_did: &String) {
-    match env.storage().get(&VERIFIABLE_CREDENTIAL_KEY) {
-        Some(credential_map) => {
-            let mut credential_map: Map<String, VerifiableCredential> = credential_map.unwrap();
+    match env.storage().instance().get(&VERIFIABLE_CREDENTIAL_KEY) {
+        Some(mut credential_map) => {
             revoke_credential_from_map(env, &mut credential_map, credential_did);
             write_credentials(env, &credential_map);
         }
         None => {
-            panic_with_error!(env, ContractError::NoVerifiableCredential)
+            panic_with_error!(env, DIDContractError::NoVerifiableCredential)
         }
     };
 }
@@ -92,18 +91,15 @@ pub(crate) fn get_public_credentials(env: &Env) -> Vec<VerifiableCredential> {
     // Look for the capability invocation type and get the credential (did)
     let capability_invocation = read_capability_invocation(env);
     for cap in capability_invocation {
-        let cap = cap.unwrap();
         if cap.type_ == CapType::PublicRead {
             if let OptionString::Some(credential_did) = cap.credential {
-                let verifiable_credential = verifiable_credentials_map
-                    .get_unchecked(credential_did)
-                    .unwrap();
+                let verifiable_credential =
+                    verifiable_credentials_map.get_unchecked(credential_did);
 
                 credentials.push_front(verifiable_credential);
             }
         }
     }
-
     credentials
 }
 
@@ -115,21 +111,18 @@ pub(crate) fn get_shared_credentials(env: &Env, invoker: &String) -> Vec<Verifia
     // Look for the capability invocation type and get the credential (did)
     let capability_invocation = read_capability_invocation(env);
     for cap in capability_invocation {
-        let cap = cap.unwrap();
         if cap.type_ == CapType::ReadCredential {
             if let (OptionString::Some(credential_did), OptionString::Some(cap_invoker)) =
                 (cap.credential, cap.invoker)
             {
                 if cap_invoker == invoker.clone() {
-                    let verifiable_credential = verifiable_credentials_map
-                        .get_unchecked(credential_did)
-                        .unwrap();
+                    let verifiable_credential =
+                        verifiable_credentials_map.get_unchecked(credential_did);
                     credentials.push_front(verifiable_credential)
                 }
             }
         }
     }
-
     credentials
 }
 
@@ -139,22 +132,23 @@ fn revoke_credential_from_map(
     credential_did: &String,
 ) {
     match credential_map.get(credential_did.clone()) {
-        Some(credential) => {
-            let mut credential = credential.unwrap();
+        Some(mut credential) => {
             credential.revoked = true;
             credential_map.set(credential_did.clone(), credential);
         }
-        None => panic_with_error!(env, ContractError::VerifiableCredentialNotFound),
+        None => panic_with_error!(env, DIDContractError::VerifiableCredentialNotFound),
     }
 }
 
 fn read_credentials(env: &Env) -> Map<String, VerifiableCredential> {
-    match env.storage().get(&VERIFIABLE_CREDENTIAL_KEY) {
-        Some(credential) => credential.unwrap(),
-        None => panic_with_error!(env, ContractError::NoVerifiableCredential),
+    match env.storage().instance().get(&VERIFIABLE_CREDENTIAL_KEY) {
+        Some(credential) => credential,
+        None => panic_with_error!(env, DIDContractError::NoVerifiableCredential),
     }
 }
 
 fn write_credentials(env: &Env, certs: &Map<String, VerifiableCredential>) {
-    env.storage().set(&VERIFIABLE_CREDENTIAL_KEY, certs)
+    env.storage()
+        .instance()
+        .set(&VERIFIABLE_CREDENTIAL_KEY, certs)
 }

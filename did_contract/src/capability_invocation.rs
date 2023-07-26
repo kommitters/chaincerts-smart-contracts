@@ -5,7 +5,7 @@
 use soroban_sdk::{contracttype, panic_with_error, Address, Env, String, Vec};
 
 use crate::{
-    error::ContractError,
+    error::{ContractError, DIDContractError},
     option::{OptionAddress, OptionString},
 };
 
@@ -34,24 +34,26 @@ pub enum CapType {
 }
 
 pub(crate) fn write_capability_invocation(env: &Env, cap_list: &Vec<CapabilityInvocation>) {
-    env.storage().set(&CAP_INVOCATION_KEY, cap_list)
+    env.storage().instance().set(&CAP_INVOCATION_KEY, cap_list)
 }
 
 pub(crate) fn read_capability_invocation(env: &Env) -> Vec<CapabilityInvocation> {
-    env.storage().get_unchecked(&CAP_INVOCATION_KEY).unwrap()
+    env.storage().instance().get(&CAP_INVOCATION_KEY).unwrap()
 }
 
 pub(crate) fn write_public_add_cap(env: &Env, public_add: bool) {
-    env.storage().set(&DataKey::PublicAdd, &public_add)
+    env.storage()
+        .instance()
+        .set(&DataKey::PublicAdd, &public_add)
 }
 
 pub(crate) fn has_public_add_cap(env: &Env) -> bool {
-    env.storage().get_unchecked(&DataKey::PublicAdd).unwrap()
+    env.storage().instance().get(&DataKey::PublicAdd).unwrap()
 }
 
 pub(crate) fn add_capability(env: &Env, capability: &CapabilityInvocation) {
     let mut cap_invocation: Vec<CapabilityInvocation> =
-        env.storage().get_unchecked(&CAP_INVOCATION_KEY).unwrap();
+        env.storage().instance().get(&CAP_INVOCATION_KEY).unwrap();
 
     if is_valid_capability(env, capability)
         && !is_capability_in_list(&capability.id, &cap_invocation)
@@ -68,19 +70,19 @@ pub(crate) fn add_capability(env: &Env, capability: &CapabilityInvocation) {
 
 pub(crate) fn remove_capability(env: &Env, cap_id: &String) {
     let mut cap_list: Vec<CapabilityInvocation> =
-        env.storage().get_unchecked(&CAP_INVOCATION_KEY).unwrap();
+        env.storage().instance().get(&CAP_INVOCATION_KEY).unwrap();
     if cap_list.is_empty() {
         panic_with_error!(env, ContractError::NoCapabilityInvocation);
     }
     remove_from_cap_invocation_list(env, cap_id, &mut cap_list);
-    env.storage().set(&CAP_INVOCATION_KEY, &cap_list)
+    env.storage().instance().set(&CAP_INVOCATION_KEY, &cap_list)
 }
 
 pub(crate) fn check_capability_to_deposit(env: &Env, invoker: &String) -> OptionAddress {
-    let cap_list = env.storage().get(&CAP_INVOCATION_KEY).unwrap();
-    let cap_invocation: Vec<CapabilityInvocation> = cap_list.unwrap();
+    let cap_invocation: Vec<CapabilityInvocation> =
+        env.storage().instance().get(&CAP_INVOCATION_KEY).unwrap();
+
     for cap in cap_invocation.iter() {
-        let cap = cap.unwrap();
         if let OptionString::Some(cap_invoker) = cap.invoker {
             if cap_invoker == invoker.clone() && cap.type_ == CapType::AddCredential {
                 return cap.invoker_address;
@@ -92,9 +94,8 @@ pub(crate) fn check_capability_to_deposit(env: &Env, invoker: &String) -> Option
 
 pub(crate) fn check_capability_to_read_credentials(env: &Env, address: &Address, invoker: &String) {
     let cap_list: Vec<CapabilityInvocation> =
-        env.storage().get_unchecked(&CAP_INVOCATION_KEY).unwrap();
+        env.storage().instance().get(&CAP_INVOCATION_KEY).unwrap();
     for cap in cap_list.iter() {
-        let cap = cap.unwrap();
         if let (OptionString::Some(cap_invoker), OptionAddress::Some(cap_address)) =
             (cap.invoker, cap.invoker_address)
         {
@@ -145,7 +146,7 @@ pub(crate) fn is_valid_capability(env: &Env, capability_invocation: &CapabilityI
         }
     }
 
-    panic_with_error!(env, ContractError::InvalidCapabilityInvocation)
+    panic_with_error!(env, DIDContractError::InvalidCapabilityInvocation)
 }
 
 fn remove_from_cap_invocation_list(
@@ -155,10 +156,10 @@ fn remove_from_cap_invocation_list(
 ) {
     let index = cap_invocation
         .iter()
-        .position(|cap| cap.unwrap().id == cap_id.clone());
+        .position(|cap| cap.id == cap_id.clone());
     match index {
         Some(val) => {
-            let cap = cap_invocation.get_unchecked(val as u32).unwrap();
+            let cap = cap_invocation.get_unchecked(val as u32);
             if cap.type_ == CapType::PublicAdd {
                 write_public_add_cap(env, false);
             }
@@ -169,7 +170,5 @@ fn remove_from_cap_invocation_list(
 }
 
 fn is_capability_in_list(cap_id: &String, cap_invocation: &Vec<CapabilityInvocation>) -> bool {
-    cap_invocation
-        .iter()
-        .any(|cap| cap.unwrap().id == cap_id.clone())
+    cap_invocation.iter().any(|cap| cap.id == cap_id.clone())
 }

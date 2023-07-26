@@ -9,23 +9,23 @@ use soroban_sdk::{panic_with_error, Address, Env, String};
 
 pub fn has_organization(e: &Env) -> bool {
     let key = DataKey::Organization;
-    e.storage().has(&key)
+    e.storage().instance().has(&key)
 }
 
 pub fn write_organization(e: &Env, org: Organization) {
     let key = DataKey::Organization;
-    e.storage().set(&key, &org);
+    e.storage().instance().set(&key, &org);
 }
 
 pub fn read_organization_did(e: &Env) -> String {
     let key = DataKey::Organization;
-    let organization: Organization = e.storage().get_unchecked(&key).unwrap();
+    let organization: Organization = e.storage().instance().get(&key).unwrap();
     organization.did
 }
 
 fn read_organization_admin(e: &Env) -> Address {
     let key = DataKey::Organization;
-    let organization: Organization = e.storage().get_unchecked(&key).unwrap();
+    let organization: Organization = e.storage().instance().get(&key).unwrap();
     organization.admin
 }
 

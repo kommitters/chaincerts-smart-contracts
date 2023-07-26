@@ -21,8 +21,11 @@ use crate::organization::{
 };
 use crate::recipients::{add_recipient, create_recipients, read_recipients};
 use crate::storage_types::{CredentialData, Info, Organization, RevokedCredential};
-use soroban_sdk::{contractimpl, panic_with_error, Address, Env, Map, String, Vec};
+use soroban_sdk::{contract, contractimpl, panic_with_error, Address, Env, Map, String, Vec};
 
+const LIFE_TIME: u32 = 1_578_000;
+
+#[contract]
 pub struct IssuanceContract;
 
 #[contractimpl]
@@ -51,8 +54,13 @@ impl IssuanceTrait for IssuanceContract {
         define_limit_and_recipients(&e, recipients, distribution_limit);
 
         if let Some(credentials) = distribute_credentials {
-            Self::batch_distribute(e, organization.admin, credentials);
+            Self::batch_distribute(e.clone(), organization.admin, credentials);
         }
+
+        // The contract instance will be bumped to have a lifetime of ~3 months.
+        // If the lifetime is already more than 3 months, this is a no-op.
+        // This lifetime bump includes the contract instance itself and all entries in storage().instance()
+        e.storage().instance().bump(LIFE_TIME)
     }
 
     /// Distribute Credentials to recipients.
@@ -63,7 +71,7 @@ impl IssuanceTrait for IssuanceContract {
 
         credentials
             .iter()
-            .for_each(|credential| apply_distribution(&e, &credential.unwrap()));
+            .for_each(|credential| apply_distribution(&e, &credential));
     }
 
     /// Revoke a Credential from a recipient.
@@ -72,20 +80,13 @@ impl IssuanceTrait for IssuanceContract {
         check_admin(&e, &admin);
         admin.require_auth();
         let mut recipients: Map<String, Option<CredentialData>> = read_recipients(&e);
-        if let Some(credential_data) = recipients.get(recipient_did.clone()) {
-            match credential_data.unwrap() {
-                Some(data) => {
-                    let mut revoked_credentials = read_revoked_credentials(&e);
-                    let revoked_credential = RevokedCredential::new(data, revocation_date);
-                    revoked_credentials.set(recipient_did.clone(), revoked_credential);
-                    recipients.remove(recipient_did);
-                    write_recipients(&e, recipients);
-                    write_revoked_credentials(&e, revoked_credentials);
-                }
-                None => {
-                    panic_with_error!(e, ContractError::NoRevocable);
-                }
-            }
+        if let Some(Some(credential_data)) = recipients.get(recipient_did.clone()) {
+            let mut revoked_credentials = read_revoked_credentials(&e);
+            let revoked_credential = RevokedCredential::new(credential_data, revocation_date);
+            revoked_credentials.set(recipient_did.clone(), revoked_credential);
+            recipients.remove(recipient_did);
+            write_recipients(&e, recipients);
+            write_revoked_credentials(&e, revoked_credentials);
         } else {
             panic_with_error!(e, ContractError::NoRevocable);
         }
@@ -226,10 +227,8 @@ fn check_revocable(e: &Env) {
 /// Deposit a chaincert to a DID and makes the necessary storage changes when successful.
 fn distribute_to_recipient(e: &Env, credential: &DistributeCredential) {
     let mut recipients: Map<String, Option<CredentialData>> = read_recipients(e);
-    let mut credential_data: Option<CredentialData> = recipients
-        .get(credential.recipient_did.clone())
-        .unwrap()
-        .unwrap();
+    let mut credential_data: Option<CredentialData> =
+        recipients.get(credential.recipient_did.clone()).unwrap();
     check_recipient_status_for_distribute(e, &credential_data);
     let credential_type = read_credential_type(e);
     let credential_title = read_credential_title(e);

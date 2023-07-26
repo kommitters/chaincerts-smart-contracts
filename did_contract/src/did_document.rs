@@ -49,37 +49,37 @@ pub struct Service {
 
 pub(crate) fn read_id(env: &Env) -> String {
     let key: DataKey = DataKey::Id;
-    env.storage().get_unchecked(&key).unwrap()
+    env.storage().instance().get(&key).unwrap()
 }
 
 pub(crate) fn write_id(env: &Env, id: &String) {
     let key: DataKey = DataKey::Id;
-    env.storage().set(&key, id);
+    env.storage().instance().set(&key, id);
 }
 
 pub(crate) fn write_context(env: &Env, context: &Vec<String>) {
     let key: DataKey = DataKey::Context;
-    env.storage().set(&key, context);
+    env.storage().instance().set(&key, context);
 }
 
 pub(crate) fn read_context(env: &Env) -> Vec<String> {
     let key: DataKey = DataKey::Context;
-    env.storage().get_unchecked(&key).unwrap()
+    env.storage().instance().get(&key).unwrap()
 }
 
 pub(crate) fn write_verification_processes(env: &Env, verification_processes: &Vec<Method>) {
     let key: DataKey = DataKey::VerificationProcesses;
-    env.storage().set(&key, verification_processes);
+    env.storage().instance().set(&key, verification_processes);
 }
 
 pub(crate) fn write_services(env: &Env, services: &Vec<Service>) {
     let key: DataKey = DataKey::Services;
-    env.storage().set(&key, services);
+    env.storage().instance().set(&key, services);
 }
 
 pub(crate) fn read_services(env: &Env) -> Vec<Service> {
     let key: DataKey = DataKey::Services;
-    env.storage().get_unchecked(&key).unwrap()
+    env.storage().instance().get(&key).unwrap()
 }
 
 pub(crate) fn retrieve_public_did_document(env: &Env) -> DIDDocument {

@@ -7,14 +7,17 @@ mod option;
 mod storage_types;
 mod verifiable_credential;
 
-use crate::error::ContractError;
+use crate::error::{ContractError, DIDContractError};
 use authentication::VerificationMethod;
 use capability_invocation::CapabilityInvocation;
 use did_document::{DIDDocument, Method, Service};
 use option::OptionAddress;
-use soroban_sdk::{contractimpl, panic_with_error, Address, Env, String, Vec};
+use soroban_sdk::{contract, contractimpl, panic_with_error, Address, Env, String, Vec};
 use verifiable_credential::VerifiableCredential;
 
+const LIFE_TIME: u32 = 1_578_000;
+
+#[contract]
 pub struct DIDContract;
 
 #[contractimpl]
@@ -46,13 +49,17 @@ impl DIDContract {
         );
         if let Some(cap) = public_add_cap {
             if cap.type_ != capability_invocation::CapType::PublicAdd {
-                panic_with_error!(env, ContractError::InvalidCapabilityInvocation);
+                panic_with_error!(env, DIDContractError::InvalidCapabilityInvocation);
             }
             capability_invocation::add_capability(&env, &cap);
-            capability_invocation::write_public_add_cap(&env, true);
         } else {
             capability_invocation::write_public_add_cap(&env, false);
         }
+
+        // The contract instance will be bumped to have a lifetime of ~3 months.
+        // If the lifetime is already more than 3 months, this is a no-op.
+        // This lifetime bump includes the contract instance itself and all entries in storage().instance()
+        env.storage().instance().bump(LIFE_TIME)
     }
 
     /// Add capability invocation

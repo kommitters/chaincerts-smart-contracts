@@ -159,7 +159,7 @@ fn test_successful_execution_of_did_contract_capabilities() {
         issuance_date: 1680105831,
         expiration_date: OptionU64::Some(1711662757),
         credential_subject: test.credential_subject.clone(),
-        attestation: test.cids.get_unchecked(0).unwrap(),
+        attestation: test.cids.get_unchecked(0),
         revoked: false,
     };
     let verifiable_credential2 = VerifiableCredential {
@@ -168,16 +168,16 @@ fn test_successful_execution_of_did_contract_capabilities() {
         issuance_date: 1680205831,
         expiration_date: OptionU64::None,
         credential_subject: test.credential_subject,
-        attestation: test.cids.get_unchecked(0).unwrap(),
+        attestation: test.cids.get_unchecked(0),
         revoked: false,
     };
     test.did_contract.add_capability(
         &test.authentication_address,
-        &test.capability_invocations.get_unchecked(0).unwrap(),
+        &test.capability_invocations.get_unchecked(0),
     );
     test.did_contract.add_capability(
         &test.authentication_address,
-        &test.capability_invocations.get_unchecked(1).unwrap(),
+        &test.capability_invocations.get_unchecked(1),
     );
 
     assert_eq!(
@@ -205,7 +205,7 @@ fn test_successful_execution_of_did_contract_capabilities() {
 
     test.did_contract.remove_capability(
         &test.authentication_address,
-        &test.capability_invocations.get_unchecked(0).unwrap().id,
+        &test.capability_invocations.get_unchecked(0).id,
     );
     assert_eq!(
         test.did_contract
@@ -266,7 +266,7 @@ fn test_public_and_shared_credential_capability() {
         issuance_date: 1680105831,
         expiration_date: OptionU64::Some(1711662757),
         credential_subject: test.credential_subject.clone(),
-        attestation: test.cids.get_unchecked(0).unwrap(),
+        attestation: test.cids.get_unchecked(0),
         revoked: false,
     };
     let verifiable_credential2 = VerifiableCredential {
@@ -275,25 +275,25 @@ fn test_public_and_shared_credential_capability() {
         issuance_date: 1680205831,
         expiration_date: OptionU64::None,
         credential_subject: test.credential_subject,
-        attestation: test.cids.get_unchecked(0).unwrap(),
+        attestation: test.cids.get_unchecked(0),
         revoked: false,
     };
 
     test.did_contract.add_capability(
         &test.authentication_address,
-        &test.capability_invocations.get_unchecked(0).unwrap(),
+        &test.capability_invocations.get_unchecked(0),
     );
     test.did_contract.add_capability(
         &test.authentication_address,
-        &test.capability_invocations.get_unchecked(1).unwrap(),
+        &test.capability_invocations.get_unchecked(1),
     );
     test.did_contract.add_capability(
         &test.authentication_address,
-        &test.capability_invocations.get_unchecked(2).unwrap(),
+        &test.capability_invocations.get_unchecked(2),
     );
     test.did_contract.add_capability(
         &test.authentication_address,
-        &test.capability_invocations.get_unchecked(3).unwrap(),
+        &test.capability_invocations.get_unchecked(3),
     );
 
     test.did_contract
@@ -351,7 +351,7 @@ fn test_remove_verification_method_when_remove_verification_with_auth() {
 }
 
 #[test]
-#[should_panic(expected = "Status(ContractError(1))")]
+#[should_panic(expected = "HostError: Error(Contract, #1)")]
 fn test_initialize_an_already_initialized_did_contract() {
     let test = DIDContractTest::setup();
     test.did_contract.initialize(
@@ -365,7 +365,7 @@ fn test_initialize_an_already_initialized_did_contract() {
 }
 
 #[test]
-#[should_panic(expected = "Status(ContractError(2))")]
+#[should_panic(expected = "HostError: Error(Contract, #2)")]
 fn test_when_invalid_address() {
     let test = DIDContractTest::setup();
     let invalid_address = Address::random(&test.env);
@@ -375,61 +375,61 @@ fn test_when_invalid_address() {
 }
 
 #[test]
-#[should_panic(expected = "Status(ContractError(4))")]
+#[should_panic(expected = "HostError: Error(Contract, #4)")]
 fn test_when_adding_an_already_added_org() {
     let test = DIDContractTest::setup();
 
     test.did_contract.add_capability(
         &test.authentication_address,
-        &test.capability_invocations.get_unchecked(0).unwrap(),
+        &test.capability_invocations.get_unchecked(0),
     );
     test.did_contract.add_capability(
         &test.authentication_address,
-        &test.capability_invocations.get_unchecked(0).unwrap(),
+        &test.capability_invocations.get_unchecked(0),
     );
 }
 
 #[test]
-#[should_panic(expected = "Status(ContractError(6))")]
+#[should_panic(expected = "HostError: Error(Contract, #6")]
 fn test_remove_capability_when_no_capability_invocations_already_set() {
     let test = DIDContractTest::setup();
     test.did_contract.remove_capability(
         &test.authentication_address,
-        &test.capability_invocations.get_unchecked(0).unwrap().id,
+        &test.capability_invocations.get_unchecked(0).id,
     );
 }
 
 #[test]
-#[should_panic(expected = "Status(ContractError(8))")]
+#[should_panic(expected = "HostError: Error(Contract, #8)")]
 fn test_remove_capability_when_organization_not_found() {
     let test = DIDContractTest::setup();
     test.did_contract.add_capability(
         &test.authentication_address,
-        &test.capability_invocations.get_unchecked(0).unwrap(),
+        &test.capability_invocations.get_unchecked(0),
     );
     test.did_contract.remove_capability(
         &test.authentication_address,
-        &test.capability_invocations.get_unchecked(1).unwrap().id,
+        &test.capability_invocations.get_unchecked(1).id,
     );
 }
 
 #[test]
-#[should_panic(expected = "Status(ContractError(2))")]
+#[should_panic(expected = "HostError: Error(Contract, #2)")]
 fn test_deposit_credential_when_not_share_cap_set() {
     let test = DIDContractTest::setup();
     let verifiable_credential1 = VerifiableCredential {
         id: test.credential_did,
-        issuer: test.capability_invocations.get_unchecked(1).unwrap().id,
+        issuer: test.capability_invocations.get_unchecked(1).id,
         issuance_date: 1680105831,
         expiration_date: OptionU64::Some(1711662757),
         credential_subject: test.credential_subject,
-        attestation: test.cids.get_unchecked(0).unwrap(),
+        attestation: test.cids.get_unchecked(0),
         revoked: false,
     };
 
     test.did_contract.add_capability(
         &test.authentication_address,
-        &test.capability_invocations.get_unchecked(0).unwrap(),
+        &test.capability_invocations.get_unchecked(0),
     );
 
     test.did_contract
@@ -437,14 +437,14 @@ fn test_deposit_credential_when_not_share_cap_set() {
 }
 
 #[test]
-#[should_panic(expected = "Status(ContractError(2))")]
+#[should_panic(expected = "HostError: Error(Contract, #2)")]
 fn test_deposit_credential_when_no_shared_cap_set() {
     let test = DIDContractTest::setup();
     let issuer = String::from_slice(&test.env, "did:chaincerts:ISSUER1");
 
     test.did_contract.add_capability(
         &test.authentication_address,
-        &test.capability_invocations.get_unchecked(0).unwrap(),
+        &test.capability_invocations.get_unchecked(0),
     );
 
     test.did_contract
@@ -452,7 +452,7 @@ fn test_deposit_credential_when_no_shared_cap_set() {
 }
 
 #[test]
-#[should_panic(expected = "Status(ContractError(9))")]
+#[should_panic(expected = "HostError: Error(Contract, #9)")]
 fn test_deposit_credential_already_in_the_did_contract() {
     let test = DIDContractTest::setup();
     let issuer = String::from_slice(&test.env, "did:chaincerts:ISSUER1");
@@ -462,17 +462,17 @@ fn test_deposit_credential_already_in_the_did_contract() {
         issuance_date: 1680105831,
         expiration_date: OptionU64::Some(1711662757),
         credential_subject: test.credential_subject,
-        attestation: test.cids.get_unchecked(0).unwrap(),
+        attestation: test.cids.get_unchecked(0),
         revoked: false,
     };
 
     test.did_contract.add_capability(
         &test.authentication_address,
-        &test.capability_invocations.get_unchecked(0).unwrap(),
+        &test.capability_invocations.get_unchecked(0),
     );
     test.did_contract.add_capability(
         &test.authentication_address,
-        &test.capability_invocations.get_unchecked(1).unwrap(),
+        &test.capability_invocations.get_unchecked(1),
     );
 
     test.did_contract
@@ -483,23 +483,23 @@ fn test_deposit_credential_already_in_the_did_contract() {
 }
 
 #[test]
-#[should_panic(expected = "Status(ContractError(11))")]
+#[should_panic(expected = "HostError: Error(Contract, #1)")]
 fn test_revoke_credential_when_no_chaincerts_in_did_contract() {
     let test = DIDContractTest::setup();
 
     test.did_contract.add_capability(
         &test.authentication_address,
-        &test.capability_invocations.get_unchecked(0).unwrap(),
+        &test.capability_invocations.get_unchecked(0),
     );
     test.did_contract
         .revoke_credential(&test.authentication_address, &test.credential_did)
 }
 
 #[test]
-#[should_panic(expected = "Status(ContractError(10))")]
+#[should_panic(expected = "HostError: Error(Contract, #0)")]
 fn test_revoke_credential_when_chaincert_not_found() {
     let test = DIDContractTest::setup();
-    let issuer_org1 = test.capability_invocations.get_unchecked(0).unwrap();
+    let issuer_org1 = test.capability_invocations.get_unchecked(0);
     let issuer = String::from_slice(&test.env, "did:chaincerts:ISSUER1");
     let new_chaincert: String = "did:chaincerts:abc123#credential-invalid".into_val(&test.env);
     let verifiable_credential1 = VerifiableCredential {
@@ -508,7 +508,7 @@ fn test_revoke_credential_when_chaincert_not_found() {
         issuance_date: 1680105831,
         expiration_date: OptionU64::Some(1711662757),
         credential_subject: test.credential_subject,
-        attestation: test.cids.get_unchecked(0).unwrap(),
+        attestation: test.cids.get_unchecked(0),
         revoked: false,
     };
 
@@ -522,7 +522,7 @@ fn test_revoke_credential_when_chaincert_not_found() {
 }
 
 #[test]
-#[should_panic(expected = "Status(ContractError(11))")]
+#[should_panic(expected = "HostError: Error(Contract, #1)")]
 fn test_request_chaincerts_when_no_chaincerts_set() {
     let test = DIDContractTest::setup();
 
@@ -531,7 +531,7 @@ fn test_request_chaincerts_when_no_chaincerts_set() {
 }
 
 #[test]
-#[should_panic(expected = "Status(ContractError(12))")]
+#[should_panic(expected = "HostError: Error(Contract, #2)")]
 fn test_remove_authentication_with_only_one_authentication() {
     let test = DIDContractTest::setup();
 
@@ -540,7 +540,7 @@ fn test_remove_authentication_with_only_one_authentication() {
 }
 
 #[test]
-#[should_panic(expected = "Status(ContractError(12))")]
+#[should_panic(expected = "HostError: Error(Contract, #2)")]
 fn test_remove_authentication_with_non_existent_key() {
     let test = DIDContractTest::setup();
     let key_id = String::from_slice(&test.env, "did:chaincerts::ABC#key2");
@@ -557,7 +557,7 @@ fn test_remove_authentication_with_non_existent_key() {
 }
 
 #[test]
-#[should_panic(expected = "Status(ContractError(13))")]
+#[should_panic(expected = "HostError: Error(Contract, #3)")]
 fn test_remove_verification_method_with_only_one_authentication() {
     let test = DIDContractTest::setup();
 
@@ -566,7 +566,7 @@ fn test_remove_verification_method_with_only_one_authentication() {
 }
 
 #[test]
-#[should_panic(expected = "Status(ContractError(13))")]
+#[should_panic(expected = "HostError: Error(Contract, #3)")]
 fn test_remove_verification_method_with_non_existent_key() {
     let test = DIDContractTest::setup();
     let key_id = String::from_slice(&test.env, "did:chaincerts::ABC#key2");
@@ -583,7 +583,7 @@ fn test_remove_verification_method_with_non_existent_key() {
 }
 
 #[test]
-#[should_panic(expected = "Status(ContractError(14))")]
+#[should_panic(expected = "HostError: Error(Contract, #4)")]
 fn test_add_invalid_public_read_cap() {
     let test = DIDContractTest::setup();
     let invalid_cap = CapabilityInvocation {
@@ -598,7 +598,7 @@ fn test_add_invalid_public_read_cap() {
         .add_capability(&test.authentication_address, &invalid_cap);
 }
 #[test]
-#[should_panic(expected = "Status(ContractError(14))")]
+#[should_panic(expected = "HostError: Error(Contract, #4)")]
 fn test_add_invalid_read_credential_cap() {
     let test = DIDContractTest::setup();
     let invalid_cap = CapabilityInvocation {
@@ -613,7 +613,7 @@ fn test_add_invalid_read_credential_cap() {
         .add_capability(&test.authentication_address, &invalid_cap);
 }
 #[test]
-#[should_panic(expected = "Status(ContractError(14))")]
+#[should_panic(expected = "HostError: Error(Contract, #4)")]
 fn test_add_invalid_add_credential_cap() {
     let test = DIDContractTest::setup();
     let invalid_cap = CapabilityInvocation {
@@ -653,7 +653,7 @@ fn test_initialize_with_public_add_cap() {
 
     // Check that the public add cap is added to the CapabilityInvocations
     let caps = did_contract.get_capability_invocation(&test.authentication_address);
-    let first_cap = caps.get_unchecked(0).unwrap();
+    let first_cap = caps.get_unchecked(0);
     assert_eq!(first_cap, public_add_cap.unwrap());
 
     // Let's remove the public add cap
@@ -662,7 +662,7 @@ fn test_initialize_with_public_add_cap() {
 }
 
 #[test]
-#[should_panic(expected = "Status(ContractError(14))")]
+#[should_panic(expected = "HostError: Error(Contract, #4)")]
 fn test_initialize_with_invalid_public_add_cap() {
     let test = DIDContractTest::setup();
     let invalid_public_add_cap = Option::Some(CapabilityInvocation {

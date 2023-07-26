@@ -484,7 +484,6 @@ fn test_deposit_credential_already_in_the_did_contract() {
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #1)")]
-//TODO fix
 fn test_revoke_credential_when_no_chaincerts_in_did_contract() {
     let test = DIDContractTest::setup();
 
@@ -498,7 +497,6 @@ fn test_revoke_credential_when_no_chaincerts_in_did_contract() {
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #0)")]
-//TODO fix
 fn test_revoke_credential_when_chaincert_not_found() {
     let test = DIDContractTest::setup();
     let issuer_org1 = test.capability_invocations.get_unchecked(0);
@@ -525,7 +523,6 @@ fn test_revoke_credential_when_chaincert_not_found() {
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #1)")]
-//TODO fix
 fn test_request_chaincerts_when_no_chaincerts_set() {
     let test = DIDContractTest::setup();
 
@@ -535,7 +532,6 @@ fn test_request_chaincerts_when_no_chaincerts_set() {
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #2)")]
-//TODO fix
 fn test_remove_authentication_with_only_one_authentication() {
     let test = DIDContractTest::setup();
 
@@ -545,7 +541,6 @@ fn test_remove_authentication_with_only_one_authentication() {
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #2)")]
-//TODO fix
 fn test_remove_authentication_with_non_existent_key() {
     let test = DIDContractTest::setup();
     let key_id = String::from_slice(&test.env, "did:chaincerts::ABC#key2");

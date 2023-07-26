@@ -16,6 +16,7 @@ use soroban_sdk::{contract, contractimpl, panic_with_error, Address, Env, String
 use verifiable_credential::VerifiableCredential;
 
 const LIFE_TIME: u32 = 1_578_000;
+
 #[contract]
 pub struct DIDContract;
 
@@ -54,6 +55,10 @@ impl DIDContract {
         } else {
             capability_invocation::write_public_add_cap(&env, false);
         }
+
+        // The contract instance will be bumped to have a lifetime of ~3 months.
+        // If the lifetime is already more than 3 months, this is a no-op.
+        // This lifetime bump includes the contract instance itself and all entries in storage().instance()
         env.storage().instance().bump(LIFE_TIME)
     }
 

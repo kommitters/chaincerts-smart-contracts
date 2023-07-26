@@ -56,6 +56,10 @@ impl IssuanceTrait for IssuanceContract {
         if let Some(credentials) = distribute_credentials {
             Self::batch_distribute(e.clone(), organization.admin, credentials);
         }
+
+        // The contract instance will be bumped to have a lifetime of ~3 months.
+        // If the lifetime is already more than 3 months, this is a no-op.
+        // This lifetime bump includes the contract instance itself and all entries in storage().instance()
         e.storage().instance().bump(LIFE_TIME)
     }
 

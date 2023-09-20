@@ -15,7 +15,8 @@ use option::OptionAddress;
 use soroban_sdk::{contract, contractimpl, panic_with_error, Address, Env, String, Vec};
 use verifiable_credential::VerifiableCredential;
 
-const LIFE_TIME: u32 = 1_578_000;
+const LOW_LIFE_TIME: u32 = 52_000;
+const HIGH_LIFE_TIME: u32 = 520_000;
 
 #[contract]
 pub struct DIDContract;
@@ -59,7 +60,7 @@ impl DIDContract {
         // The contract instance will be bumped to have a lifetime of ~3 months.
         // If the lifetime is already more than 3 months, this is a no-op.
         // This lifetime bump includes the contract instance itself and all entries in storage().instance()
-        env.storage().instance().bump(LIFE_TIME)
+        env.storage().instance().bump(LOW_LIFE_TIME, HIGH_LIFE_TIME)
     }
 
     /// Add capability invocation

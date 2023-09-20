@@ -91,7 +91,7 @@ fn setup_initialized_and_distributed_contract<'a>() -> (
     IssuanceContractClient<'a>,
 ) {
     let e: Env = Default::default();
-    e.mock_all_auths();
+    e.mock_all_auths_allowing_non_root_auth();
     let recipient_address = Address::random(&e);
     let recipient_did = String::from_slice(&e, "did:chaincerts:abc123");
     let organization: Organization = Organization {
@@ -158,7 +158,7 @@ fn test_create_cert_data() {
 #[test]
 fn test_initialize_contract_with_credentials_distribution() {
     let e: Env = Default::default();
-    e.mock_all_auths();
+    e.mock_all_auths_allowing_non_root_auth();
     let recipient_address = Address::random(&e);
     let recipient_did = String::from_slice(&e, "did:chaincerts:abc123");
     let organization: Organization = Organization {
@@ -378,7 +378,7 @@ fn test_get_contract_info() {
 #[test]
 fn test_distribute_with_distribution_limit_contract() {
     let e: Env = Default::default();
-    e.mock_all_auths();
+    e.mock_all_auths_allowing_non_root_auth();
     e.budget().reset_unlimited();
     let recipient1_address = Address::random(&e);
     let recipient1_did = String::from_slice(&e, "did:chaincerts:abc123");
@@ -430,7 +430,7 @@ fn test_distribute_with_distribution_limit_contract() {
 #[test]
 fn test_batch_distribute_with_distribution_limit_contract() {
     let e: Env = Default::default();
-    e.mock_all_auths();
+    e.mock_all_auths_allowing_non_root_auth();
     e.budget().reset_unlimited();
     let recipient1_address = Address::random(&e);
     let recipient2_address = Address::random(&e);
@@ -500,7 +500,7 @@ fn test_batch_distribute_with_distribution_limit_contract() {
 #[test]
 fn test_distribute_with_initial_recipients() {
     let e: Env = Default::default();
-    e.mock_all_auths();
+    e.mock_all_auths_allowing_non_root_auth();
     e.budget().reset_unlimited();
     let recipients = Option::Some(create_random_recipient_dids(&e));
     let recipient1_address = Address::random(&e);
@@ -560,7 +560,7 @@ fn test_distribute_with_initial_recipients() {
 #[test]
 fn test_revoke_chaincert() {
     let e: Env = Default::default();
-    e.mock_all_auths();
+    e.mock_all_auths_allowing_non_root_auth();
     let recipients: Option<Vec<String>> = Option::Some(create_random_recipient_dids(&e));
     let recipient_address = Address::random(&e);
     let recipient_did = recipients
@@ -773,9 +773,10 @@ fn test_distribute_admin_error() {
 #[should_panic(expected = "HostError: Error(Contract, #3)")]
 fn test_distribute_limit_error() {
     let e: Env = Default::default();
-    e.mock_all_auths();
+    e.mock_all_auths_allowing_non_root_auth();
     e.budget().reset_unlimited();
-    let recipients = Option::Some(create_random_recipient_dids(&e));
+    let recipients = create_random_recipient_dids(&e);
+    let option_recipients = Option::Some(recipients.clone());
     let address1 = Address::random(&e);
     let address2 = Address::random(&e);
     let organization: Organization = Organization {
@@ -809,7 +810,7 @@ fn test_distribute_limit_error() {
     let mut verifiable_credential = DistributeCredential {
         did: "did:chaincerts:abc123#credential-xyz123".into_val(&e),
         id: "c8b875a2-3f5d-4a63-b1c8-791be9b01c02".into_val(&e),
-        recipient_did: recipients
+        recipient_did: option_recipients
             .clone()
             .expect("Vec of recipients")
             .get(0)
@@ -824,7 +825,7 @@ fn test_distribute_limit_error() {
     let verifiable_credentials = vec![&e, verifiable_credential.clone()];
     issuance_contract.batch_distribute(&organization.admin, &verifiable_credentials);
 
-    verifiable_credential.recipient_did = recipients.expect("Vec of recipients").get(1).unwrap();
+    verifiable_credential.recipient_did = recipients.get(1).unwrap();
     verifiable_credential.did_contract_id = did2.address;
     verifiable_credential.attestation = ATTESTATION2.into_val(&e);
 
@@ -836,9 +837,9 @@ fn test_distribute_limit_error() {
 #[should_panic(expected = "HostError: Error(Contract, #5)")]
 fn test_distribute_status_error() {
     let e: Env = Default::default();
-    e.mock_all_auths();
+    e.mock_all_auths_allowing_non_root_auth();
     let did_owner = Address::random(&e);
-    let recipients = Option::Some(create_random_recipient_dids(&e));
+    let recipients = create_random_recipient_dids(&e);
     let organization: Organization = Organization {
         admin: Address::random(&e),
         did: "did:chaincerts:org123".into_val(&e),
@@ -868,7 +869,7 @@ fn test_distribute_status_error() {
     let verifiable_credential = DistributeCredential {
         did: "did:chaincerts:abc123#credential-xyz123".into_val(&e),
         id: "c8b875a2-3f5d-4a63-b1c8-791be9b01c02".into_val(&e),
-        recipient_did: recipients.expect("Vec of recipients").get(0).unwrap(),
+        recipient_did: recipients.get(0).unwrap(),
         signature: String::from_slice(&e, "MEUCIFZ5o9zSYiC9d0hvN6V73Y8yBm9n3MF8Hj"),
         attestation: ATTESTATION1.into_val(&e),
         issuance_date: 1679918400,
@@ -887,7 +888,7 @@ fn test_distribute_status_error() {
 #[should_panic(expected = "HostError: Error(Contract, #2)")]
 fn test_revoke_admin_error() {
     let e: Env = Default::default();
-    e.mock_all_auths();
+    e.mock_all_auths_allowing_non_root_auth();
     let recipients: Option<Vec<String>> = Option::Some(create_random_recipient_dids(&e));
     let recipient_address = Address::random(&e);
     let recipient_did = recipients
@@ -985,7 +986,7 @@ fn test_revoke_credential_data_none_error() {
 #[should_panic(expected = "HostError: Error(Contract, #7)")]
 fn test_revoke_status_revoked_error() {
     let e: Env = Default::default();
-    e.mock_all_auths();
+    e.mock_all_auths_allowing_non_root_auth();
     let recipients: Option<Vec<String>> = Option::Some(create_random_recipient_dids(&e));
     let recipient_did = recipients
         .clone()

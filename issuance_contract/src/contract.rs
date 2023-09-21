@@ -23,7 +23,8 @@ use crate::recipients::{add_recipient, create_recipients, read_recipients};
 use crate::storage_types::{CredentialData, Info, Organization, RevokedCredential};
 use soroban_sdk::{contract, contractimpl, panic_with_error, Address, Env, Map, String, Vec};
 
-const LIFE_TIME: u32 = 1_578_000;
+const LEDGERS_THRESHOLD: u32 = 1;
+const LEDGERS_TO_LIVE: u32 = 535_000;
 
 #[contract]
 pub struct IssuanceContract;
@@ -38,7 +39,6 @@ impl IssuanceTrait for IssuanceContract {
         distribution_limit: Option<u32>,
         organization: Organization,
         credential_params: CredentialParams,
-        distribute_credentials: Option<Vec<DistributeCredential>>,
     ) {
         if has_organization(&e) {
             panic_with_error!(&e, ContractError::AlreadyInit);
@@ -53,14 +53,12 @@ impl IssuanceTrait for IssuanceContract {
         write_credential_title(&e, credential_params.credential_title);
         define_limit_and_recipients(&e, recipients, distribution_limit);
 
-        if let Some(credentials) = distribute_credentials {
-            Self::batch_distribute(e.clone(), organization.admin, credentials);
-        }
-
-        // The contract instance will be bumped to have a lifetime of ~3 months.
-        // If the lifetime is already more than 3 months, this is a no-op.
+        // The contract instance will be bumped to have a lifetime of ~1 month.
+        // If the lifetime is already more than 1 month, this is a no-op.
         // This lifetime bump includes the contract instance itself and all entries in storage().instance()
-        e.storage().instance().bump(LIFE_TIME)
+        e.storage()
+            .instance()
+            .bump(LEDGERS_THRESHOLD, LEDGERS_TO_LIVE)
     }
 
     /// Distribute Credentials to recipients.
@@ -68,7 +66,6 @@ impl IssuanceTrait for IssuanceContract {
         check_admin(&e, &admin);
         admin.require_auth();
         check_amount(&e);
-
         credentials
             .iter()
             .for_each(|credential| apply_distribution(&e, &credential));
@@ -232,7 +229,6 @@ fn distribute_to_recipient(e: &Env, credential: &DistributeCredential) {
     check_recipient_status_for_distribute(e, &credential_data);
     let credential_type = read_credential_type(e);
     let credential_title = read_credential_title(e);
-
     deposit_to_did(e, credential);
 
     credential_data = Some(CredentialData::new(

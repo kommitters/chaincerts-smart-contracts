@@ -47,7 +47,6 @@ pub trait IssuanceTrait {
         distribution_limit: Option<u32>,
         organization: Organization,
         credential_params: CredentialParams,
-        distribute_credentials: Option<Vec<DistributeCredential>>,
     );
 
     /// Distribute Credentials to recipients.

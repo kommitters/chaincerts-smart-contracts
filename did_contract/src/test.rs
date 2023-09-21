@@ -631,13 +631,14 @@ fn test_add_invalid_add_credential_cap() {
 #[test]
 fn test_initialize_with_public_add_cap() {
     let test = DIDContractTest::setup();
-    let public_add_cap = Option::Some(CapabilityInvocation {
+    let public_add_cap = CapabilityInvocation {
         id: String::from_slice(&test.env, "did:chaincerts:ABC123#capability-1"),
         type_: CapType::PublicAdd,
         invoker: OptionString::None,
         invoker_address: OptionAddress::None,
         credential: OptionString::None,
-    });
+    };
+    let option_public_add_cap = Option::Some(public_add_cap.clone());
     let did_contract = create_did_contract(
         &test.env,
         &test.id,
@@ -645,7 +646,7 @@ fn test_initialize_with_public_add_cap() {
         &test.context,
         &test.verification_processes,
         &test.services,
-        &public_add_cap,
+        &option_public_add_cap,
     );
 
     // Check that the public add cap is set in storage
@@ -654,7 +655,7 @@ fn test_initialize_with_public_add_cap() {
     // Check that the public add cap is added to the CapabilityInvocations
     let caps = did_contract.get_capability_invocation(&test.authentication_address);
     let first_cap = caps.get_unchecked(0);
-    assert_eq!(first_cap, public_add_cap.unwrap());
+    assert_eq!(first_cap, public_add_cap);
 
     // Let's remove the public add cap
     did_contract.remove_capability(&test.authentication_address, &first_cap.id);

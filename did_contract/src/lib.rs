@@ -16,7 +16,7 @@ use soroban_sdk::{contract, contractimpl, panic_with_error, Address, Env, String
 use verifiable_credential::VerifiableCredential;
 
 const LEDGERS_THRESHOLD: u32 = 1;
-const LEDGERS_TO_LIVE: u32 = 520_000;
+const LEDGERS_TO_LIVE: u32 = 535_000;
 
 #[contract]
 pub struct DIDContract;

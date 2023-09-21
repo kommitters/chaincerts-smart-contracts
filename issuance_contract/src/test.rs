@@ -61,7 +61,6 @@ fn create_issuance_contract<'a>(
     recipient_dids: &Option<Vec<String>>,
     organization: &Organization,
     credential_params: &CredentialParams,
-    distribute_credentials: &Option<Vec<DistributeCredential>>,
 ) -> IssuanceContractClient<'a> {
     let issuance_contract =
         IssuanceContractClient::new(e, &e.register_contract(None, IssuanceContract {}));
@@ -72,7 +71,6 @@ fn create_issuance_contract<'a>(
         limit,
         organization,
         credential_params,
-        distribute_credentials,
     );
     issuance_contract
 }
@@ -115,7 +113,6 @@ fn setup_initialized_and_distributed_contract<'a>() -> (
         &Option::None,
         &organization,
         &credential_params,
-        &Option::None,
     );
 
     const ATTESTATION1: &str = "ipfs://QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
@@ -179,7 +176,6 @@ fn test_initialize_contract_with_recipients() {
         &recipients,
         &organization,
         &credential_params,
-        &Option::None,
     );
     assert_eq!(issuance_contract.file_storage(), "FileBase".into_val(&e));
     assert_eq!(
@@ -216,7 +212,6 @@ fn test_initialize_with_limit_contract() {
         &Option::None,
         &organization,
         &credential_params,
-        &Option::None,
     );
     assert_eq!(issuance_contract.file_storage(), "FileBase".into_val(&e));
     assert_eq!(
@@ -251,7 +246,6 @@ fn test_initialize_without_limit_contract_and_recipients() {
         &Option::None,
         &organization,
         &credential_params,
-        &Option::None,
     );
     assert_eq!(issuance_contract.file_storage(), "FileBase".into_val(&e));
     assert_eq!(
@@ -295,7 +289,6 @@ fn test_get_contract_info() {
         &Option::None,
         &organization,
         &credential_params_without_expiration_time,
-        &Option::None,
     );
 
     let issuance_contract_2 = create_issuance_contract(
@@ -304,7 +297,6 @@ fn test_get_contract_info() {
         &Option::None,
         &organization,
         &credential_params_with_expiration_time,
-        &Option::None,
     );
 
     let info = Info {
@@ -356,7 +348,6 @@ fn test_distribute_with_distribution_limit_contract() {
         &Option::None,
         &organization,
         &credential_params,
-        &Option::None,
     );
 
     const ATTESTATION1: &str = "ipfs://QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
@@ -413,7 +404,6 @@ fn test_batch_distribute_with_distribution_limit_contract() {
         &Option::None,
         &organization,
         &credential_params,
-        &Option::None,
     );
 
     const ATTESTATION1: &str = "ipfs://QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
@@ -483,7 +473,6 @@ fn test_distribute_with_initial_recipients() {
         &recipients,
         &organization,
         &credential_params,
-        &Option::None,
     );
 
     let mut recipients = issuance_contract.recipients();
@@ -545,7 +534,6 @@ fn test_revoke_chaincert() {
         &recipients,
         &organization,
         &credential_params,
-        &Option::None,
     );
 
     let verifiable_credential = DistributeCredential {
@@ -620,7 +608,6 @@ fn test_initialize_contract_with_recipients_error() {
         &recipient_dids,
         &organization,
         &credential_params,
-        &Option::None,
     );
 
     issuance_contract.initialize(
@@ -629,7 +616,6 @@ fn test_initialize_contract_with_recipients_error() {
         &Option::None,
         &organization,
         &credential_params,
-        &Option::None,
     );
 }
 
@@ -657,7 +643,6 @@ fn test_initialize_with_limit_contract_error() {
         &Option::None,
         &organization,
         &credential_params,
-        &Option::None,
     );
 
     issuance_contract.initialize(
@@ -666,7 +651,6 @@ fn test_initialize_with_limit_contract_error() {
         &distribution_limit,
         &organization,
         &credential_params,
-        &Option::None,
     );
 }
 
@@ -705,7 +689,6 @@ fn test_distribute_admin_error() {
         &recipient_dids,
         &organization,
         &credential_params,
-        &Option::None,
     );
 
     let verifiable_credential = DistributeCredential {
@@ -756,7 +739,6 @@ fn test_distribute_limit_error() {
         &Option::None,
         &organization,
         &credential_params,
-        &Option::None,
     );
     const ATTESTATION1: &str = "ipfs://QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
     const ATTESTATION2: &str = "ipfs://QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrED";
@@ -816,7 +798,6 @@ fn test_distribute_status_error() {
         &Option::None,
         &organization,
         &credential_params,
-        &Option::None,
     );
     pub const ATTESTATION1: &str = "ipfs://QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
 
@@ -873,7 +854,6 @@ fn test_revoke_admin_error() {
         &recipients,
         &organization,
         &credential_params,
-        &Option::None,
     );
 
     let credential = DistributeCredential {
@@ -930,7 +910,6 @@ fn test_revoke_credential_data_none_error() {
         &recipients,
         &organization,
         &credential_params,
-        &Option::None,
     );
 
     issuance_contract.revoke(&organization.admin, &recipient_did, &revocation_date);
@@ -971,7 +950,6 @@ fn test_revoke_status_revoked_error() {
         &recipients,
         &organization,
         &credential_params,
-        &Option::None,
     );
 
     let verifiable_credential = DistributeCredential {
@@ -1033,7 +1011,6 @@ fn test_revoke_no_revocable_cert() {
         &recipients,
         &organization,
         &credential_params,
-        &Option::None,
     );
 
     issuance_contract.revoke(&organization.admin, &recipient_did, &revocation_date);

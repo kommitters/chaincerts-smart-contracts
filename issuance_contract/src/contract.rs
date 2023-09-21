@@ -39,7 +39,6 @@ impl IssuanceTrait for IssuanceContract {
         distribution_limit: Option<u32>,
         organization: Organization,
         credential_params: CredentialParams,
-        _distribute_credentials: Option<Vec<DistributeCredential>>,
     ) {
         if has_organization(&e) {
             panic_with_error!(&e, ContractError::AlreadyInit);
@@ -54,8 +53,8 @@ impl IssuanceTrait for IssuanceContract {
         write_credential_title(&e, credential_params.credential_title);
         define_limit_and_recipients(&e, recipients, distribution_limit);
 
-        // The contract instance will be bumped to have a lifetime of ~1 months.
-        // If the lifetime is already more than 3 months, this is a no-op.
+        // The contract instance will be bumped to have a lifetime of ~1 month.
+        // If the lifetime is already more than 1 month, this is a no-op.
         // This lifetime bump includes the contract instance itself and all entries in storage().instance()
         e.storage()
             .instance()

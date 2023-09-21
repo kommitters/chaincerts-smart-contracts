@@ -23,8 +23,8 @@ use crate::recipients::{add_recipient, create_recipients, read_recipients};
 use crate::storage_types::{CredentialData, Info, Organization, RevokedCredential};
 use soroban_sdk::{contract, contractimpl, panic_with_error, Address, Env, Map, String, Vec};
 
-const LOW_LIFE_TIME: u32 = 510_000;
-const HIGH_LIFE_TIME: u32 = 520_000;
+const LEDGERS_THRESHOLD: u32 = 1;
+const LEDGERS_TO_LIVE: u32 = 520_000;
 
 #[contract]
 pub struct IssuanceContract;
@@ -61,7 +61,9 @@ impl IssuanceTrait for IssuanceContract {
         // The contract instance will be bumped to have a lifetime of ~1 months.
         // If the lifetime is already more than 3 months, this is a no-op.
         // This lifetime bump includes the contract instance itself and all entries in storage().instance()
-        e.storage().instance().bump(LOW_LIFE_TIME, HIGH_LIFE_TIME)
+        e.storage()
+            .instance()
+            .bump(LEDGERS_THRESHOLD, LEDGERS_TO_LIVE)
     }
 
     /// Distribute Credentials to recipients.

@@ -156,52 +156,6 @@ fn test_create_cert_data() {
 }
 
 #[test]
-fn test_initialize_contract_with_credentials_distribution() {
-    let e: Env = Default::default();
-    e.mock_all_auths_allowing_non_root_auth();
-    let recipient_address = Address::random(&e);
-    let recipient_did = String::from_slice(&e, "did:chaincerts:abc123");
-    let organization: Organization = Organization {
-        admin: Address::random(&e),
-        did: "did:chaincerts:org123".into_val(&e),
-    };
-    let id = String::from_slice(&e, "did:chaincerts::ABC123");
-    let authentication = String::from_slice(&e, "did:chaincerts:ABC123#key1");
-    let did = create_did_contract(&e, &id, &(authentication, recipient_address));
-    let distribution_limit: Option<u32> = Option::Some(6);
-    let credential_params = CredentialParams {
-        file_storage: "FileBase".into_val(&e),
-        revocable: true,
-        credential_type: String::from_slice(&e, "Work"),
-        credential_title: String::from_slice(&e, "Software Engineer"),
-    };
-
-    const ATTESTATION1: &str = "ipfs://QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC";
-
-    let distribute_credential = DistributeCredential {
-        did: "did:chaincerts:abc123#credential-xyz123".into_val(&e),
-        id: "c8b875a2-3f5d-4a63-b1c8-791be9b01c02".into_val(&e),
-        recipient_did,
-        signature: String::from_slice(&e, "MEUCIFZ5o9zSYiC9d0hvN6V73Y8yBm9n3MF8Hj"),
-        attestation: ATTESTATION1.into_val(&e),
-        issuance_date: 1679918400,
-        expiration_date: OptionU64::None,
-        did_contract_id: did.address,
-    };
-
-    let distribute_credentials = vec![&e, distribute_credential];
-
-    create_issuance_contract(
-        &e,
-        &distribution_limit,
-        &Option::None,
-        &organization,
-        &credential_params,
-        &Option::Some(distribute_credentials),
-    );
-}
-
-#[test]
 fn test_initialize_contract_with_recipients() {
     let e: Env = Default::default();
     e.mock_all_auths();

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.11.0 (21.09.2023)
+
+- [Bump soroban-sdk to v20.0.0-rc2](https://github.com/kommitters/chaincerts-smart-contracts/issues/123)
+
 ## 0.10.0 (26.07.2023)
 
 - [Upgrade Soroban SDK to Preview 10](https://github.com/kommitters/chaincerts-smart-contracts/issues/119)

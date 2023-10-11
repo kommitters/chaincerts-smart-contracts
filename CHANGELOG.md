@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.11.1 (11.10.2023)
+
+- [Update chaincerts logo in README](https://github.com/kommitters/chaincerts-smart-contracts/pull/130)
+
 ## 0.11.0 (21.09.2023)
 
 - [Upgrade Soroban SDK to Preview 11](https://github.com/kommitters/chaincerts-smart-contracts/issues/123)

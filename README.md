@@ -1,4 +1,4 @@
-<img src="https://user-images.githubusercontent.com/1649973/235795202-02794303-b462-43bd-bb06-2e2dbf783d14.png" width="400">
+![Chaincerts Logo](https://github.com/kommitters/chaincerts-smart-contracts/assets/50219561/63963006-1b41-4d21-82c2-dbc3ae188b13)
 
 [**Chaincerts**][chaincerts.co] is a cutting-edge platform that revolutionizes the way digital credentials are issued, verified, and showcased.
 

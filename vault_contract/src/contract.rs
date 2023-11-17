@@ -10,7 +10,7 @@ const LEDGERS_TO_EXTEND: u32 = 535_000;
 
 contractmeta!(
     key = "Description",
-    val = "Smart contract for decentralized identifiers (DIDs)",
+    val = "Smart contract for Vault",
 );
 
 #[contract]
@@ -23,6 +23,8 @@ impl VaultTrait for VaultContract {
             panic_with_error!(e, ContractError::AlreadyInitialized);
         }
         storage::write_admin(&e, &admin);
+
+        // set initial data
         set_dids(&e, &dids);
         set_issuers(&e);
 

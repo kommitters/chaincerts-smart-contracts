@@ -8,10 +8,7 @@ use soroban_sdk::{
 const LEDGERS_THRESHOLD: u32 = 1;
 const LEDGERS_TO_EXTEND: u32 = 535_000;
 
-contractmeta!(
-    key = "Description",
-    val = "Smart contract for Vault",
-);
+contractmeta!(key = "Description", val = "Smart contract for Vault",);
 
 #[contract]
 pub struct VaultContract;

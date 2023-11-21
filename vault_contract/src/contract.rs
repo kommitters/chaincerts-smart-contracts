@@ -58,10 +58,12 @@ fn validate_admin(e: &Env, admin: Address) {
 }
 
 fn validate_did(e: &Env, did: &String) {
-    if !did::is_registered(e, did) {
+    let dids = storage::read_dids(e);
+
+    if !did::is_registered(&dids, did) {
         panic_with_error!(e, ContractError::DidNotFound)
     }
-    if let Some(true) = did::is_revoked(e, did) {
+    if did::is_revoked(&dids, did) {
         panic_with_error!(e, ContractError::DidRevoked)
     }
 }

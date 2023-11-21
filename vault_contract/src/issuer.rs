@@ -1,5 +1,6 @@
-use crate::{error::ContractError, storage};
-use soroban_sdk::{contracttype, panic_with_error, Address, Env, Map};
+use crate::error::ContractError;
+use crate::storage;
+use soroban_sdk::{contracttype, panic_with_error, Address, Env, Map, String};
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -8,22 +9,22 @@ pub struct Issuer {
     pub is_revoked: bool,
 }
 
-pub fn add_issuer_to_issuers_map(e: &Env, issuer: &Address) -> Map<Address, Issuer> {
-    let mut issuers = storage::read_issuers(e);
+pub fn authorize_issuer(e: &Env, issuer_pk: &Address, did: &String) {
+    let mut issuers: Map<Address, Issuer> = storage::read_issuers(e, did);
 
     issuers.set(
-        issuer.clone(),
+        issuer_pk.clone(),
         Issuer {
-            public_key: issuer.clone(),
+            public_key: issuer_pk.clone(),
             is_revoked: false,
         },
     );
 
-    issuers
+    storage::write_issuers(e, &issuers, did);
 }
 
-pub fn revoke_issuer_to_issuers_map(e: &Env, issuer: &Address) -> Map<Address, Issuer> {
-    let mut issuers = storage::read_issuers(e);
+pub fn revoke_issuer(e: &Env, issuer: &Address, did: &String) {
+    let mut issuers = storage::read_issuers(e, did);
 
     if issuers.contains_key(issuer.clone()) {
         issuers.set(
@@ -37,5 +38,5 @@ pub fn revoke_issuer_to_issuers_map(e: &Env, issuer: &Address) -> Map<Address, I
         panic_with_error!(e, ContractError::IssuerNotFound)
     }
 
-    issuers
+    storage::write_issuers(e, &issuers, did);
 }

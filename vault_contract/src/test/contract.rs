@@ -6,6 +6,7 @@ fn test_inititialize() {
     let VaultContractTest {
         env: _env,
         admin,
+        did: _did,
         dids,
         issuer: _issuer,
         contract,
@@ -19,6 +20,7 @@ fn test_initialize_an_already_initialized_contract() {
     let VaultContractTest {
         env: _env,
         admin,
+        did: _did,
         dids,
         issuer: _issuer,
         contract,
@@ -34,7 +36,8 @@ fn test_initialize_with_empty_dids() {
     let VaultContractTest {
         env,
         admin,
-        dids: _did,
+        dids: _dids,
+        did: _did,
         issuer: _issuer,
         contract,
     } = VaultContractTest::setup();
@@ -48,13 +51,14 @@ fn test_authorize_issuer() {
     let VaultContractTest {
         env: _env,
         admin,
+        did,
         dids,
         issuer,
         contract,
     } = VaultContractTest::setup();
 
     contract.initialize(&admin, &dids);
-    contract.authorize_issuer(&admin, &issuer);
+    contract.authorize_issuer(&admin, &issuer, &did);
 }
 
 #[test]
@@ -63,6 +67,7 @@ fn test_authorize_issuer_with_invalid_admin() {
     let VaultContractTest {
         env,
         admin,
+        did,
         dids,
         issuer,
         contract,
@@ -71,7 +76,7 @@ fn test_authorize_issuer_with_invalid_admin() {
     let invalid_admin = Address::random(&env);
     contract.initialize(&admin, &dids);
 
-    contract.authorize_issuer(&invalid_admin, &issuer);
+    contract.authorize_issuer(&invalid_admin, &issuer, &did);
 }
 
 #[test]
@@ -79,14 +84,15 @@ fn test_revoke_issuer() {
     let VaultContractTest {
         env: _env,
         admin,
+        did,
         dids,
         issuer,
         contract,
     } = VaultContractTest::setup();
 
     contract.initialize(&admin, &dids);
-    contract.authorize_issuer(&admin, &issuer);
-    contract.revoke_issuer(&admin, &issuer);
+    contract.authorize_issuer(&admin, &issuer, &did);
+    contract.revoke_issuer(&admin, &issuer, &did);
 }
 
 #[test]
@@ -95,16 +101,17 @@ fn test_revoke_issuer_with_invalid_admin() {
     let VaultContractTest {
         env,
         admin,
+        did,
         dids,
         issuer,
         contract,
     } = VaultContractTest::setup();
 
     contract.initialize(&admin, &dids);
-    contract.authorize_issuer(&admin, &issuer);
+    contract.authorize_issuer(&admin, &issuer, &did);
 
     let invalid_admin = Address::random(&env);
-    contract.revoke_issuer(&invalid_admin, &issuer);
+    contract.revoke_issuer(&invalid_admin, &issuer, &did);
 }
 
 #[test]
@@ -113,14 +120,15 @@ fn test_revoke_issuer_when_issuer_is_not_found() {
     let VaultContractTest {
         env,
         admin,
+        did,
         dids,
         issuer,
         contract,
     } = VaultContractTest::setup();
 
     contract.initialize(&admin, &dids);
-    contract.authorize_issuer(&admin, &issuer);
+    contract.authorize_issuer(&admin, &issuer, &did);
 
     let invalid_issuer = Address::random(&env);
-    contract.revoke_issuer(&admin, &invalid_issuer);
+    contract.revoke_issuer(&admin, &invalid_issuer, &did);
 }

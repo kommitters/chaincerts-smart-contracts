@@ -1,12 +1,13 @@
-use crate::{did::Did, issuer::Issuer};
+use crate::did::Did;
+use crate::issuer::Issuer;
 use soroban_sdk::{contracttype, Address, Env, Map, String};
 
 #[derive(Clone)]
 #[contracttype]
 pub enum DataKey {
-    Admin,   // Address
-    Dids,    // Vec<String>
-    Issuers, // Map<Address, Issuer>
+    Admin,           // Address
+    Dids,            // Vec<String>
+    Issuers(String), // Map<Address, Issuer>
 }
 
 pub fn has_admin(e: &Env) -> bool {
@@ -29,12 +30,12 @@ pub fn write_dids(e: &Env, dids: &Map<String, Did>) {
     e.storage().instance().set(&key, dids);
 }
 
-pub fn read_issuers(e: &Env) -> Map<Address, Issuer> {
-    let key = DataKey::Issuers;
-    e.storage().instance().get(&key).unwrap()
+pub fn read_issuers(e: &Env, did: &String) -> Map<Address, Issuer> {
+    let key = DataKey::Issuers(did.clone());
+    e.storage().instance().get(&key).unwrap_or(Map::new(e))
 }
 
-pub fn write_issuers(e: &Env, issuers: &Map<Address, Issuer>) {
-    let key = DataKey::Issuers;
-    e.storage().instance().set(&key, issuers);
+pub fn write_issuers(e: &Env, issuers: &Map<Address, Issuer>, did: &String) {
+    let key = DataKey::Issuers(did.clone());
+    e.storage().instance().set(&key, issuers)
 }

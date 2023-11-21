@@ -1,9 +1,11 @@
+use crate::did;
 use crate::error::ContractError;
-use crate::{did, issuer, storage};
+use crate::issuer;
+use crate::storage;
 
 use crate::vault_trait::VaultTrait;
 use soroban_sdk::{
-    contract, contractimpl, contractmeta, panic_with_error, Address, Env, Map, String, Vec,
+    contract, contractimpl, contractmeta, panic_with_error, Address, Env, String, Vec,
 };
 
 const LEDGERS_THRESHOLD: u32 = 1;
@@ -22,39 +24,30 @@ impl VaultTrait for VaultContract {
         }
         storage::write_admin(&e, &admin);
 
-        // set initial data
         did::set_initial_dids(&e, &dids);
-        set_issuers(&e);
 
         e.storage()
             .instance()
             .bump(LEDGERS_THRESHOLD, LEDGERS_TO_EXTEND);
     }
 
-    fn authorize_issuer(e: Env, admin: Address, issuer: Address) {
+    fn authorize_issuer(e: Env, admin: Address, issuer: Address, did: String) {
         let contract_admin = storage::read_admin(&e);
         if contract_admin != admin {
             panic_with_error!(e, ContractError::NotAuthorized)
         }
         admin.require_auth();
 
-        let updated_issuers = issuer::add_issuer_to_issuers_map(&e, &issuer);
-        storage::write_issuers(&e, &updated_issuers);
+        issuer::authorize_issuer(&e, &issuer, &did);
     }
 
-    fn revoke_issuer(e: Env, admin: Address, issuer: Address) {
+    fn revoke_issuer(e: Env, admin: Address, issuer: Address, did: String) {
         let contract_admin = storage::read_admin(&e);
         if contract_admin != admin {
             panic_with_error!(e, ContractError::NotAuthorized)
         }
         admin.require_auth();
 
-        let updated_issuers = issuer::revoke_issuer_to_issuers_map(&e, &issuer);
-        storage::write_issuers(&e, &updated_issuers);
+        issuer::revoke_issuer(&e, &issuer, &did)
     }
-}
-
-fn set_issuers(e: &Env) {
-    let issuers = Map::new(e);
-    storage::write_issuers(e, &issuers);
 }

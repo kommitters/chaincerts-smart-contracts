@@ -1,12 +1,12 @@
-use crate::{did::Did, error::ContractError, issuer::Issuer};
-use soroban_sdk::{contracttype, panic_with_error, Address, Env, Map, String, Vec};
+use crate::{did::Did, issuer::Issuer};
+use soroban_sdk::{contracttype, Address, Env, Map, String};
 
 #[derive(Clone)]
 #[contracttype]
 pub enum DataKey {
     Admin,   // Address
-    Dids,    // String
-    Issuers, // Address
+    Dids,    // Vec<String>
+    Issuers, // Map<Address, Issuer>
 }
 
 pub fn has_admin(e: &Env) -> bool {
@@ -24,21 +24,9 @@ pub fn write_admin(e: &Env, id: &Address) {
     e.storage().instance().set(&key, id);
 }
 
-pub fn write_dids(e: &Env, dids: &Vec<String>) {
+pub fn write_dids(e: &Env, dids: &Map<String, Did>) {
     let key = DataKey::Dids;
-
-    let mut dids_map: Map<String, Did> = Map::new(e);
-
-    for did in dids.iter() {
-        dids_map.set(
-            did.clone(),
-            Did {
-                did: did.clone(),
-                is_revoked: false,
-            },
-        )
-    }
-    e.storage().instance().set(&key, &dids_map);
+    e.storage().instance().set(&key, dids);
 }
 
 pub fn read_issuers(e: &Env) -> Map<Address, Issuer> {
@@ -49,33 +37,4 @@ pub fn read_issuers(e: &Env) -> Map<Address, Issuer> {
 pub fn write_issuers(e: &Env, issuers: &Map<Address, Issuer>) {
     let key = DataKey::Issuers;
     e.storage().instance().set(&key, issuers);
-}
-
-pub fn write_issuer(e: &Env, issuer: &Address) {
-    let mut issuers = read_issuers(e);
-    issuers.set(
-        issuer.clone(),
-        Issuer {
-            public_key: issuer.clone(),
-            is_revoked: false,
-        },
-    );
-    write_issuers(e, &issuers);
-}
-
-pub fn revoke_issuer(e: &Env, issuer: &Address) {
-    let mut issuers = read_issuers(e);
-
-    if issuers.contains_key(issuer.clone()) {
-        issuers.set(
-            issuer.clone(),
-            Issuer {
-                public_key: issuer.clone(),
-                is_revoked: true,
-            },
-        )
-    } else {
-        panic_with_error!(e, ContractError::IssuerNotFound)
-    }
-    write_issuers(e, &issuers);
 }

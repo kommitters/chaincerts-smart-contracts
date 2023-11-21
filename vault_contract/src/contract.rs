@@ -1,5 +1,6 @@
 use crate::error::ContractError;
-use crate::storage;
+use crate::{did, issuer, storage};
+
 use crate::vault_trait::VaultTrait;
 use soroban_sdk::{
     contract, contractimpl, contractmeta, panic_with_error, Address, Env, Map, String, Vec,
@@ -22,7 +23,7 @@ impl VaultTrait for VaultContract {
         storage::write_admin(&e, &admin);
 
         // set initial data
-        set_dids(&e, &dids);
+        did::set_initial_dids(&e, &dids);
         set_issuers(&e);
 
         e.storage()
@@ -36,7 +37,9 @@ impl VaultTrait for VaultContract {
             panic_with_error!(e, ContractError::NotAuthorized)
         }
         admin.require_auth();
-        storage::write_issuer(&e, &issuer);
+
+        let updated_issuers = issuer::add_issuer_to_issuers_map(&e, &issuer);
+        storage::write_issuers(&e, &updated_issuers);
     }
 
     fn revoke_issuer(e: Env, admin: Address, issuer: Address) {
@@ -45,15 +48,10 @@ impl VaultTrait for VaultContract {
             panic_with_error!(e, ContractError::NotAuthorized)
         }
         admin.require_auth();
-        storage::revoke_issuer(&e, &issuer);
-    }
-}
 
-fn set_dids(e: &Env, dids: &Vec<String>) {
-    if dids.is_empty() {
-        panic_with_error!(e, ContractError::EmptyDID);
+        let updated_issuers = issuer::revoke_issuer_to_issuers_map(&e, &issuer);
+        storage::write_issuers(&e, &updated_issuers);
     }
-    storage::write_dids(e, dids);
 }
 
 fn set_issuers(e: &Env) {

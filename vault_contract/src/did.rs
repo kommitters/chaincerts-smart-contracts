@@ -28,3 +28,13 @@ pub fn set_initial_dids(e: &Env, dids: &Vec<String>) {
 
     storage::write_dids(e, &dids_map);
 }
+
+pub fn is_revoked(e: &Env, did: &String) -> Option<bool> {
+    storage::read_dids(e)
+        .get(did.clone())
+        .map(|did_map| did_map.is_revoked)
+}
+
+pub fn is_registered(e: &Env, did: &String) -> bool {
+    storage::read_dids(e).contains_key(did.clone())
+}

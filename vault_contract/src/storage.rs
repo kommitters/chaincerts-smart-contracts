@@ -25,6 +25,11 @@ pub fn write_admin(e: &Env, id: &Address) {
     e.storage().instance().set(&key, id);
 }
 
+pub fn read_dids(e: &Env) -> Map<String, Did> {
+    let key = DataKey::Dids;
+    e.storage().instance().get(&key).unwrap()
+}
+
 pub fn write_dids(e: &Env, dids: &Map<String, Did>) {
     let key = DataKey::Dids;
     e.storage().instance().set(&key, dids);

@@ -8,4 +8,6 @@ pub enum ContractError {
     NotAuthorized = 2,
     EmptyDIDs = 3,
     IssuerNotFound = 4,
+    DidRevoked = 5,
+    DidNotFound = 6,
 }

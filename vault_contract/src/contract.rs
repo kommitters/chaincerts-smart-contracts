@@ -1,11 +1,15 @@
 use crate::did;
+use crate::did::DidWithVCs;
 use crate::error::ContractError;
 use crate::issuer;
+use crate::issuer::Issuer;
 use crate::storage;
+use crate::verifiable_credential;
+use crate::verifiable_credential::VerifiableCredential;
 
 use crate::vault_trait::VaultTrait;
 use soroban_sdk::{
-    contract, contractimpl, contractmeta, panic_with_error, Address, Env, String, Vec,
+    contract, contractimpl, contractmeta, panic_with_error, Address, Env, Map, String, Vec,
 };
 
 const LEDGERS_THRESHOLD: u32 = 1;
@@ -47,6 +51,59 @@ impl VaultTrait for VaultContract {
 
         issuer::revoke_issuer(&e, &issuer, &did)
     }
+
+    fn store_vc(
+        e: Env,
+        vc_id: String,
+        vc_data: String,
+        recipient_did: String,
+        issuer_pk: Address,
+        issuance_contract_address: Address,
+    ) {
+        validate_did(&e, &recipient_did);
+        validate_issuer(&e, &issuer_pk, &recipient_did);
+
+        verifiable_credential::store_vc(
+            &e,
+            &vc_id,
+            &vc_data,
+            &issuance_contract_address,
+            &recipient_did,
+        );
+    }
+
+    fn get_vc(e: Env, vc_id: String) -> VerifiableCredential {
+        let vcs = storage::read_vcs(&e);
+
+        if !vcs.contains_key(vc_id.clone()) {
+            panic_with_error!(&e, ContractError::VCNotFound)
+        }
+        vcs.get_unchecked(vc_id.clone())
+    }
+
+    fn list_vcs(e: Env) -> Map<String, DidWithVCs> {
+        let vcs = storage::read_vcs(&e);
+        let dids = storage::read_dids(&e);
+        let mut dids_with_vcs = Map::new(&e);
+
+        for (did, did_struct) in dids {
+            let mut did_vcs = Vec::new(&e);
+            for vc in did_struct.vcs {
+                did_vcs.push_front(vcs.get_unchecked(vc));
+            }
+
+            dids_with_vcs.set(
+                did.clone(),
+                DidWithVCs {
+                    did: did.clone(),
+                    is_revoked: did_struct.is_revoked,
+                    vcs: did_vcs,
+                },
+            )
+        }
+
+        dids_with_vcs
+    }
 }
 
 fn validate_admin(e: &Env, admin: Address) {
@@ -65,5 +122,20 @@ fn validate_did(e: &Env, did: &String) {
     }
     if did::is_revoked(&dids, did) {
         panic_with_error!(e, ContractError::DidRevoked)
+    }
+}
+
+fn validate_issuer(e: &Env, issuer: &Address, did: &String) {
+    issuer.require_auth();
+
+    let issuers: Map<Address, Issuer> = storage::read_issuers(e, did);
+    if issuers.is_empty() {
+        panic_with_error!(e, ContractError::DidWithoutIssuers)
+    }
+    if !issuer::is_registered(&issuers, issuer) {
+        panic_with_error!(e, ContractError::IssuerNotFound)
+    }
+    if issuer::is_revoked(&issuers, issuer) {
+        panic_with_error!(e, ContractError::IssuerRevoked)
     }
 }

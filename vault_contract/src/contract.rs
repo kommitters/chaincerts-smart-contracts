@@ -75,10 +75,10 @@ impl VaultTrait for VaultContract {
     fn get_vc(e: Env, vc_id: String) -> VerifiableCredential {
         let vcs = storage::read_vcs(&e);
 
-        if !vcs.contains_key(vc_id.clone()) {
-            panic_with_error!(&e, ContractError::VCNotFound)
+        match vcs.get(vc_id) {
+            Some(vc) => vc,
+            None => panic_with_error!(&e, ContractError::VCNotFound),
         }
-        vcs.get_unchecked(vc_id.clone())
     }
 
     fn list_vcs(e: Env) -> Map<String, DidWithVCs> {
@@ -127,11 +127,8 @@ fn validate_did(e: &Env, did: &String) {
 
 fn validate_issuer(e: &Env, issuer: &Address, did: &String) {
     issuer.require_auth();
-
     let issuers: Map<Address, Issuer> = storage::read_issuers(e, did);
-    if issuers.is_empty() {
-        panic_with_error!(e, ContractError::DidWithoutIssuers)
-    }
+
     if !issuer::is_registered(&issuers, issuer) {
         panic_with_error!(e, ContractError::IssuerNotFound)
     }

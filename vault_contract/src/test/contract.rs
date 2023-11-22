@@ -192,7 +192,7 @@ fn test_store_vc() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #7)")]
+#[should_panic(expected = "HostError: Error(Contract, #4)")]
 fn test_store_vc_with_empty_issuers() {
     let VaultContractTest {
         env,
@@ -245,7 +245,7 @@ fn test_store_vc_with_issuer_not_found() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #8)")]
+#[should_panic(expected = "HostError: Error(Contract, #7)")]
 fn test_store_vc_with_revoked_issuer() {
     let VaultContractTest {
         env,
@@ -326,7 +326,7 @@ fn test_get_vc() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #9)")]
+#[should_panic(expected = "HostError: Error(Contract, #8)")]
 fn test_get_vc_not_found() {
     let VaultContractTest {
         env,

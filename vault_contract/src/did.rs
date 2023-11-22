@@ -1,5 +1,6 @@
 use crate::error::ContractError;
 use crate::storage;
+use crate::verifiable_credential::VerifiableCredential;
 use soroban_sdk::{contracttype, panic_with_error, Env, Map, String, Vec};
 
 #[contracttype]
@@ -7,6 +8,15 @@ use soroban_sdk::{contracttype, panic_with_error, Env, Map, String, Vec};
 pub struct Did {
     pub did: String,
     pub is_revoked: bool,
+    pub vcs: Vec<String>,
+}
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct DidWithVCs {
+    pub did: String,
+    pub is_revoked: bool,
+    pub vcs: Vec<VerifiableCredential>,
 }
 
 pub fn set_initial_dids(e: &Env, dids: &Vec<String>) {
@@ -22,6 +32,7 @@ pub fn set_initial_dids(e: &Env, dids: &Vec<String>) {
             Did {
                 did: did.clone(),
                 is_revoked: false,
+                vcs: Vec::new(e),
             },
         )
     }

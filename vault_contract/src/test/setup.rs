@@ -30,3 +30,20 @@ impl<'a> VaultContractTest<'a> {
         }
     }
 }
+
+pub struct VCVaultContractTest {
+    pub vc_id: String,
+    pub vc_data: String,
+    pub issuance_contract_address: Address,
+}
+
+pub fn get_vc_setup(env: &Env) -> VCVaultContractTest {
+    let vc_id = String::from_slice(env, "vc_id");
+    let vc_data = String::from_slice(env, "vc_data");
+    let issuance_contract_address = Address::random(env);
+    VCVaultContractTest {
+        vc_id,
+        vc_data,
+        issuance_contract_address,
+    }
+}

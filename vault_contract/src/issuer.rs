@@ -40,3 +40,11 @@ pub fn revoke_issuer(e: &Env, issuer: &Address, did: &String) {
 
     storage::write_issuers(e, &issuers, did);
 }
+
+pub fn is_registered(issuers: &Map<Address, Issuer>, issuer: &Address) -> bool {
+    issuers.contains_key(issuer.clone())
+}
+
+pub fn is_revoked(issuers: &Map<Address, Issuer>, issuer: &Address) -> bool {
+    issuers.get_unchecked(issuer.clone()).is_revoked
+}

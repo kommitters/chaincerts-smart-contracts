@@ -7,6 +7,7 @@ use soroban_sdk::{contract, contractimpl, contractmeta, panic_with_error, Addres
 const LEDGERS_THRESHOLD: u32 = 1;
 const LEDGERS_TO_EXTEND: u32 = 535_000;
 const DEFAULT_AMOUNT: u32 = 20;
+const MAX_AMOUNT: u32 = 100;
 
 contractmeta!(
     key = "Description",
@@ -22,6 +23,10 @@ impl VCsTrait for VCsContract {
         if storage::has_admin(&e) {
             panic_with_error!(e, ContractError::AlreadyInitialized);
         }
+        if amount.map_or(false, |a| a > MAX_AMOUNT) {
+            panic_with_error!(e, ContractError::AmountLimitExceeded);
+        }
+
         storage::write_admin(&e, &admin);
         storage::write_amount(&e, &amount.unwrap_or(DEFAULT_AMOUNT));
 

@@ -449,6 +449,22 @@ fn test_register_did() {
 }
 
 #[test]
+#[should_panic(expected = "HostError: Error(Contract, #9)")]
+fn test_register_did_with_duplicated_did() {
+    let VaultContractTest {
+        env: _,
+        admin,
+        did: duplicated_did,
+        dids,
+        issuer: _,
+        contract,
+    } = VaultContractTest::setup();
+
+    contract.initialize(&admin, &dids);
+    contract.register_did(&admin, &duplicated_did);
+}
+
+#[test]
 #[should_panic(expected = "HostError: Error(Contract, #2)")]
 fn test_register_did_with_invalid_admin() {
     let VaultContractTest {

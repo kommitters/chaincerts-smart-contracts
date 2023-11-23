@@ -128,6 +128,10 @@ impl VaultTrait for VaultContract {
         validate_admin(&e, admin);
         let mut dids = storage::read_dids(&e);
 
+        if did::is_registered(&dids, &did) {
+            panic_with_error!(e, ContractError::DuplicatedDID)
+        }
+
         dids.set(
             did.clone(),
             Did {

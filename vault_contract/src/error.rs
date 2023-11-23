@@ -12,4 +12,5 @@ pub enum ContractError {
     DidNotFound = 6,
     IssuerRevoked = 7,
     VCNotFound = 8,
+    DuplicatedDID = 9,
 }

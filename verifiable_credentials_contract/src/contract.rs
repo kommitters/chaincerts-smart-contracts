@@ -2,9 +2,7 @@ use crate::error::ContractError;
 use crate::storage;
 
 use crate::vcs_trait::VCsTrait;
-use soroban_sdk::{
-    contract, contractimpl, contractmeta, panic_with_error, Address, Env, Map, Vec,
-};
+use soroban_sdk::{contract, contractimpl, contractmeta, panic_with_error, Address, Env, Map, Vec};
 
 const LEDGERS_THRESHOLD: u32 = 1;
 const LEDGERS_TO_EXTEND: u32 = 535_000;
@@ -28,8 +26,8 @@ impl VCsTrait for VCsContract {
         storage::write_amount(&e, &amount.unwrap_or(DEFAULT_AMOUNT));
 
         // set initial empty values
-        storage::write_vcs(&e,  &Vec::new(&e));
-        storage::write_revocations(&e,  &Map::new(&e));
+        storage::write_vcs(&e, &Vec::new(&e));
+        storage::write_revocations(&e, &Map::new(&e));
 
         e.storage()
             .instance()

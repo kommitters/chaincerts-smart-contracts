@@ -1,13 +1,13 @@
-use soroban_sdk::{contracttype, Address, Env, String, Vec, Map};
 use crate::revocation::Revocation;
+use soroban_sdk::{contracttype, Address, Env, Map, String, Vec};
 
 #[derive(Clone)]
 #[contracttype]
 pub enum DataKey {
-    Admin,           // Address
-    Amount,          // U32
-    VCs,             // Vec<String>
-    Revocations,     // Map<String, Revocation>
+    Admin,       // Address
+    Amount,      // U32
+    VCs,         // Vec<String>
+    Revocations, // Map<String, Revocation>
 }
 
 pub fn has_admin(e: &Env) -> bool {

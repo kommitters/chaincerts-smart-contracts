@@ -1,4 +1,4 @@
-![CHAINCERTS_LOGO](https://github.com/kommitters/chaincerts-smart-contracts/assets/1649973/a43a4a8b-932b-47e5-af63-470e35ab9330)
+[![CHAINCERTS_LOGO](https://github.com/kommitters/chaincerts-smart-contracts/assets/1649973/a43a4a8b-932b-47e5-af63-470e35ab9330)][chaincerts.co]
 
 Issue, store, and verify your credentials backed by smart contracts on Soroban.
 
@@ -30,6 +30,7 @@ Chaincerts utilizes [Decentralized Identifiers (DIDs)][w3c-did-core-spec] and [V
 ## Decentralized Identifiers (DIDs)
 The DID smart contract strictly adheres to the [W3C DID specification][w3c-did-core-spec] and is a foundational component within the verifiable credential ecosystem. It empowers individuals and issuers to establish and manage their self-sovereign identities on the Stellar blockchain.
 
+> [!NOTE]
 >  🤝
 > In line with our commitment to contribute to the **Stellar community**, we have developed a Soroban DID contract that serves as an interface. This contract can be utilized by anyone in the community seeking to innovate with a solution that follows the W3C specification.
 
@@ -55,28 +56,23 @@ Through the implementation of control access mechanisms, the smart contract auth
 
 <br/>
 
-# Changelog
-Features and bug fixes are listed in the [CHANGELOG][changelog] file.
-
-<br/>
-
-# Code of conduct
-We welcome everyone to contribute. Make sure you have read the [CODE_OF_CONDUCT][coc] before.
-
-<br/>
-
-# Contributing
-For information on how to contribute, please refer to our [CONTRIBUTING][contributing] guide.
-
-<br/>
-
 # License
-This library is licensed under a GNU AGPLv3 license. See [LICENSE][license] for details.
+This software is licensed under the [Apache License 2.0][license] © kommit.
 
 <br/>
 
-# Acknowledgements
-Made with 💙 by the [kommit OSPO](https://kommit.co)
+<hr/>
+
+[<img src="https://github.com/kommitters/chaincerts-smart-contracts/assets/1649973/d60d775f-166b-4968-89b6-8be847993f8c" width="80px" alt="kommit"/>](https://kommit.co)
+
+<sub>
+
+[Website][kommit-website] •
+[Github][kommit-github] •
+[X][kommit-x] •
+[LinkedIn][kommit-linkedin]
+
+</sub>
 
 [chaincerts.co]: https://chaincerts.co
 [soroban-setup]: https://soroban.stellar.org/docs/getting-started/setup
@@ -89,3 +85,7 @@ Made with 💙 by the [kommit OSPO](https://kommit.co)
 [did-repo]: https://github.com/kommitters/soroban-did-contract
 [vcs-issuance-repo]: https://github.com/kommitters/chaincerts-smart-contracts/tree/main/issuance_contract
 [vcs-storage-repo]: https://github.com/kommitters/chaincerts-smart-contracts/tree/main/vault_contract
+[kommit-website]: https://kommit.co
+[kommit-github]: https://github.com/kommitters
+[kommit-x]: https://twitter.com/kommitco
+[kommit-linkedin]: https://www.linkedin.com/company/kommit-co

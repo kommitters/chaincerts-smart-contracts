@@ -1,22 +1,23 @@
-use crate::contract::{VCsContract, VCsContractClient};
+use crate::contract::{VCIssuanceContract, VCIssuanceContractClient};
 use soroban_sdk::{testutils::Address as _, Address, Env};
 
-pub struct VCsContractTest<'a> {
+pub struct VCIssuanceContractTest<'a> {
     pub env: Env,
     pub admin: Address,
     pub amount: Option<u32>,
-    pub contract: VCsContractClient<'a>,
+    pub contract: VCIssuanceContractClient<'a>,
 }
 
-impl<'a> VCsContractTest<'a> {
+impl<'a> VCIssuanceContractTest<'a> {
     pub fn setup() -> Self {
         let env: Env = Default::default();
         env.mock_all_auths();
         let admin = Address::random(&env);
-        let contract = VCsContractClient::new(&env, &env.register_contract(None, VCsContract));
+        let contract =
+            VCIssuanceContractClient::new(&env, &env.register_contract(None, VCIssuanceContract));
         let amount = Some(10);
 
-        VCsContractTest {
+        VCIssuanceContractTest {
             env,
             admin,
             amount,

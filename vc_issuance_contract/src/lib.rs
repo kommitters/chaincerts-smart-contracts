@@ -1,9 +1,9 @@
 #![no_std]
 mod contract;
 mod error;
-mod revocation;
 mod storage;
-mod vcs_trait;
+mod vc_issuance_trait;
+mod vc_revocation;
 
 #[cfg(test)]
 mod test;

@@ -1,5 +1,5 @@
 [package]
-name = "verifiable_credentials_contract"
+name = "vc_issuance_contract"
 version = "0.1.0"
 edition = "2021"
 

@@ -1,7 +1,7 @@
 use crate::error::ContractError;
 use crate::storage;
 
-use crate::vcs_trait::VCsTrait;
+use crate::vc_issuance_trait::VCIssuanceTrait;
 use soroban_sdk::{contract, contractimpl, contractmeta, panic_with_error, Address, Env, Map, Vec};
 
 const LEDGERS_THRESHOLD: u32 = 1;
@@ -11,14 +11,14 @@ const MAX_AMOUNT: u32 = 100;
 
 contractmeta!(
     key = "Description",
-    val = "Smart contract for Verifiable Credentials",
+    val = "Smart Contract to issue, transfer, verify, and revoke Verifiable Credentials (VCs).",
 );
 
 #[contract]
-pub struct VCsContract;
+pub struct VCIssuanceContract;
 
 #[contractimpl]
-impl VCsTrait for VCsContract {
+impl VCIssuanceTrait for VCIssuanceContract {
     fn initialize(e: Env, admin: Address, amount: Option<u32>) {
         if storage::has_admin(&e) {
             panic_with_error!(e, ContractError::AlreadyInitialized);
@@ -32,7 +32,7 @@ impl VCsTrait for VCsContract {
 
         // set initial empty values
         storage::write_vcs(&e, &Vec::new(&e));
-        storage::write_revocations(&e, &Map::new(&e));
+        storage::write_vcs_revocations(&e, &Map::new(&e));
 
         e.storage()
             .instance()

@@ -1,4 +1,4 @@
-use crate::vc_revocation::VCRevocation;
+use crate::revocation::Revocation;
 use soroban_sdk::{contracttype, Address, Env, Map, String, Vec};
 
 #[derive(Clone)]
@@ -7,7 +7,7 @@ pub enum DataKey {
     Admin,                 // Address
     Amount,                // U32
     VerifiableCredentials, // Vec<String>
-    RevocationsList,       // Map<String, Revocation>
+    RevocationList,        // Map<String, Revocation>
 }
 
 pub fn has_admin(e: &Env) -> bool {
@@ -30,7 +30,7 @@ pub fn write_vcs(e: &Env, vc: &Vec<String>) {
     e.storage().instance().set(&key, vc)
 }
 
-pub fn write_vcs_revocations(e: &Env, revocations: &Map<String, VCRevocation>) {
-    let key = DataKey::RevocationsList;
+pub fn write_vcs_revocations(e: &Env, revocations: &Map<String, Revocation>) {
+    let key = DataKey::RevocationList;
     e.storage().instance().set(&key, revocations)
 }

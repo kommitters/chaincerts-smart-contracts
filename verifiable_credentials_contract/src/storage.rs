@@ -20,6 +20,11 @@ pub fn write_admin(e: &Env, id: &Address) {
     e.storage().instance().set(&key, id);
 }
 
+pub fn read_admin(e: &Env) -> Address {
+    let key = DataKey::Admin;
+    e.storage().instance().get(&key).unwrap()
+}
+
 pub fn write_amount(e: &Env, amount: &u32) {
     let key = DataKey::Amount;
     e.storage().instance().set(&key, amount)
@@ -28,6 +33,11 @@ pub fn write_amount(e: &Env, amount: &u32) {
 pub fn write_vcs(e: &Env, vc: &Vec<String>) {
     let key = DataKey::VCs;
     e.storage().instance().set(&key, vc)
+}
+
+pub fn read_vcs(e: &Env) -> Vec<String> {
+    let key = DataKey::VCs;
+    e.storage().instance().get(&key).unwrap()
 }
 
 pub fn write_revocations(e: &Env, revocations: &Map<String, Revocation>) {

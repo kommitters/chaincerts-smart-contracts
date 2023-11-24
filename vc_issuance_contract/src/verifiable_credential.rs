@@ -7,7 +7,7 @@ pub fn add_vc(e: &Env, vc_id: &String) {
     let mut vcs = storage::read_vcs(e);
     vcs.push_front(vc_id.clone());
 
-    storage::write_vcs(&e, &vcs);
+    storage::write_vcs(e, &vcs);
 }
 
 pub fn generate_id(e: &Env) -> String {

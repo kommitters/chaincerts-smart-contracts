@@ -7,9 +7,7 @@ mod storage;
 mod vc_issuance_trait;
 mod verifiable_credential;
 mod vault_contract {
-    soroban_sdk::contractimport!(
-        file = "../target/wasm32-unknown-unknown/release/vault_contract.wasm"
-    );
+    soroban_sdk::contractimport!(file = "./vault_contract.wasm");
 }
 
 #[cfg(test)]

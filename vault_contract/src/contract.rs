@@ -1,5 +1,5 @@
 use crate::did;
-use crate::did::DidWithVCs;
+use crate::did::{Did, DidWithVCs};
 use crate::error::ContractError;
 use crate::issuer;
 use crate::issuer::Issuer;
@@ -103,6 +103,44 @@ impl VaultTrait for VaultContract {
         }
 
         dids_with_vcs
+    }
+
+    fn revoke_did(e: Env, admin: Address, did: String) {
+        validate_admin(&e, admin);
+        let mut dids = storage::read_dids(&e);
+        if !did::is_registered(&dids, &did) {
+            panic_with_error!(e, ContractError::DidNotFound)
+        }
+
+        let did_struct = dids.get_unchecked(did.clone());
+        dids.set(
+            did.clone(),
+            Did {
+                did: did.clone(),
+                is_revoked: true,
+                vcs: did_struct.vcs,
+            },
+        );
+        storage::write_dids(&e, &dids);
+    }
+
+    fn register_did(e: Env, admin: Address, did: String) {
+        validate_admin(&e, admin);
+        let mut dids = storage::read_dids(&e);
+
+        if did::is_registered(&dids, &did) {
+            panic_with_error!(e, ContractError::DuplicatedDID)
+        }
+
+        dids.set(
+            did.clone(),
+            Did {
+                did: did.clone(),
+                is_revoked: false,
+                vcs: Vec::new(&e),
+            },
+        );
+        storage::write_dids(&e, &dids)
     }
 }
 

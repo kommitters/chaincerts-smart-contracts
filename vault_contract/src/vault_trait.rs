@@ -27,4 +27,10 @@ pub trait VaultTrait {
 
     /// Retrieves the list of verifiable credentials from the storage grouped by DID.
     fn list_vcs(e: Env) -> Map<String, DidWithVCs>;
+
+    /// Revokes a DID given its DID URI.
+    fn revoke_did(e: Env, admin: Address, did: String);
+
+    /// Registers a new DID given a DID URI.
+    fn register_did(e: Env, admin: Address, did: String);
 }

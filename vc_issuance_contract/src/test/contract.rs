@@ -63,8 +63,8 @@ fn test_issue() {
         amount: _,
         contract,
     } = VCIssuanceContractTest::setup();
-    let vc_data = String::from_slice(&env, "vc_data");
-    let recipient_did = String::from_slice(&env, "recipient_did");
+    let vc_data = String::from_slice(&env, "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y");
+    let recipient_did = String::from_slice(&env, "did:chaincerts:pe4t2r94dftr1n1gf6jikt6a");
 
     let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did);
     contract.issue(&admin, &vc_data, &recipient_did, &vault_contract_id);
@@ -81,8 +81,8 @@ fn test_issue_with_invalid_admin() {
     } = VCIssuanceContractTest::setup();
     let invalid_admin = Address::random(&env);
 
-    let vc_data = String::from_slice(&env, "vc_data");
-    let recipient_did = String::from_slice(&env, "recipient_did");
+    let vc_data = String::from_slice(&env, "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y");
+    let recipient_did = String::from_slice(&env, "did:chaincerts:pe4t2r94dftr1n1gf6jikt6a");
 
     let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did);
     contract.issue(&invalid_admin, &vc_data, &recipient_did, &vault_contract_id);

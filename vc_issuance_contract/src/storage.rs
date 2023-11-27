@@ -44,3 +44,8 @@ pub fn write_vcs_revocations(e: &Env, revocations: &Map<String, Revocation>) {
     let key = DataKey::RevocationList;
     e.storage().instance().set(&key, revocations)
 }
+
+pub fn read_vcs_revocations(e: &Env) -> Map<String, Revocation> {
+    let key = DataKey::RevocationList;
+    e.storage().instance().get(&key).unwrap()
+}

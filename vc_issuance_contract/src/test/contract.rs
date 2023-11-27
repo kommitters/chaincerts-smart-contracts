@@ -87,3 +87,73 @@ fn test_issue_with_invalid_admin() {
     let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did);
     contract.issue(&invalid_admin, &vc_data, &recipient_did, &vault_contract_id);
 }
+
+#[test]
+#[should_panic(expected = "HostError: Error(Contract, #4)")]
+fn test_revoke_vc_with_invalid_vc() {
+    let VCIssuanceContractTest {
+        env,
+        admin,
+        amount: _,
+        contract,
+    } = VCIssuanceContractTest::setup();
+    contract.initialize(&admin, &Some(10));
+
+    let vc_id = String::from_slice(&env, "vc_id1");
+    let date = String::from_slice(&env, "date1");
+
+    contract.revoke(&admin, &vc_id, &date);
+}
+
+#[test]
+fn test_revoke_vc() {
+    let VCIssuanceContractTest {
+        env,
+        admin,
+        amount: _,
+        contract,
+    } = VCIssuanceContractTest::setup();
+    let vc_data = String::from_slice(&env, "vc_data");
+    let recipient_did = String::from_slice(&env, "recipient_did");
+    let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did);
+    let vc_id = contract.issue(&admin, &vc_data, &recipient_did, &vault_contract_id);
+
+    let date = String::from_slice(&env, "date1");
+
+    contract.revoke(&admin, &vc_id, &date);
+}
+
+#[test]
+fn test_verify_vc() {
+    let VCIssuanceContractTest {
+        env,
+        admin,
+        amount: _,
+        contract,
+    } = VCIssuanceContractTest::setup();
+    let vc_data = String::from_slice(&env, "vc_data");
+    let recipient_did = String::from_slice(&env, "recipient_did");
+    let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did);
+    let vc_id = contract.issue(&admin, &vc_data, &recipient_did, &vault_contract_id);
+
+    assert!(contract.verify(&vc_id));
+}
+
+#[test]
+fn test_verify_vc_with_revoked_vc() {
+    let VCIssuanceContractTest {
+        env,
+        admin,
+        amount: _,
+        contract,
+    } = VCIssuanceContractTest::setup();
+    let vc_data = String::from_slice(&env, "vc_data");
+    let recipient_did = String::from_slice(&env, "recipient_did");
+    let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did);
+    let vc_id = contract.issue(&admin, &vc_data, &recipient_did, &vault_contract_id);
+    let date = String::from_slice(&env, "date");
+
+    contract.revoke(&admin, &vc_id, &date);
+
+    assert!(!contract.verify(&vc_id));
+}

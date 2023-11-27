@@ -12,4 +12,10 @@ pub trait VCIssuanceTrait {
         vc_data: String,
         storage_address: Address,
     ) -> String;
+
+    /// Verifies if the Verifiable Credential is not revoked
+    fn verify(e: Env, vc_id: String) -> bool;
+
+    /// Revokes a Verifiable Credential
+    fn revoke(e: Env, admin: Address, vc_id: String, date: String);
 }

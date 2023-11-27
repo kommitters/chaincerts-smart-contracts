@@ -1,4 +1,5 @@
 use crate::error::ContractError;
+use crate::revocation::Revocation;
 use crate::storage;
 use crate::vault_contract;
 use crate::vc_issuance_trait::VCIssuanceTrait;
@@ -58,6 +59,31 @@ impl VCIssuanceTrait for VCIssuanceContract {
 
         vc_id
     }
+
+    fn verify(e: Env, vc_id: String) -> bool {
+        validate_vc(&e, &vc_id);
+
+        let revocations = storage::read_vcs_revocations(&e);
+
+        revocations.get(vc_id).is_none()
+    }
+
+    fn revoke(e: Env, admin: Address, vc_id: String, date: String) {
+        validate_admin(&e, &admin);
+        validate_vc(&e, &vc_id);
+
+        let mut revocations = storage::read_vcs_revocations(&e);
+
+        revocations.set(
+            vc_id.clone(),
+            Revocation {
+                vc_id: vc_id.clone(),
+                date,
+            },
+        );
+
+        storage::write_vcs_revocations(&e, &revocations);
+    }
 }
 
 fn validate_admin(e: &Env, admin: &Address) {
@@ -66,4 +92,12 @@ fn validate_admin(e: &Env, admin: &Address) {
         panic_with_error!(e, ContractError::NotAuthorized)
     }
     admin.require_auth();
+}
+
+fn validate_vc(e: &Env, vc_id: &String) {
+    let vcs = storage::read_vcs(e);
+
+    if !vcs.contains(vc_id) {
+        panic_with_error!(e, ContractError::IssuerNotFound)
+    }
 }

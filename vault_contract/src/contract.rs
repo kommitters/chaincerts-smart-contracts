@@ -164,7 +164,6 @@ fn validate_did(e: &Env, did: &String) {
 }
 
 fn validate_issuer(e: &Env, issuer: &Address, did: &String) {
-    issuer.require_auth();
     let issuers: Map<Address, Issuer> = storage::read_issuers(e, did);
 
     if !issuer::is_registered(&issuers, issuer) {

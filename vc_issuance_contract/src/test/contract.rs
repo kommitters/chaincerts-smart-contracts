@@ -1,4 +1,7 @@
 use crate::test::setup::VCIssuanceContractTest;
+use soroban_sdk::{testutils::Address as _, Address, String};
+
+use super::setup::create_vc;
 
 #[test]
 fn test_initialize_with_amount() {
@@ -50,4 +53,37 @@ fn test_initialize_an_already_initialized_contract() {
 
     contract.initialize(&admin, &amount);
     contract.initialize(&admin, &amount);
+}
+
+#[test]
+fn test_issue() {
+    let VCIssuanceContractTest {
+        env,
+        admin,
+        amount: _,
+        contract,
+    } = VCIssuanceContractTest::setup();
+    let vc_data = String::from_slice(&env, "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y");
+    let recipient_did = String::from_slice(&env, "did:chaincerts:pe4t2r94dftr1n1gf6jikt6a");
+
+    let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did);
+    contract.issue(&admin, &vc_data, &recipient_did, &vault_contract_id);
+}
+
+#[test]
+#[should_panic(expected = "HostError: Error(Contract, #2)")]
+fn test_issue_with_invalid_admin() {
+    let VCIssuanceContractTest {
+        env,
+        admin,
+        amount: _,
+        contract,
+    } = VCIssuanceContractTest::setup();
+    let invalid_admin = Address::random(&env);
+
+    let vc_data = String::from_slice(&env, "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y");
+    let recipient_did = String::from_slice(&env, "did:chaincerts:pe4t2r94dftr1n1gf6jikt6a");
+
+    let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did);
+    contract.issue(&invalid_admin, &vc_data, &recipient_did, &vault_contract_id);
 }

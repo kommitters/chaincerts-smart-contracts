@@ -77,3 +77,30 @@ fn test_issue() {
     contract.initialize(&admin, &amount);
     contract.issue(&admin, &vc_data, &recipient_did, &vault_contract_id);
 }
+
+#[test]
+#[should_panic(expected = "HostError: Error(Contract, #2)")]
+fn test_issue_with_invalid_admin() {
+    let VCIssuanceContractTest {
+        env,
+        admin,
+        amount,
+        contract,
+    } = VCIssuanceContractTest::setup();
+
+    let vc_data = String::from_slice(&env, "vc_data");
+    let recipient_did = String::from_slice(&env, "recipient_did");
+    let vault_admin = Address::random(&env);
+    let invalid_admin = Address::random(&env);
+
+    let vault_contract_id = env.register_contract_wasm(None, vault_contract::WASM);
+    let vault_client = vault_contract::Client::new(&env, &vault_contract_id);
+    let dids = vec![&env, recipient_did.clone()];
+
+    vault_client.initialize(&vault_admin, &dids);
+    vault_client.authorize_issuer(&vault_admin, &admin, &recipient_did);
+
+    contract.initialize(&admin, &amount);
+
+    contract.issue(&invalid_admin, &vc_data, &recipient_did, &vault_contract_id);
+}

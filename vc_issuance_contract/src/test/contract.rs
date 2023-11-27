@@ -1,6 +1,7 @@
 use crate::test::setup::VCIssuanceContractTest;
-use crate::vault_contract;
-use soroban_sdk::{testutils::Address as _, vec, Address, String};
+use soroban_sdk::{testutils::Address as _, Address, String};
+
+use super::setup::create_vc;
 
 #[test]
 fn test_initialize_with_amount() {
@@ -59,22 +60,13 @@ fn test_issue() {
     let VCIssuanceContractTest {
         env,
         admin,
-        amount,
+        amount: _,
         contract,
     } = VCIssuanceContractTest::setup();
-
     let vc_data = String::from_slice(&env, "vc_data");
     let recipient_did = String::from_slice(&env, "recipient_did");
-    let vault_admin = Address::random(&env);
 
-    let vault_contract_id = env.register_contract_wasm(None, vault_contract::WASM);
-    let vault_client = vault_contract::Client::new(&env, &vault_contract_id);
-    let dids = vec![&env, recipient_did.clone()];
-
-    vault_client.initialize(&vault_admin, &dids);
-    vault_client.authorize_issuer(&vault_admin, &admin, &recipient_did);
-
-    contract.initialize(&admin, &amount);
+    let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did);
     contract.issue(&admin, &vc_data, &recipient_did, &vault_contract_id);
 }
 
@@ -84,23 +76,14 @@ fn test_issue_with_invalid_admin() {
     let VCIssuanceContractTest {
         env,
         admin,
-        amount,
+        amount: _,
         contract,
     } = VCIssuanceContractTest::setup();
+    let invalid_admin = Address::random(&env);
 
     let vc_data = String::from_slice(&env, "vc_data");
     let recipient_did = String::from_slice(&env, "recipient_did");
-    let vault_admin = Address::random(&env);
-    let invalid_admin = Address::random(&env);
 
-    let vault_contract_id = env.register_contract_wasm(None, vault_contract::WASM);
-    let vault_client = vault_contract::Client::new(&env, &vault_contract_id);
-    let dids = vec![&env, recipient_did.clone()];
-
-    vault_client.initialize(&vault_admin, &dids);
-    vault_client.authorize_issuer(&vault_admin, &admin, &recipient_did);
-
-    contract.initialize(&admin, &amount);
-
+    let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did);
     contract.issue(&invalid_admin, &vc_data, &recipient_did, &vault_contract_id);
 }

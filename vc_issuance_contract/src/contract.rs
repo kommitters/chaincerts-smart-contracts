@@ -1,7 +1,8 @@
+use crate::error::ContractError;
 use crate::storage;
 use crate::vault_contract;
 use crate::vc_issuance_trait::VCIssuanceTrait;
-use crate::{error::ContractError, verifiable_credential};
+use crate::verifiable_credential;
 use soroban_sdk::{
     contract, contractimpl, contractmeta, panic_with_error, Address, Env, Map, String, Vec,
 };

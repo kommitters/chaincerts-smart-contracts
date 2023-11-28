@@ -13,7 +13,7 @@ Issue, store, and verify your credentials backed by smart contracts on Soroban.
 <br/>
 
 # Build in the Open ☝️
-As part of our commitment to transparency, we promote the adoption of a _"build in the open"_ approach to developing these contracts. This approach allows anyone to review and inspect the underlying code of smart contracts, ensuring that they work as intended and do not harbor any hidden vulnerabilities or malicious code. We aim to foster trust within the ecosystem and community, promoting greater confidence in using Chaincerts.
+As part of our commitment to transparency, we promote the adoption of a **"build in the open"** approach to developing these contracts. This approach allows anyone to use or inspect the underlying code of smart contracts, ensuring that it works as intended and does not contain any hidden vulnerabilities or malicious code. We aim to foster trust within the ecosystem and community, promoting greater confidence in using Chaincerts.
 
 For more details, please refer to the open source [LICENSE][license].
 
@@ -30,16 +30,12 @@ Chaincerts utilizes [Decentralized Identifiers (DIDs)][w3c-did-core-spec] and [V
 ## Decentralized Identifiers (DIDs)
 The DID smart contract strictly adheres to the [W3C DID specification][w3c-did-core-spec] and is a foundational component within the verifiable credential ecosystem. It empowers individuals and issuers to establish and manage their self-sovereign identities on the Stellar blockchain.
 
-> [!NOTE]
->  🤝
-> In line with our commitment to contribute to the **Stellar community**, we have developed a Soroban DID contract that serves as an interface. This contract can be utilized by anyone in the community seeking to innovate with a solution that follows the W3C specification.
-
 [**DID smart contract code**][did-repo]
 
 <br/>
 
 ## Verifiable Credentials Issuance
-The Verifiable Credentials (VCs) Issuance smart contract establishes the foundational rules for issuing, transferring, and revoking verifiable credentials. It acts as the governing framework, ensuring the secure and standardized management of on-chain verifiable credentials.
+The Verifiable Credentials (VCs) Issuance smart contract establishes the rules for issuing, transferring, and revoking verifiable credentials. It acts as the governing framework, ensuring the secure and standardized management of on-chain verifiable credentials.
 
 This smart contract prioritizes security and privacy by avoiding the persistence of structured data or personal information. Data is handled exclusively in an encrypted form, with access granted only to owners through cryptographic mechanisms. This approach is particularly critical in insecure communication channels such as blockchain ledgers. For more details, refer to the [W3C KeyAgreement specification](https://www.w3.org/TR/did-core/#dfn-keyagreement).
 
@@ -50,7 +46,7 @@ This smart contract prioritizes security and privacy by avoiding the persistence
 ## Vault: Verifiable Credentials Storage
 The Vault smart contract is a secure repository for safeguarding Verifiable Credentials (VCs).
 
-Through the implementation of control access mechanisms, the smart contract authorizes issuers to deposit credentials through issuance contracts. VCs stored within the Vault utilize an encryption mechanism that prioritizes security and data privacy, ensuring only credential owners can view the information.
+Through the implementation of control access mechanisms, the smart contract authorizes issuers to deposit credentials through issuance contracts. VCs stored within the Vault utilize an encryption mechanism that prioritizes security and data privacy.
 
 [**Vault smart contract code**][vcs-storage-repo]
 

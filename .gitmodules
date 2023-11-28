@@ -1,0 +1,3 @@
+[submodule "did_contract"]
+	path = did_contract
+	url = git@github.com:kommitters/soroban-did-contract.git

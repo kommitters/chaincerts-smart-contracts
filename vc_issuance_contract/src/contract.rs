@@ -1,10 +1,11 @@
 use crate::error::ContractError;
+use crate::revocation::Revocation;
 use crate::storage;
 use crate::vault_contract;
 use crate::vc_issuance_trait::VCIssuanceTrait;
 use crate::verifiable_credential;
 use soroban_sdk::{
-    contract, contractimpl, contractmeta, panic_with_error, Address, Env, Map, String, Vec,
+    contract, contractimpl, contractmeta, map, panic_with_error, Address, Env, Map, String, Vec,
 };
 
 const LEDGERS_THRESHOLD: u32 = 1;
@@ -58,6 +59,38 @@ impl VCIssuanceTrait for VCIssuanceContract {
 
         vc_id
     }
+
+    fn verify(e: Env, vc_id: String) -> Map<String, String> {
+        validate_vc(&e, &vc_id);
+        let revocations = storage::read_vcs_revocations(&e);
+
+        let status_str = String::from_slice(&e, "status");
+        let since_str = String::from_slice(&e, "since");
+        let revoked_str = String::from_slice(&e, "revoked");
+        let valid_str = String::from_slice(&e, "valid");
+
+        match revocations.get(vc_id) {
+            Some(revocation) => map![&e, (status_str, revoked_str), (since_str, revocation.date)],
+            None => map![&e, (status_str, valid_str)],
+        }
+    }
+
+    fn revoke(e: Env, admin: Address, vc_id: String, date: String) {
+        validate_admin(&e, &admin);
+        validate_vc(&e, &vc_id);
+
+        let mut revocations = storage::read_vcs_revocations(&e);
+
+        revocations.set(
+            vc_id.clone(),
+            Revocation {
+                vc_id: vc_id.clone(),
+                date,
+            },
+        );
+
+        storage::write_vcs_revocations(&e, &revocations);
+    }
 }
 
 fn validate_admin(e: &Env, admin: &Address) {
@@ -66,4 +99,12 @@ fn validate_admin(e: &Env, admin: &Address) {
         panic_with_error!(e, ContractError::NotAuthorized)
     }
     admin.require_auth();
+}
+
+fn validate_vc(e: &Env, vc_id: &String) {
+    let vcs = storage::read_vcs(e);
+
+    if !vcs.contains(vc_id) {
+        panic_with_error!(e, ContractError::VCNotFound)
+    }
 }

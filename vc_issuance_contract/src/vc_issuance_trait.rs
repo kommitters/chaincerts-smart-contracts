@@ -1,4 +1,4 @@
-use soroban_sdk::{Address, Env, String};
+use soroban_sdk::{Address, Env, Map, String};
 
 pub trait VCIssuanceTrait {
     /// Initializes the Verifiable Credentials Issuance Contract by setting the admin and an optional amount.
@@ -12,4 +12,10 @@ pub trait VCIssuanceTrait {
         vc_data: String,
         storage_address: Address,
     ) -> String;
+
+    /// Verifies if the Verifiable Credential is not revoked
+    fn verify(e: Env, vc_id: String) -> Map<String, String>;
+
+    /// Revokes a Verifiable Credential
+    fn revoke(e: Env, admin: Address, vc_id: String, date: String);
 }

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.12.0 (11.28.2023)
+
+- [Update docs](https://github.com/kommitters/chaincerts-smart-contracts/pull/148)
+- [Reference new DID contract](https://github.com/kommitters/chaincerts-smart-contracts/pull/150)
+- [First release of Verifiable Credentials issuance contract](https://github.com/kommitters/chaincerts-smart-contracts/issues/144)
+- [First release of Vault contract](https://github.com/kommitters/chaincerts-smart-contracts/issues/133)
+
 ## 0.11.1 (11.10.2023)
 
 - [Update chaincerts logo in README](https://github.com/kommitters/chaincerts-smart-contracts/pull/130)

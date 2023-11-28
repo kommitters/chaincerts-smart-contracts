@@ -54,15 +54,15 @@ pub fn create_vc(
 
 pub fn get_revoked_vc_map(env: &Env, date: String) -> Map<String, String> {
     let status_str = String::from_slice(env, "status");
-    let since_str = String::from_slice(env, "Since");
-    let revoked_str = String::from_slice(env, "Revoked");
+    let since_str = String::from_slice(env, "since");
+    let revoked_str = String::from_slice(env, "revoked");
 
     map![env, (status_str, revoked_str), (since_str, date)]
 }
 
 pub fn get_valid_vc_map(env: &Env) -> Map<String, String> {
     let status_str = String::from_slice(env, "status");
-    let valid_str = String::from_slice(env, "Valid");
+    let valid_str = String::from_slice(env, "valid");
 
     map![env, (status_str, valid_str)]
 }

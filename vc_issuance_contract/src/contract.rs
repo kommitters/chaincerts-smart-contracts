@@ -65,9 +65,10 @@ impl VCIssuanceTrait for VCIssuanceContract {
         let revocations = storage::read_vcs_revocations(&e);
 
         let status_str = String::from_slice(&e, "status");
-        let since_str = String::from_slice(&e, "Since");
-        let revoked_str = String::from_slice(&e, "Revoked");
-        let valid_str = String::from_slice(&e, "Valid");
+        let since_str = String::from_slice(&e, "since");
+        let revoked_str = String::from_slice(&e, "revoked");
+        let valid_str = String::from_slice(&e, "valid");
+
         match revocations.get(vc_id) {
             Some(revocation) => map![&e, (status_str, revoked_str), (since_str, revocation.date)],
             None => map![&e, (status_str, valid_str)],
@@ -104,6 +105,6 @@ fn validate_vc(e: &Env, vc_id: &String) {
     let vcs = storage::read_vcs(e);
 
     if !vcs.contains(vc_id) {
-        panic_with_error!(e, ContractError::IssuerNotFound)
+        panic_with_error!(e, ContractError::VCNotFound)
     }
 }

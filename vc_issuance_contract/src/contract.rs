@@ -5,7 +5,7 @@ use crate::vault_contract;
 use crate::vc_issuance_trait::VCIssuanceTrait;
 use crate::verifiable_credential;
 use soroban_sdk::{
-    contract, contractimpl, contractmeta, panic_with_error, Address, Env, Map, String, Vec,
+    contract, contractimpl, contractmeta, map, panic_with_error, Address, Env, Map, String, Vec,
 };
 
 const LEDGERS_THRESHOLD: u32 = 1;
@@ -60,12 +60,18 @@ impl VCIssuanceTrait for VCIssuanceContract {
         vc_id
     }
 
-    fn verify(e: Env, vc_id: String) -> bool {
+    fn verify(e: Env, vc_id: String) -> Map<String, String> {
         validate_vc(&e, &vc_id);
-
         let revocations = storage::read_vcs_revocations(&e);
 
-        revocations.get(vc_id).is_none()
+        let status_str = String::from_slice(&e, "status");
+        let since_str = String::from_slice(&e, "Since");
+        let revoked_str = String::from_slice(&e, "Revoked");
+        let valid_str = String::from_slice(&e, "Valid");
+        match revocations.get(vc_id) {
+            Some(revocation) => map![&e, (status_str, revoked_str), (since_str, revocation.date)],
+            None => map![&e, (status_str, valid_str)],
+        }
     }
 
     fn revoke(e: Env, admin: Address, vc_id: String, date: String) {

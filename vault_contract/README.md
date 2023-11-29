@@ -2,7 +2,9 @@
 <br/><br/>
 
 # Vault Smart Contract
-The Vault smart contract is a secure repository designed to safeguard Verifiable Credentials (VCs) in a blockchain environment. The primary purpose of this contract is to provide a dedicated and secure storage solution for managing Verifiable Credentials associated with decentralized identities (DIDs).
+The Vault smart contract is a secure repository for safeguarding Verifiable Credentials (VCs).
+
+Through the implementation of control access mechanisms, the smart contract authorizes issuers to deposit credentials through issuance contracts. VCs stored within the Vault utilize an encryption mechanism that prioritizes security and data privacy.
 
 ## Development
 
@@ -33,7 +35,7 @@ Before getting started with the development of the Vault smart contract, ensure 
 
 ## Vault Contract Functions
 
-The following functions define the behavior of the Vault smart contract, responsible for managing decentralized identities (DIDs) and their associated verifiable credentials (VCs).
+The following functions define the behavior of the Vault smart contract.
 
 ### `initialize`
 Initializes the Vault Contract by setting the admin and the initial DIDs.
@@ -41,7 +43,6 @@ Initializes the Vault Contract by setting the admin and the initial DIDs.
 ```rust
 fn initialize(e: Env, admin: Address, dids: Vec<String>);
 ```
-
 
 #### Parameters:
 
@@ -63,7 +64,8 @@ soroban contract invoke \
 ```
 
 ### `authorize_issuer`
-Authorizes an issuer adding it to the issuers map.
+
+Authorizes an issuer to issue verifiable credentials to a specific DID. If the DID is already registered or revoked, a specific error will be returned. The admin account is the only party authorized to invoke this function.
 
 ```rust
 fn authorize_issuer(e: Env, admin: Address, issuer: Address, did: String);
@@ -91,7 +93,7 @@ soroban contract invoke \
 ```
 
 ### `revoke_issuer`
-Revokes an issuer setting its is_revoked property to true.
+Revokes an issuer to prevent the issuance of verifiable credentials to a specific DID in the vault. The admin account is the only party authorized to invoke this function.
 
 ```rust
 fn revoke_issuer(e: Env, admin: Address, issuer: Address, did: String);
@@ -119,7 +121,7 @@ soroban contract invoke \
 ```
 
 ### `store_vc`:
-Stores the verifiable credential.
+Stores a verifiable credential related to a holder DID. This function is invoked by the issuer from the vc_issuance_contract smart contract.
 
 ```rust
 fn store_vc(
@@ -136,7 +138,7 @@ fn store_vc(
 
 - `e`: Environment object.
 - `vc_id`: String representing the unique identifier of the verifiable credential.
-- `vc_data`: String containing the verifiable credential data.
+- `vc_data`: String containing the encrypted verifiable credential data.
 - `recipient_did`: String representing the DID of the credential recipient.
 - `issuer_pk`: Address of the issuer's public key.
 - `issuance_contract_address`: Address of the contract responsible for credential issuance.
@@ -150,8 +152,8 @@ soroban contract invoke \
   --network testnet \
   -- \
   store_vc \
-  --vc_id "vc_id3" \
-  --vc_data "vc_data" \
+  --vc_id "vc_id" \
+  --vc_data "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y" \
   --recipient_did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h" \
   --issuer_pk GDSOFBSZMFIY5BMZT3R5FCQK6MJAR2PGDSWHOMHZFGFFGKUO32DBNJKC \
   --issuance_contract_address CBRM3HA7GLEI6QQ3O55RUKVRDSQASARUPKK6NXKXKKPWEYLE533GDYQD
@@ -177,11 +179,15 @@ soroban contract invoke \
   --network testnet \
   -- \
   get_vc \
-  --vc_id "vc_id"
+  --vc_id "t5iwuct2njbbcdu2nfwr32ib"
+
+# Response: VerifiableCredential
+
+{"data":"eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y","holder_did":"did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h","id":"t5iwuct2njbbcdu2nfwr32ib","issuance_contract":"CBWDZIBI5NZ77EPSZLJDS3RTM57D3CIBKAIIOFER2TZEZATUYBASYF65"}
 ```
 
 ### `list_vcs`:
-Retrieves the list of verifiable credentials from the storage grouped by DID.
+Retrieves the list of verifiable credentials from the storage grouped by DID. The admin account is the only party authorized to invoke this function.
 
 ```rust
 fn list_vcs(e: Env) -> Map<String, DidWithVCs>;
@@ -200,10 +206,13 @@ soroban contract invoke \
   --network testnet \
   -- \
   list_vcs
+
+#Response: Map<String, DidWithVCs>
+{"\"did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h\"":{"did":"did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h","is_revoked":false,"vcs":[{"data":"eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y","holder_did":"did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h","id":"t5iwuct2njbbcdu2nfwr32ib","issuance_contract":"CBWDZIBI5NZ77EPSZLJDS3RTM57D3CIBKAIIOFER2TZEZATUYBASYF65"}]}}
 ```
 
 ### `revoke_did`:
-Revokes a DID given its DID URI.
+Revokes a DID based on its DID URI to prevent the issuance of verifiable credentials to the specific DID. The admin account is the only party authorized to invoke this function.
 
 ```rust
 fn revoke_did(e: Env, admin: Address, did: String);
@@ -229,7 +238,7 @@ soroban contract invoke \
 ```
 
 ### `register_did`:
-Registers a new DID given a DID URI.
+Registers a new DID in the vault given a DID URI. The admin account is the only party authorized to invoke this function.
 
 ```rust
 fn register_did(e: Env, admin: Address, did: String);

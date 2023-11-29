@@ -63,8 +63,25 @@ Initializes the VC Issuance Contract by setting the admin.
 fn initialize(e: Env, admin: Address);
 ```
 
+#### Parameters:
+
+- e: Environment object.
+- admin: Address of the smart contract administrator.
+
+#### Example:
+
+```bash
+soroban contract invoke \
+  --id CONTRACT_ID \
+  --source SOURCE_ACCOUNT_SECRET_KEY \
+  --network testnet \
+  -- \
+  initialize \
+  --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA 
+```
+
 ### `issue`:
- Issues a new Verifiable Credential and returns the Verifiable Credential id as String.
+ Issues a new Verifiable Credential and returns the Verifiable Credential id as String. The admin account is the only party authorized to invoke this function.
 
 ```rust
 fn issue(
@@ -83,6 +100,20 @@ fn issue(
 - `vc_data`: String representing encrypted Verifiable Credential data.
 - `storage_address`: Vault smart contract address
 
+#### Example:
+
+```bash
+soroban contract invoke \
+  --id CONTRACT_ID \
+  --source SOURCE_ACCOUNT_SECRET_KEY \
+  --network testnet \
+  -- \
+  revoke \
+  --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
+  --vc_data "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y" \
+  --storage_address GR2RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA
+```
+
 ### `verify`
 Verifies if the Verifiable Credential has been revoked, it returns a Map with the respective status.
 
@@ -95,23 +126,65 @@ fn verify(e: Env, vc_id: String) -> Map<String, String>;
 - `e`: Environment object.
 - `vc_id`: String representing the VC ID to verify.
 
+#### Example: 
+
+```bash
+soroban contract invoke \
+  --id CONTRACT_ID \
+  --source SOURCE_ACCOUNT_SECRET_KEY \
+  --network testnet \
+  -- \
+  verify \
+  --vc_id "vc_id"
+```
+
 ### `revoke`
-Revokes a verifiable credential in a specific date.
+Revokes a verifiable credential in a specific date. The admin account is the only party authorized to invoke this function.
 
 ```rust
 fn revoke(e: Env, admin: Address, vc_id: String, date: String);
 ```
 
-Parameters:
+#### Parameters:
 
 - `e`: Environment object.
 - `admin`: Address of the smart contract administrator.
 - `vc_id`: ID of the VC to be revoked.
 - `date`: String representing the date where the VC is revoked.
 
+#### Example:
+
+```bash
+soroban contract invoke \
+  --id CONTRACT_ID \
+  --source SOURCE_ACCOUNT_SECRET_KEY \
+  --network testnet \
+  -- \
+  revoke \
+  --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
+  --vc_id "vc_id" \
+  --date "01/01/2010 14:10:10"
+```
 
 ## Deployment
-...
+
+1. Build the contract:
+    ```
+    soroban contract build
+    ```
+
+    This will generate a WASM file for the contract in the `target/wasm32-unknown-unknown/release/` directory.
+
+2. Deploy using Soroban CLI:
+    ```bash
+    soroban contract deploy \
+        --source-account SOURCE_ACCOUNT_SECRET_KEY \
+        --rpc-url https://rpc-futurenet.stellar.org \
+        --network-passphrase 'Test SDF Network ; October 2022' \
+        --wasm target/wasm32-unknown-unknown/release/vc_issuance_contract.wasm
+
+    CONTRACT_ID
+    ```
 
 ## Contract Errors
 
@@ -119,13 +192,8 @@ Parameters:
 | --- | --- | --- |
 | 1 | `AlreadyInitialized` | Contract has already been initialized |
 | 2 | `NotAuthorized` | Invoker lacks the necessary authorization as the contract administrator |
-| 3 | `EmptyDIDs` | The array of DIDs is empty |
-| 4 | `IssuerNotFound` | The specified issuer was not found |
-| 5 | `DidRevoked` | The DID cannot perform the action because it has been revoked |
-| 6 | `DidNotFound` | The specified DID was not found |
-| 7 | `IssuerRevoked` | The issuer cannot perform the action because it has been revoked |
-| 8 | `VCNotFound` | The Verifiable Credential (VC) was not found |
-| 9 | `DuplicatedDID` | The DID is already registered |
+| 3 | `AmountLimitExceeded` | The amount exceeds the issuance contract's capacity for certificates |
+| 4 | `VCNotFound` | The Verifiable Credential (VC) was not found |
 
 ## Changelog
 Features and bug fixes are listed in the [CHANGELOG][changelog] file.

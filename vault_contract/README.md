@@ -2,33 +2,291 @@
 <br/><br/>
 
 # Vault Smart Contract
-The Vault smart contract is a secure repository for safeguarding Verifiable Credentials (VCs) ...
-
+The Vault smart contract is a secure repository designed to safeguard Verifiable Credentials (VCs) in a blockchain environment. The primary purpose of this contract is to provide a dedicated and secure storage solution for managing Verifiable Credentials associated with decentralized identities (DIDs).
 
 ## Development
-...
 
 ### Pre-requirements
-...
+
+Before getting started with the development of the Vault smart contract, ensure the following pre-requirements are met:
+
+- [Soroban setup][soroban-setup].
 
 ### Setup
-...
 
-## Usage
-...
+1. Clone the repository:
+    ```
+    git clone git@github.com:kommitters/soroban-did-contract.git
+    ```
+
+2. Build the project and install dependencies:
+    ```
+    cd soroban-did-contract
+    soroban contract build
+    ```
+
+3. Run tests:
+    ```
+    cargo test
+    ```
+
+
+## Vault Contract Functions
+
+The following functions define the behavior of the Vault smart contract, responsible for managing decentralized identities (DIDs) and their associated verifiable credentials (VCs).
+
+### `initialize`
+Initializes the Vault Contract by setting the admin and the initial DIDs.
+
+```rust
+fn initialize(e: Env, admin: Address, dids: Vec<String>);
+```
+
+
+#### Parameters:
+
+- e: Environment object.
+- admin: Address of the smart contract administrator.
+- dids: Vector of strings representing the initial DIDs to be stored.
+
+#### Example:
 
 ```bash
-soroban contract deploy \
-    --source-account SOURCE_ACCOUNT_SECRET_KEY \
-    --rpc-url https://rpc-futurenet.stellar.org \
-    --network-passphrase 'Test SDF Network ; October 2022' \
-    --wasm target/wasm32-unknown-unknown/release/contract.wasm
+soroban contract invoke \
+  --id CA3E7M5TT4VH5CZU2YSJF3JR4S572LXQDVMCDEMSLGXHZHWW6GVO3PTR \
+  --source Mario \
+  --network testnet \
+  -- \
+  initialize \
+  --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
+  --dids '["did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h"]'
+```
 
-SUCCESS
+### `authorize_issuer`
+Authorizes an issuer adding it to the issuers map.
+
+```rust
+fn authorize_issuer(e: Env, admin: Address, issuer: Address, did: String);
+```
+
+#### Parameters:
+
+- `e`: Environment object.
+- `admin`: Address of the smart contract administrator.
+- `issuer`: Address of the issuer to be authorized.
+- `did`: String representing the DID associated with the issuer.
+
+#### Example:
+
+```bash
+soroban contract invoke \
+  --id CA3E7M5TT4VH5CZU2YSJF3JR4S572LXQDVMCDEMSLGXHZHWW6GVO3PTR \
+  --source Mario \
+  --network testnet \
+  -- \
+  authorize_issuer \
+  --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
+  --issuer GDSOFBSZMFIY5BMZT3R5FCQK6MJAR2PGDSWHOMHZFGFFGKUO32DBNJKC \
+  --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h"
+```
+
+### `revoke_issuer`
+Revokes an issuer setting its is_revoked property to true.
+
+```rust
+fn revoke_issuer(e: Env, admin: Address, issuer: Address, did: String);
+```
+
+Parameters:
+
+- `e`: Environment object.
+- `admin`: Address of the smart contract administrator.
+- `issuer`: Address of the issuer to be revoked.
+- `did`: String representing the DID associated with the issuer.
+
+#### Example:
+
+```bash
+soroban contract invoke \
+  --id CAXA7W47KED3UE2UDMGYZ6V5V23RJFWMMKLCWCAL27URCV2JEKPGDJDX \
+  --source Mario \
+  --network testnet \
+  -- \
+  revoke_issuer \
+  --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
+  --issuer GCPGQ32D7OTELJWJ7G2YBCM5DDXXWKDWFJYRQLOJ4HQCXYFSVXVEBLN3 \
+  --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h"
+```
+
+### `store_vc`:
+Stores the verifiable credential.
+
+```rust
+fn store_vc(
+    e: Env,
+    vc_id: String,
+    vc_data: String,
+    recipient_did: String,
+    issuer_pk: Address,
+    issuance_contract_address: Address,
+);
+```
+
+#### Parameters:
+
+- `e`: Environment object.
+- `vc_id`: String representing the unique identifier of the verifiable credential.
+- `vc_data`: String containing the verifiable credential data.
+- `recipient_did`: String representing the DID of the credential recipient.
+- `issuer_pk`: Address of the issuer's public key.
+- `issuance_contract_address`: Address of the contract responsible for credential issuance.
+
+#### Example:
+
+```bash
+soroban contract invoke \
+  --id CAXA7W47KED3UE2UDMGYZ6V5V23RJFWMMKLCWCAL27URCV2JEKPGDJDX \
+  --source Mario \
+  --network testnet \
+  -- \
+  store_vc \
+  --vc_id "vc_id3" \
+  --vc_data "vc_data" \
+  --recipient_did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h" \
+  --issuer_pk GDSOFBSZMFIY5BMZT3R5FCQK6MJAR2PGDSWHOMHZFGFFGKUO32DBNJKC \
+  --issuance_contract_address CBRM3HA7GLEI6QQ3O55RUKVRDSQASARUPKK6NXKXKKPWEYLE533GDYQD
+```
+### `get_vc`:
+Retrieves a verifiable credential using its unique identifier.
+
+```rust
+fn get_vc(e: Env, vc_id: String) -> VerifiableCredential;
+```
+
+#### Parameters:
+
+- `e`: Environment object.
+- `vc_id`: String representing the unique identifier of the verifiable credential.
+
+#### Example:
+
+```bash
+soroban contract invoke \
+  --id CAXA7W47KED3UE2UDMGYZ6V5V23RJFWMMKLCWCAL27URCV2JEKPGDJDX \
+  --source Mario \
+  --network testnet \
+  -- \
+  get_vc \
+  --vc_id "vc_id"
+```
+
+### `list_vcs`:
+Retrieves the list of verifiable credentials from the storage grouped by DID.
+
+```rust
+fn list_vcs(e: Env) -> Map<String, DidWithVCs>;
+```
+
+#### Parameters:
+
+- `e`: Environment object.
+
+#### Example:
+
+```bash
+soroban contract invoke \
+  --id CA3E7M5TT4VH5CZU2YSJF3JR4S572LXQDVMCDEMSLGXHZHWW6GVO3PTR \
+  --source Mario \
+  --network testnet \
+  -- \
+  list_vcs
+```
+
+### `revoke_did`:
+Revokes a DID given its DID URI.
+
+```rust
+fn revoke_did(e: Env, admin: Address, did: String);
+```
+
+#### Parameters:
+
+- `e`: Environment object.
+- `admin`: Address of the smart contract administrator.
+- `did`: String representing the DID to be revoked.
+
+#### Example:
+
+```bash
+soroban contract invoke \
+  --id CAXA7W47KED3UE2UDMGYZ6V5V23RJFWMMKLCWCAL27URCV2JEKPGDJDX \
+  --source Mario \
+  --network testnet \
+  -- \
+  revoke_did \
+  --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
+  --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h" 
+```
+
+### `register_did`:
+Registers a new DID given a DID URI.
+
+```rust
+fn register_did(e: Env, admin: Address, did: String);
+```
+
+#### Parameters:
+
+- `e`: Environment object.
+- `admin`: Address of the smart contract administrator.
+- `did`: String representing the new DID to be registered.
+
+#### Example:
+
+```bash
+soroban contract invoke \
+  --id CAXA7W47KED3UE2UDMGYZ6V5V23RJFWMMKLCWCAL27URCV2JEKPGDJDX \
+  --source Mario \
+  --network testnet \
+  -- \
+  register_did \
+  --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
+  --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h" 
 ```
 
 ## Deployment
-...
+
+1. Build the contract:
+    ```
+    soroban contract build
+    ```
+
+    This will generate a WASM file for the contract in the `target/wasm32-unknown-unknown/release/` directory.
+
+2. Deploy using Soroban CLI:
+    ```bash
+    soroban contract deploy \
+        --source-account SOURCE_ACCOUNT_SECRET_KEY \
+        --rpc-url https://rpc-futurenet.stellar.org \
+        --network-passphrase 'Test SDF Network ; October 2022' \
+        --wasm target/wasm32-unknown-unknown/release/vault_contract.wasm
+
+    CONTRACT_ID
+    ```
+
+## Contract Errors
+
+| Code | Error | Description |
+| --- | --- | --- |
+| 1 | `AlreadyInitialized` | Contract has already been initialized |
+| 2 | `NotAuthorized` | Invoker lacks the necessary authorization as the contract administrator |
+| 3 | `EmptyDIDs` | The array of DIDs is empty |
+| 4 | `IssuerNotFound` | The specified issuer was not found |
+| 5 | `DidRevoked` | The DID cannot perform the action because it has been revoked |
+| 6 | `DidNotFound` | The specified DID was not found |
+| 7 | `IssuerRevoked` | The issuer cannot perform the action because it has been revoked |
+| 8 | `VCNotFound` | The Verifiable Credential (VC) was not found |
+| 9 | `DuplicatedDID` | The DID is already registered |
 
 ## Changelog
 Features and bug fixes are listed in the [CHANGELOG][changelog] file.

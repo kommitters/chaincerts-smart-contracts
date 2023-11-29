@@ -53,8 +53,8 @@ fn initialize(e: Env, admin: Address, dids: Vec<String>);
 
 ```bash
 soroban contract invoke \
-  --id CA3E7M5TT4VH5CZU2YSJF3JR4S572LXQDVMCDEMSLGXHZHWW6GVO3PTR \
-  --source Mario \
+  --id CONTRACT_ID \
+  --source SOURCE_ACCOUNT_SECRET_KEY \
   --network testnet \
   -- \
   initialize \
@@ -80,8 +80,8 @@ fn authorize_issuer(e: Env, admin: Address, issuer: Address, did: String);
 
 ```bash
 soroban contract invoke \
-  --id CA3E7M5TT4VH5CZU2YSJF3JR4S572LXQDVMCDEMSLGXHZHWW6GVO3PTR \
-  --source Mario \
+  --id CONTRACT_ID \
+  --source SOURCE_ACCOUNT_SECRET_KEY \
   --network testnet \
   -- \
   authorize_issuer \
@@ -108,8 +108,8 @@ Parameters:
 
 ```bash
 soroban contract invoke \
-  --id CAXA7W47KED3UE2UDMGYZ6V5V23RJFWMMKLCWCAL27URCV2JEKPGDJDX \
-  --source Mario \
+  --id CONTRACT_ID \
+  --source SOURCE_ACCOUNT_SECRET_KEY \
   --network testnet \
   -- \
   revoke_issuer \
@@ -145,8 +145,8 @@ fn store_vc(
 
 ```bash
 soroban contract invoke \
-  --id CAXA7W47KED3UE2UDMGYZ6V5V23RJFWMMKLCWCAL27URCV2JEKPGDJDX \
-  --source Mario \
+  --id CONTRACT_ID \
+  --source SOURCE_ACCOUNT_SECRET_KEY \
   --network testnet \
   -- \
   store_vc \
@@ -172,8 +172,8 @@ fn get_vc(e: Env, vc_id: String) -> VerifiableCredential;
 
 ```bash
 soroban contract invoke \
-  --id CAXA7W47KED3UE2UDMGYZ6V5V23RJFWMMKLCWCAL27URCV2JEKPGDJDX \
-  --source Mario \
+  --id CONTRACT_ID \
+  --source SOURCE_ACCOUNT_SECRET_KEY \
   --network testnet \
   -- \
   get_vc \
@@ -195,8 +195,8 @@ fn list_vcs(e: Env) -> Map<String, DidWithVCs>;
 
 ```bash
 soroban contract invoke \
-  --id CA3E7M5TT4VH5CZU2YSJF3JR4S572LXQDVMCDEMSLGXHZHWW6GVO3PTR \
-  --source Mario \
+  --id CONTRACT_ID \
+  --source SOURCE_ACCOUNT_SECRET_KEY \
   --network testnet \
   -- \
   list_vcs
@@ -219,8 +219,8 @@ fn revoke_did(e: Env, admin: Address, did: String);
 
 ```bash
 soroban contract invoke \
-  --id CAXA7W47KED3UE2UDMGYZ6V5V23RJFWMMKLCWCAL27URCV2JEKPGDJDX \
-  --source Mario \
+  --id CONTRACT_ID \
+  --source SOURCE_ACCOUNT_SECRET_KEY \
   --network testnet \
   -- \
   revoke_did \
@@ -245,8 +245,8 @@ fn register_did(e: Env, admin: Address, did: String);
 
 ```bash
 soroban contract invoke \
-  --id CAXA7W47KED3UE2UDMGYZ6V5V23RJFWMMKLCWCAL27URCV2JEKPGDJDX \
-  --source Mario \
+  --id CONTRACT_ID \
+  --source SOURCE_ACCOUNT_SECRET_KEY \
   --network testnet \
   -- \
   register_did \

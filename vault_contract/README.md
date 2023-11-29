@@ -1,56 +1,91 @@
-[<img src="https://github.com/kommitters/chaincerts-smart-contracts/assets/1649973/a43a4a8b-932b-47e5-af63-470e35ab9330" width="300px" />][chaincerts.co]
-<br/><br/>
-
 # Vault Smart Contract
-The Vault smart contract is a secure repository for safeguarding Verifiable Credentials (VCs).
+[![Release Badge](https://img.shields.io/github/v/release/kommitters/chaincerts-smart-contracts?style=for-the-badge)](https://github.com/kommitters/chaincerts-smart-contracts/releases)
+[![License Badge](https://img.shields.io/github/license/kommitters/chaincerts-smart-contracts?style=for-the-badge)](https://github.com/kommitters/chaincerts-smart-contracts/blob/main/LICENSE)
+![Build Badge](https://img.shields.io/github/actions/workflow/status/kommitters/chaincerts-smart-contracts/ci.yml?branch=main&style=for-the-badge)
+[![Coverage Status](https://img.shields.io/coveralls/github/kommitters/chaincerts-smart-contracts?style=for-the-badge)](https://coveralls.io/github/kommitters/chaincerts-smart-contracts)
+[![OSSF-Scorecard Score](https://img.shields.io/ossf-scorecard/github.com/kommitters/chaincerts-smart-contracts?label=openssf%20scorecard&style=for-the-badge)](https://api.securityscorecards.dev/projects/github.com/kommitters/chaincerts-smart-contracts)
 
-Through the implementation of control access mechanisms, the smart contract authorizes issuers to deposit credentials through issuance contracts. VCs stored within the Vault utilize an encryption mechanism that prioritizes security and data privacy.
+> [!IMPORTANT]
+>  🤝
+> In line with our commitment to contribute to the [Stellar community][stellar], we have developed this vault smart contract that serves as an interface. This contract can be utilized by anyone seeking to innovate with a solution that follows the W3C specification.
 
-## Development
+## Features
+The vault smart contract is a secure repository for safeguarding Verifiable Credentials (VCs). With this smart contract, you will be able to:
 
-### Pre-requirements
+- Empower issuers to emit certificates for specific Decentralized Identifiers (DIDs)
+- Revoke an issuer's authority for a particular DID.
+- Store a verifiable credential.
+- Get a verifiable credential by id.
+- List verifiable credentials grouped by DID.
+- Register new DIDs in the vault.
+- Revoke DIDs in the vault.
 
-Before getting started with the development of the Vault smart contract, ensure the following pre-requirements are met:
+## Types
 
-- [Soroban setup][soroban-setup].
+### VerifiableCredential
+Represents Verifiable Credential.
 
-### Setup
+#### Attributes
 
-1. Clone the repository:
-    ```
-    git clone git@github.com:kommitters/soroban-did-contract.git
-    ```
+| Name                   | Type                 | Description                                                |
+| ---------------------- | -------------------- | ---------------------------------------------------------- |
+| `id`                   | `String`             | Unique identifier for the verifiable credential (e.g., `vc-1`). |
+| `data`                 | `String`             | The actual data contained within the credential encrypted using the X25519KeyAgreementKey2020 algorithm.|
+| `holder_did`          | `String`             | The Decentralized Identifier (DID) of the credential holder. |
+| `issuance_contract`    | `Address`            | The address of the smart contract responsible for credential issuance. |
 
-2. Build the project and install dependencies:
-    ```
-    cd soroban-did-contract
-    soroban contract build
-    ```
+#### Example 
 
-3. Run tests:
-    ```
-    cargo test
-    ```
+```bash
+{
+  "id": "t5iwuct2njbbcdu2nfwr32ib",
+  "data": "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y",
+  "holder_did": "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h",
+  "issuance_contract": "CBWDZIBI5NZ77EPSZLJDS3RTM57D3CIBKAIIOFER2TZEZATUYBASYF65"
+}
+```
+
+### DidWithVCs
+Represents a structure mapping to a DID (Decentralized Identifier) along with associated Verifiable Credentials.
+
+#### Attributes
+
+| Name            | Type                           | Description                                                |
+| --------------- | ------------------------------ | ---------------------------------------------------------- |
+| `did`           | `String`                       | The Decentralized Identifier (DID) associated with the structure. |
+| `is_revoked`    | `bool`                         | Indicates whether the DID has been revoked (`true` if revoked, `false` otherwise). |
+| `vcs`           | `Vec<VerifiableCredential>`    | List of Verifiable Credentials associated with the given DID. |
 
 
-## Vault Contract Functions
+#### Example
+```bash
+{
+  "did": "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h",
+  "is_revoked": false,
+  "vcs": [
+    {
+      "id": "t5iwuct2njbbcdu2nfwr32ib",
+      "data": "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y",
+      "holder_did": "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h",
+      "issuance_contract": "CBWDZIBI5NZ77EPSZLJDS3RTM57D3CIBKAIIOFER2TZEZATUYBASYF65"
+    }
+  ]
+}
+```
+
+
+## Functions
 
 The following functions define the behavior of the Vault smart contract.
 
-### `initialize`
+### Initialize
 Initializes the Vault Contract by setting the admin and the initial DIDs.
 
 ```rust
 fn initialize(e: Env, admin: Address, dids: Vec<String>);
 ```
 
-#### Parameters:
-
-- e: Environment object.
-- admin: Address of the smart contract administrator.
-- dids: Vector of strings representing the initial DIDs to be stored.
-
-#### Example:
+#### Example
 
 ```bash
 soroban contract invoke \
@@ -63,7 +98,7 @@ soroban contract invoke \
   --dids '["did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h"]'
 ```
 
-### `authorize_issuer`
+### Authorize Issuer
 
 Authorizes an issuer to issue verifiable credentials to a specific DID. If the DID is already registered or revoked, a specific error will be returned. The admin account is the only party authorized to invoke this function.
 
@@ -71,14 +106,7 @@ Authorizes an issuer to issue verifiable credentials to a specific DID. If the D
 fn authorize_issuer(e: Env, admin: Address, issuer: Address, did: String);
 ```
 
-#### Parameters:
-
-- `e`: Environment object.
-- `admin`: Address of the smart contract administrator.
-- `issuer`: Address of the issuer to be authorized.
-- `did`: String representing the DID associated with the issuer.
-
-#### Example:
+#### Example
 
 ```bash
 soroban contract invoke \
@@ -92,21 +120,14 @@ soroban contract invoke \
   --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h"
 ```
 
-### `revoke_issuer`
+### Revoke issuer
 Revokes an issuer to prevent the issuance of verifiable credentials to a specific DID in the vault. The admin account is the only party authorized to invoke this function.
 
 ```rust
 fn revoke_issuer(e: Env, admin: Address, issuer: Address, did: String);
 ```
 
-Parameters:
-
-- `e`: Environment object.
-- `admin`: Address of the smart contract administrator.
-- `issuer`: Address of the issuer to be revoked.
-- `did`: String representing the DID associated with the issuer.
-
-#### Example:
+#### Example
 
 ```bash
 soroban contract invoke \
@@ -120,7 +141,7 @@ soroban contract invoke \
   --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h"
 ```
 
-### `store_vc`:
+### Store VC
 Stores a verifiable credential related to a holder DID. This function is invoked by the issuer from the vc_issuance_contract smart contract.
 
 ```rust
@@ -134,16 +155,7 @@ fn store_vc(
 );
 ```
 
-#### Parameters:
-
-- `e`: Environment object.
-- `vc_id`: String representing the unique identifier of the verifiable credential.
-- `vc_data`: String containing the encrypted verifiable credential data.
-- `recipient_did`: String representing the DID of the credential recipient.
-- `issuer_pk`: Address of the issuer's public key.
-- `issuance_contract_address`: Address of the contract responsible for credential issuance.
-
-#### Example:
+#### Example
 
 ```bash
 soroban contract invoke \
@@ -152,25 +164,30 @@ soroban contract invoke \
   --network testnet \
   -- \
   store_vc \
-  --vc_id "vc_id" \
+  --vc_id "t5iwuct2njbbcdu2nfwr32ib" \
   --vc_data "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y" \
   --recipient_did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h" \
   --issuer_pk GDSOFBSZMFIY5BMZT3R5FCQK6MJAR2PGDSWHOMHZFGFFGKUO32DBNJKC \
   --issuance_contract_address CBRM3HA7GLEI6QQ3O55RUKVRDSQASARUPKK6NXKXKKPWEYLE533GDYQD
 ```
-### `get_vc`:
+
+### Get VC
 Retrieves a verifiable credential using its unique identifier.
 
 ```rust
 fn get_vc(e: Env, vc_id: String) -> VerifiableCredential;
 ```
 
-#### Parameters:
-
-- `e`: Environment object.
-- `vc_id`: String representing the unique identifier of the verifiable credential.
-
-#### Example:
+#### Output
+```bash
+{
+  "id": "",
+  "data": "", 
+  "holder_did": "",  
+  "issuance_contract": ""
+}
+```
+#### Example
 
 ```bash
 soroban contract invoke \
@@ -181,23 +198,43 @@ soroban contract invoke \
   get_vc \
   --vc_id "t5iwuct2njbbcdu2nfwr32ib"
 
-# Response: VerifiableCredential
+# Output: VerifiableCredential
 
-{"data":"eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y","holder_did":"did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h","id":"t5iwuct2njbbcdu2nfwr32ib","issuance_contract":"CBWDZIBI5NZ77EPSZLJDS3RTM57D3CIBKAIIOFER2TZEZATUYBASYF65"}
+{
+  "data": "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y",
+  "holder_did": "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h",
+  "id": "t5iwuct2njbbcdu2nfwr32ib",
+  "issuance_contract": "CBWDZIBI5NZ77EPSZLJDS3RTM57D3CIBKAIIOFER2TZEZATUYBASYF65"
+}
 ```
 
-### `list_vcs`:
+### List verifiable credentials
 Retrieves the list of verifiable credentials from the storage grouped by DID. The admin account is the only party authorized to invoke this function.
 
 ```rust
 fn list_vcs(e: Env) -> Map<String, DidWithVCs>;
 ```
 
-#### Parameters:
+#### Output
 
-- `e`: Environment object.
+```bash
+{
+  "DID.did": {
+    "did": "",
+    "is_revoked": bool,
+    "vcs": [
+      {
+        "data": "",
+        "holder_did": "",
+        "id": "",
+        "issuance_contract": ""
+      }
+    ]
+  }
+}
+```
 
-#### Example:
+#### Example
 
 ```bash
 soroban contract invoke \
@@ -207,24 +244,32 @@ soroban contract invoke \
   -- \
   list_vcs
 
-#Response: Map<String, DidWithVCs>
-{"\"did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h\"":{"did":"did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h","is_revoked":false,"vcs":[{"data":"eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y","holder_did":"did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h","id":"t5iwuct2njbbcdu2nfwr32ib","issuance_contract":"CBWDZIBI5NZ77EPSZLJDS3RTM57D3CIBKAIIOFER2TZEZATUYBASYF65"}]}}
+#Output: Map with DIDWithVcs grouped by DID
+
+{
+  "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h": {
+    "did": "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h",
+    "is_revoked": false,
+    "vcs": [
+      {
+        "data": "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y",
+        "holder_did": "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h",
+        "id": "t5iwuct2njbbcdu2nfwr32ib",
+        "issuance_contract": "CBWDZIBI5NZ77EPSZLJDS3RTM57D3CIBKAIIOFER2TZEZATUYBASYF65"
+      }
+    ]
+  }
+}
 ```
 
-### `revoke_did`:
+### Revoke DID
 Revokes a DID based on its DID URI to prevent the issuance of verifiable credentials to the specific DID. The admin account is the only party authorized to invoke this function.
 
 ```rust
 fn revoke_did(e: Env, admin: Address, did: String);
 ```
 
-#### Parameters:
-
-- `e`: Environment object.
-- `admin`: Address of the smart contract administrator.
-- `did`: String representing the DID to be revoked.
-
-#### Example:
+#### Example
 
 ```bash
 soroban contract invoke \
@@ -237,20 +282,14 @@ soroban contract invoke \
   --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h" 
 ```
 
-### `register_did`:
+### Register DID
 Registers a new DID in the vault given a DID URI. The admin account is the only party authorized to invoke this function.
 
 ```rust
 fn register_did(e: Env, admin: Address, did: String);
 ```
 
-#### Parameters:
-
-- `e`: Environment object.
-- `admin`: Address of the smart contract administrator.
-- `did`: String representing the new DID to be registered.
-
-#### Example:
+#### Example
 
 ```bash
 soroban contract invoke \
@@ -263,7 +302,31 @@ soroban contract invoke \
   --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h" 
 ```
 
-## Deployment
+## Development
+
+### Pre-requirements
+
+In order to develop and test the smart contract, you need to install Rust and Soroban CLI. The process is outlined in the Soroban setup documentation, which can be accessed at [Soroban setup][soroban-setup].
+
+### Setup
+
+1. Clone the repository:
+    ```
+    git clone git@github.com:kommitters/chaincerts-smart-contracts.git
+    ```
+
+2. Build the project and install dependencies:
+    ```
+    cd chaincerts-smart-contracts
+    soroban contract build
+    ```
+
+3. Run tests:
+    ```
+    cargo test
+    ```
+
+### Deployment
 
 1. Build the contract:
     ```
@@ -273,11 +336,11 @@ soroban contract invoke \
     This will generate a WASM file for the contract in the `target/wasm32-unknown-unknown/release/` directory.
 
 2. Deploy using Soroban CLI:
-    ```bash
+    ```
     soroban contract deploy \
-        --source-account SOURCE_ACCOUNT_SECRET_KEY \
-        --rpc-url https://rpc-futurenet.stellar.org \
-        --network-passphrase 'Test SDF Network ; October 2022' \
+        --source SOURCE_ACCOUNT_SECRET_KEY \
+        --rpc-url https://soroban-testnet.stellar.org:443 \
+        --network-passphrase 'Test SDF Network ; September 2015' \
         --wasm target/wasm32-unknown-unknown/release/vault_contract.wasm
 
     CONTRACT_ID
@@ -334,3 +397,4 @@ This software is licensed under the [Apache License 2.0][license] © kommit.
 [kommit-github]: https://github.com/kommitters
 [kommit-x]: https://twitter.com/kommitco
 [kommit-linkedin]: https://www.linkedin.com/company/kommit-co
+[stellar]: https://stellar.org

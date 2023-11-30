@@ -32,7 +32,7 @@ soroban contract invoke \
 ```
 
 ### Issue:
- Issues a new verifiable credential and returns the Verifiable Credential id as String. The admin account is the only party authorized to invoke this function.
+ Issues a new verifiable credential and returns the Verifiable Credential id as a string. The admin account is the only party authorized to invoke this function.
 
 ```rust
 fn issue(
@@ -56,7 +56,7 @@ soroban contract invoke \
   --source SOURCE_ACCOUNT_SECRET_KEY \
   --network testnet \
   -- \
-  revoke \
+  issue \
   --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
   --vc_data "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y" \
   --storage_address GR2RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA
@@ -67,7 +67,7 @@ soroban contract invoke \
 ```
 
 ### Verify
-Verifies if the verifiable credential has been revoked, it returns a struct indicating the status of the verifiable credential, denoted as either `"valid"` or `"revoked"`. If the status is `"revoked"`, it additionally provides the date on which the verifiable credential was revoked.
+Verifies if the verifiable credential has been revoked, returning a struct indicating its status as either "valid" or "revoked". If the status is `"revoked"`, it additionally provides the date on which the verifiable credential was revoked.
 
 ```rust
 fn verify(e: Env, vc_id: String) -> Map<String, String>;

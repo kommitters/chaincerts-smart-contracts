@@ -3,7 +3,7 @@
 ## Features
 The vault smart contract is a secure repository for safeguarding verifiable credentials (VCs). With this smart contract, you will be able to:
 
-- Authorize issuers to emit certificates for specific Decentralized Identifiers (DIDs)
+- Authorize issuers to emit certificates for specific DIDs(Decentralized Identifiers).
 - Revoke an issuer's authority for a particular DID.
 - Store a verifiable credential.
 - Retrieve a specific verifiable credential using its identifier.
@@ -22,7 +22,7 @@ Represents a verifiable credential with essential attributes for comprehensive i
 | ---------------------- | -------------------- | ---------------------------------------------------------- |
 | `id`                   | `String`             | Unique identifier for the verifiable credential (e.g., `t5iwuct2njbbcdu2nfwr32ib`). |
 | `data`                 | `String`             | The encrypted payload encapsulating the actual data within the credential, utilizing the X25519KeyAgreementKey2020 algorithm for heightened security.|
-| `holder_did`           | `String`             | The Decentralized Identifier (DID) of the credential holder. |
+| `holder_did`           | `String`             | The DID of the credential holder. |
 | `issuance_contract`    | `Address`            | The address of the smart contract responsible for credential issuance. |
 
 #### Example 
@@ -37,13 +37,13 @@ Represents a verifiable credential with essential attributes for comprehensive i
 ```
 
 ### DidWithVCs
-Represents a structured entity that encapsulates a Decentralized Identifier (DID) along with its corresponding verifiable credentials.
+Represents a structured entity that encapsulates a DID along with its corresponding verifiable credentials.
 
 #### Attributes
 
 | Name            | Type                           | Description                                                |
 | --------------- | ------------------------------ | ---------------------------------------------------------- |
-| `did`           | `String`                       | The Decentralized Identifier (DID) associated with the structure. |
+| `did`           | `String`                       | The DID associated with the structure. |
 | `is_revoked`    | `bool`                         | Indicates whether the DID has been revoked (`true` if revoked, `false` otherwise). |
 | `vcs`           | `Vec<VerifiableCredential>`    | List of Verifiable Credentials associated with the given DID. |
 
@@ -91,7 +91,7 @@ soroban contract invoke \
 
 ### Authorize Issuer
 
-Authorizes an issuer to issue verifiable credentials to a specific DID. If the DID is already registered or revoked, a specific error will be returned. The admin account is the only party authorized to invoke this function.
+Authorizes an issuer to issue verifiable credentials for a specific DID. If the DID is already registered or revoked, a specific error will be triggered. This function is exclusively accessible to the admin account for invocation.
 
 ```rust
 fn authorize_issuer(e: Env, admin: Address, issuer: Address, did: String);
@@ -112,7 +112,7 @@ soroban contract invoke \
 ```
 
 ### Revoke Issuer
-Revokes an issuer to prevent the issuance of verifiable credentials to a specific DID in the vault. The admin account is the only party authorized to invoke this function.
+Revokes an issuer to prevent the issuance of verifiable credentials to a specific DID in the vault. This function is exclusively accessible to the admin account for invocation.
 
 ```rust
 fn revoke_issuer(e: Env, admin: Address, issuer: Address, did: String);
@@ -133,7 +133,7 @@ soroban contract invoke \
 ```
 
 ### Store VC
-Stores a verifiable credential related to a holder DID. This function is invoked by the issuer from the `vc_issuance_contract` smart contract.
+Stores a verifiable credential related to a holder's DID. This function is invoked by the issuer within the vc_issuance_contract smart contract.
 
 ```rust
 fn store_vc(
@@ -200,7 +200,7 @@ soroban contract invoke \
 ```
 
 ### List verifiable credentials
-Retrieves the list of verifiable credentials from the storage grouped by DID. The admin account is the only party authorized to invoke this function.
+Retrieves the list of verifiable credentials from the storage grouped by DID.
 
 ```rust
 fn list_vcs(e: Env) -> Map<String, DidWithVCs>;
@@ -210,7 +210,8 @@ fn list_vcs(e: Env) -> Map<String, DidWithVCs>;
 
 ```bash
 {
-  "DID.did": {
+  "DID.did":
+  {
     "did": "",
     "is_revoked": bool,
     "vcs": [
@@ -238,7 +239,8 @@ soroban contract invoke \
 #Output: Map with DIDWithVcs grouped by DID
 
 {
-  "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h": {
+  "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h":
+  {
     "did": "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h",
     "is_revoked": false,
     "vcs": [

@@ -125,7 +125,7 @@ impl VaultTrait for VaultContract {
         dids.set(
             did.clone(),
             Did {
-                did: did.clone(),
+                did,
                 is_revoked: true,
                 vcs: did_struct.vcs,
             },
@@ -144,7 +144,7 @@ impl VaultTrait for VaultContract {
         dids.set(
             did.clone(),
             Did {
-                did: did.clone(),
+                did,
                 is_revoked: false,
                 vcs: Vec::new(&e),
             },

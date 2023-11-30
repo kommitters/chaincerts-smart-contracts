@@ -82,13 +82,7 @@ impl VCIssuanceTrait for VCIssuanceContract {
 
         let mut revocations = storage::read_vcs_revocations(&e);
 
-        revocations.set(
-            vc_id.clone(),
-            Revocation {
-                vc_id: vc_id.clone(),
-                date,
-            },
-        );
+        revocations.set(vc_id.clone(), Revocation { vc_id, date });
 
         storage::write_vcs_revocations(&e, &revocations);
     }

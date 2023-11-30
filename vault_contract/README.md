@@ -10,7 +10,7 @@
 > In line with our commitment to contribute to the [Stellar community][stellar], we have developed this vault smart contract that serves as an interface. This contract can be utilized by anyone seeking to innovate with a solution that follows the W3C specification.
 
 ## Features
-The vault smart contract is a secure repository for safeguarding Verifiable Credentials (VCs). With this smart contract, you will be able to:
+The vault smart contract is a secure repository for safeguarding verifiable credentials (VCs). With this smart contract, you will be able to:
 
 - Empower issuers to emit certificates for specific Decentralized Identifiers (DIDs)
 - Revoke an issuer's authority for a particular DID.
@@ -23,13 +23,13 @@ The vault smart contract is a secure repository for safeguarding Verifiable Cred
 ## Types
 
 ### VerifiableCredential
-Represents Verifiable Credential.
+Represents a verifiable credential.
 
 #### Attributes
 
 | Name                   | Type                 | Description                                                |
 | ---------------------- | -------------------- | ---------------------------------------------------------- |
-| `id`                   | `String`             | Unique identifier for the verifiable credential (e.g., `vc-1`). |
+| `id`                   | `String`             | Unique identifier for the verifiable credential (e.g., `t5iwuct2njbbcdu2nfwr32ib`). |
 | `data`                 | `String`             | The actual data contained within the credential encrypted using the X25519KeyAgreementKey2020 algorithm.|
 | `holder_did`          | `String`             | The Decentralized Identifier (DID) of the credential holder. |
 | `issuance_contract`    | `Address`            | The address of the smart contract responsible for credential issuance. |
@@ -46,7 +46,7 @@ Represents Verifiable Credential.
 ```
 
 ### DidWithVCs
-Represents a structure mapping to a DID (Decentralized Identifier) along with associated Verifiable Credentials.
+Represents a structure mapping to a DID (Decentralized Identifier) along with associated verifiable credentials.
 
 #### Attributes
 
@@ -79,7 +79,7 @@ Represents a structure mapping to a DID (Decentralized Identifier) along with as
 The following functions define the behavior of the Vault smart contract.
 
 ### Initialize
-Initializes the Vault Contract by setting the admin and the initial DIDs.
+Initializes the vault contract by setting the admin and the initial DIDs.
 
 ```rust
 fn initialize(e: Env, admin: Address, dids: Vec<String>);
@@ -120,7 +120,7 @@ soroban contract invoke \
   --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h"
 ```
 
-### Revoke issuer
+### Revoke Issuer
 Revokes an issuer to prevent the issuance of verifiable credentials to a specific DID in the vault. The admin account is the only party authorized to invoke this function.
 
 ```rust
@@ -142,7 +142,7 @@ soroban contract invoke \
 ```
 
 ### Store VC
-Stores a verifiable credential related to a holder DID. This function is invoked by the issuer from the vc_issuance_contract smart contract.
+Stores a verifiable credential related to a holder DID. This function is invoked by the issuer from the `vc_issuance_contract` smart contract.
 
 ```rust
 fn store_vc(

@@ -14,37 +14,11 @@ This smart contract prioritizes security and privacy by avoiding the persistence
 > In line with our commitment to contribute to the [Stellar community][stellar], we have developed this verifiable credential issuance contract that serves as an interface. This contract can be utilized by anyone seeking to innovate with a solution that follows the W3C specification.
 
 ## Features
-The Verifiable Credentials (VCs) Issuance smart contract establishes the rules for issuing, transferring, and revoking verifiable credentials. It acts as the governing framework, ensuring the secure and standardized management of on-chain verifiable credentials. With this smart contract, you will be able to:
+The verifiable credentials (VCs) issuance smart contract establishes the rules for issuing, transferring, and revoking verifiable credentials. It acts as the governing framework, ensuring the secure and standardized management of on-chain verifiable credentials. With this smart contract, you will be able to:
 
 - Issue a verifiable credential.
 - Verify a verifiable credential.
 - Revoke a verifiable credential.
-
-## Development
-
-### Pre-requirements
-
-Before getting started with the development of the Verifiable Credentials Issuance smart contract, ensure the following pre-requirements are met:
-
-- [Soroban setup][soroban-setup].
-
-### Setup
-
-1. Clone the repository:
-    ```
-    git clone git@github.com:kommitters/chaincerts-smart-contracts.git
-    ```
-
-2. Build the project and install dependencies:
-    ```
-    cd chaincerts-smart-contracts
-    soroban contract build
-    ```
-
-3. Run tests:
-    ```
-    cargo test
-    ```
 
 ## Functions
 
@@ -103,13 +77,16 @@ soroban contract invoke \
 ```
 
 ### Verify
-Verifies if the Verifiable Credential has been revoked, it returns a Map with the respective status.
+Verifies if the verifiable credential has been revoked, it returns a struct indicating the status of the verifiable credential, denoted as either `"valid"` or `"revoked"`. If the status is `"revoked"`, it additionally provides the date on which the verifiable credential was revoked.
 
 ```rust
 fn verify(e: Env, vc_id: String) -> Map<String, String>;
 ```
 
 #### Output
+
+Returns a struct with the VC status.
+
 ```bash
 # Valid VC
 {

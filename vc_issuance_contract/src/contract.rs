@@ -27,7 +27,7 @@ impl VCIssuanceTrait for VCIssuanceContract {
         if storage::has_admin(&e) {
             panic_with_error!(e, ContractError::AlreadyInitialized);
         }
-        if amount.map_or(false, |a| a > MAX_AMOUNT) {
+        if amount.is_some() && amount.unwrap() > MAX_AMOUNT {
             panic_with_error!(e, ContractError::AmountLimitExceeded);
         }
 

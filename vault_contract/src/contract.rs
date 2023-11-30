@@ -9,8 +9,7 @@ use crate::verifiable_credential::VerifiableCredential;
 
 use crate::vault_trait::VaultTrait;
 use soroban_sdk::{
-    contract, contractimpl, contractmeta, panic_with_error, Address, Env, Map,
-    String, Vec, IntoVal,
+    contract, contractimpl, contractmeta, panic_with_error, Address, Env, IntoVal, Map, String, Vec,
 };
 
 const LEDGERS_THRESHOLD: u32 = 1;

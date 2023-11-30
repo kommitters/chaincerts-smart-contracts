@@ -9,7 +9,8 @@ use crate::verifiable_credential::VerifiableCredential;
 
 use crate::vault_trait::VaultTrait;
 use soroban_sdk::{
-    contract, contractimpl, contractmeta, panic_with_error, Address, Env, Map, String, Vec,
+    contract, contractimpl, contractmeta, panic_with_error, Address, Env, Map,
+    String, Vec, IntoVal,
 };
 
 const LEDGERS_THRESHOLD: u32 = 1;
@@ -62,6 +63,15 @@ impl VaultTrait for VaultContract {
     ) {
         validate_did(&e, &recipient_did);
         validate_issuer(&e, &issuer_pk, &recipient_did);
+        issuer_pk.require_auth_for_args(
+            (
+                vc_data.clone(),
+                recipient_did.clone(),
+                issuer_pk.clone(),
+                issuance_contract_address.clone(),
+            )
+                .into_val(&e),
+        );
 
         verifiable_credential::store_vc(
             &e,

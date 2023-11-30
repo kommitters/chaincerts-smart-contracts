@@ -3,11 +3,6 @@
 
 This smart contract prioritizes security and privacy by avoiding the persistence of structured data or personal information. Data is handled exclusively in an encrypted form, with access granted only to owners through cryptographic mechanisms. This approach is particularly critical in insecure communication channels such as blockchain ledgers. For more details, refer to the [W3C KeyAgreement specification](https://www.w3.org/TR/did-core/#dfn-keyagreement).
 
-[![Release Badge](https://img.shields.io/github/v/release/kommitters/chaincerts-smart-contracts?style=for-the-badge)](https://github.com/kommitters/chaincerts-smart-contracts/releases)
-[![License Badge](https://img.shields.io/github/license/kommitters/chaincerts-smart-contracts?style=for-the-badge)](https://github.com/kommitters/chaincerts-smart-contracts/blob/main/LICENSE)
-![Build Badge](https://img.shields.io/github/actions/workflow/status/kommitters/chaincerts-smart-contracts/ci.yml?branch=main&style=for-the-badge)
-[![Coverage Status](https://img.shields.io/coveralls/github/kommitters/chaincerts-smart-contracts?style=for-the-badge)](https://coveralls.io/github/kommitters/chaincerts-smart-contracts)
-[![OSSF-Scorecard Score](https://img.shields.io/ossf-scorecard/github.com/kommitters/chaincerts-smart-contracts?label=openssf%20scorecard&style=for-the-badge)](https://api.securityscorecards.dev/projects/github.com/kommitters/chaincerts-smart-contracts)
 
 > [!IMPORTANT]
 >  🤝
@@ -148,6 +143,12 @@ soroban contract invoke \
 | 2 | `NotAuthorized` | Invoker lacks the necessary authorization as the contract administrator |
 | 3 | `AmountLimitExceeded` | The amount exceeds the issuance contract's capacity for certificates |
 | 4 | `VCNotFound` | The Verifiable Credential (VC) was not found |
+
+## Development
+
+### Pre-requirements
+
+To develop and test the smart contract, you need to install Rust and the Soroban CLI. The process is outlined in the Soroban setup documentation, which can be accessed at [Soroban setup][soroban-setup].
 
 ### Setup
 

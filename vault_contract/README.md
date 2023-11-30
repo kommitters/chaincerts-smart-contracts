@@ -1,9 +1,4 @@
 # Vault Smart Contract
-[![Release Badge](https://img.shields.io/github/v/release/kommitters/chaincerts-smart-contracts?style=for-the-badge)](https://github.com/kommitters/chaincerts-smart-contracts/releases)
-[![License Badge](https://img.shields.io/github/license/kommitters/chaincerts-smart-contracts?style=for-the-badge)](https://github.com/kommitters/chaincerts-smart-contracts/blob/main/LICENSE)
-![Build Badge](https://img.shields.io/github/actions/workflow/status/kommitters/chaincerts-smart-contracts/ci.yml?branch=main&style=for-the-badge)
-[![Coverage Status](https://img.shields.io/coveralls/github/kommitters/chaincerts-smart-contracts?style=for-the-badge)](https://coveralls.io/github/kommitters/chaincerts-smart-contracts)
-[![OSSF-Scorecard Score](https://img.shields.io/ossf-scorecard/github.com/kommitters/chaincerts-smart-contracts?label=openssf%20scorecard&style=for-the-badge)](https://api.securityscorecards.dev/projects/github.com/kommitters/chaincerts-smart-contracts)
 
 > [!IMPORTANT]
 >  🤝
@@ -12,26 +7,26 @@
 ## Features
 The vault smart contract is a secure repository for safeguarding verifiable credentials (VCs). With this smart contract, you will be able to:
 
-- Empower issuers to emit certificates for specific Decentralized Identifiers (DIDs)
+- Authorize issuers to emit certificates for specific Decentralized Identifiers (DIDs)
 - Revoke an issuer's authority for a particular DID.
 - Store a verifiable credential.
-- Get a verifiable credential by id.
-- List verifiable credentials grouped by DID.
+- Retrieve a specific verifiable credential using its identifier.
+- Retrieve a list of verifiable credentials organized by DID.
 - Register new DIDs in the vault.
 - Revoke DIDs in the vault.
 
 ## Types
 
 ### VerifiableCredential
-Represents a verifiable credential.
+Represents a verifiable credential with essential attributes for comprehensive identification and validation.
 
 #### Attributes
 
 | Name                   | Type                 | Description                                                |
 | ---------------------- | -------------------- | ---------------------------------------------------------- |
 | `id`                   | `String`             | Unique identifier for the verifiable credential (e.g., `t5iwuct2njbbcdu2nfwr32ib`). |
-| `data`                 | `String`             | The actual data contained within the credential encrypted using the X25519KeyAgreementKey2020 algorithm.|
-| `holder_did`          | `String`             | The Decentralized Identifier (DID) of the credential holder. |
+| `data`                 | `String`             | The encrypted payload encapsulating the actual data within the credential, utilizing the X25519KeyAgreementKey2020 algorithm for heightened security.|
+| `holder_did`           | `String`             | The Decentralized Identifier (DID) of the credential holder. |
 | `issuance_contract`    | `Address`            | The address of the smart contract responsible for credential issuance. |
 
 #### Example 
@@ -46,7 +41,7 @@ Represents a verifiable credential.
 ```
 
 ### DidWithVCs
-Represents a structure mapping to a DID (Decentralized Identifier) along with associated verifiable credentials.
+Represents a structured entity that encapsulates a Decentralized Identifier (DID) along with its corresponding verifiable credentials.
 
 #### Attributes
 
@@ -79,7 +74,7 @@ Represents a structure mapping to a DID (Decentralized Identifier) along with as
 The following functions define the behavior of the Vault smart contract.
 
 ### Initialize
-Initializes the vault contract by setting the admin and the initial DIDs.
+Initiates the vault contract by configuring the administrator and initial Decentralized Identifiers (DIDs).
 
 ```rust
 fn initialize(e: Env, admin: Address, dids: Vec<String>);
@@ -306,7 +301,7 @@ soroban contract invoke \
 
 ### Pre-requirements
 
-In order to develop and test the smart contract, you need to install Rust and Soroban CLI. The process is outlined in the Soroban setup documentation, which can be accessed at [Soroban setup][soroban-setup].
+To develop and test the smart contract, you need to install Rust and the Soroban CLI. The process is outlined in the Soroban setup documentation, which can be accessed at [Soroban setup][soroban-setup].
 
 ### Setup
 

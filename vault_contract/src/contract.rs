@@ -61,15 +61,12 @@ impl VaultTrait for VaultContract {
         issuance_contract_address: Address,
     ) {
         validate_did(&e, &recipient_did);
-        validate_issuer(&e, &issuer_pk, &recipient_did);
-        issuer_pk.require_auth_for_args(
-            (
-                vc_data.clone(),
-                recipient_did.clone(),
-                issuer_pk.clone(),
-                issuance_contract_address.clone(),
-            )
-                .into_val(&e),
+        validate_issuer(
+            &e,
+            &issuer_pk,
+            &recipient_did,
+            &vc_data,
+            &issuance_contract_address,
         );
 
         verifiable_credential::store_vc(
@@ -172,7 +169,13 @@ fn validate_did(e: &Env, did: &String) {
     }
 }
 
-fn validate_issuer(e: &Env, issuer: &Address, did: &String) {
+fn validate_issuer(
+    e: &Env,
+    issuer: &Address,
+    did: &String,
+    vc_data: &String,
+    issuance_contract_address: &Address,
+) {
     let issuers: Map<Address, Issuer> = storage::read_issuers(e, did);
 
     if !issuer::is_registered(&issuers, issuer) {
@@ -181,4 +184,14 @@ fn validate_issuer(e: &Env, issuer: &Address, did: &String) {
     if issuer::is_revoked(&issuers, issuer) {
         panic_with_error!(e, ContractError::IssuerRevoked)
     }
+
+    issuer.require_auth_for_args(
+        (
+            vc_data.clone(),
+            did.clone(),
+            issuer.clone(),
+            issuance_contract_address.clone(),
+        )
+            .into_val(e),
+    );
 }

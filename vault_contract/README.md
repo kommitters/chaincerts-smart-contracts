@@ -1,9 +1,5 @@
 # Vault Smart Contract
 
-> [!IMPORTANT]
->  🤝
-> In line with our commitment to contribute to the [Stellar community][stellar], we have developed this vault smart contract that serves as an interface. This contract can be utilized by anyone seeking to innovate with a solution that follows the W3C specification.
-
 ## Features
 The vault smart contract is a secure repository for safeguarding verifiable credentials (VCs). With this smart contract, you will be able to:
 

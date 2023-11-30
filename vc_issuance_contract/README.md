@@ -3,11 +3,6 @@
 
 This smart contract prioritizes security and privacy by avoiding the persistence of structured data or personal information. Data is handled exclusively in an encrypted form, with access granted only to owners through cryptographic mechanisms. This approach is particularly critical in insecure communication channels such as blockchain ledgers. For more details, refer to the [W3C KeyAgreement specification](https://www.w3.org/TR/did-core/#dfn-keyagreement).
 
-
-> [!IMPORTANT]
->  🤝
-> In line with our commitment to contribute to the [Stellar community][stellar], we have developed this verifiable credential issuance contract that serves as an interface. This contract can be utilized by anyone seeking to innovate with a solution that follows the W3C specification.
-
 ## Features
 The verifiable credentials (VCs) issuance smart contract establishes the rules for issuing, transferring, and revoking verifiable credentials. It acts as the governing framework, ensuring the secure and standardized management of on-chain verifiable credentials. With this smart contract, you will be able to:
 

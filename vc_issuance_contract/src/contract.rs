@@ -52,9 +52,10 @@ impl VCIssuanceTrait for VCIssuanceContract {
         validate_admin(&e, &admin);
 
         let vc_id = verifiable_credential::generate_id(&e);
+        let contract_address = e.current_contract_address();
 
         let client = vault_contract::Client::new(&e, &storage_address);
-        client.store_vc(&vc_id, &vc_data, &recipient_did, &admin, &storage_address);
+        client.store_vc(&vc_id, &vc_data, &recipient_did, &admin, &contract_address);
         verifiable_credential::add_vc(&e, &vc_id);
 
         vc_id

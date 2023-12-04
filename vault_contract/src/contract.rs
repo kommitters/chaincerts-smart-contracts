@@ -1,11 +1,10 @@
-use crate::did;
-use crate::did::{Did, DidWithVCs};
 use crate::error::ContractError;
 use crate::issuer;
 use crate::issuer::Issuer;
 use crate::storage;
+use crate::vault;
+use crate::vault::Vault;
 use crate::verifiable_credential;
-use crate::verifiable_credential::VerifiableCredential;
 
 use crate::vault_trait::VaultTrait;
 use soroban_sdk::{
@@ -31,7 +30,7 @@ impl VaultTrait for VaultContract {
         }
         storage::write_admin(&e, &admin);
 
-        did::set_initial_dids(&e, &dids);
+        vault::set_initial_vaults(&e, &dids);
 
         e.storage()
             .instance()
@@ -40,14 +39,14 @@ impl VaultTrait for VaultContract {
 
     fn authorize_issuer(e: Env, admin: Address, issuer: Address, did: String) {
         validate_admin(&e, admin);
-        validate_did(&e, &did);
+        validate_vault(&e, &did);
 
         issuer::authorize_issuer(&e, &issuer, &did);
     }
 
     fn revoke_issuer(e: Env, admin: Address, issuer: Address, did: String) {
         validate_admin(&e, admin);
-        validate_did(&e, &did);
+        validate_vault(&e, &did);
 
         issuer::revoke_issuer(&e, &issuer, &did)
     }
@@ -57,96 +56,75 @@ impl VaultTrait for VaultContract {
         vc_id: String,
         vc_data: String,
         recipient_did: String,
-        issuer_pk: Address,
-        issuance_contract_address: Address,
+        issuer: Address,
+        issuance_contract: Address,
     ) {
-        validate_did(&e, &recipient_did);
-        validate_issuer(
-            &e,
-            &issuer_pk,
-            &recipient_did,
-            &vc_data,
-            &issuance_contract_address,
-        );
+        validate_vault(&e, &recipient_did);
+        validate_issuer(&e, &issuer, &recipient_did, &vc_data, &issuance_contract);
 
-        verifiable_credential::store_vc(
-            &e,
-            &vc_id,
-            &vc_data,
-            &issuance_contract_address,
-            &recipient_did,
-        );
+        verifiable_credential::store_vc(&e, &vc_id, &vc_data, &issuance_contract, &recipient_did);
     }
 
-    fn get_vc(e: Env, vc_id: String) -> VerifiableCredential {
-        let vcs = storage::read_vcs(&e);
+    fn get_vault(e: Env, vc_id: String) -> Vault {
+        let vaults = storage::read_vaults(&e);
 
-        match vcs.get(vc_id) {
+        match vaults.get(vc_id) {
             Some(vc) => vc,
-            None => panic_with_error!(&e, ContractError::VCNotFound),
+            None => panic_with_error!(&e, ContractError::VaultNotFound),
         }
     }
 
-    fn list_vcs(e: Env) -> Map<String, DidWithVCs> {
-        let vcs = storage::read_vcs(&e);
-        let dids = storage::read_dids(&e);
-        let mut dids_with_vcs = Map::new(&e);
+    fn list_vaults(e: Env) -> Vec<Vault> {
+        let vaults = storage::read_vaults(&e);
+        let mut values_vec = Vec::new(&e);
 
-        for (did, did_struct) in dids {
-            let mut did_vcs = Vec::new(&e);
-            for vc in did_struct.vcs {
-                did_vcs.push_front(vcs.get_unchecked(vc));
-            }
-
-            dids_with_vcs.set(
-                did.clone(),
-                DidWithVCs {
-                    did: did.clone(),
-                    is_revoked: did_struct.is_revoked,
-                    vcs: did_vcs,
-                },
-            )
+        for value in vaults.values() {
+            values_vec.push_front(value);
         }
 
-        dids_with_vcs
+        values_vec
     }
 
-    fn revoke_did(e: Env, admin: Address, did: String) {
+    fn revoke_vault(e: Env, admin: Address, did: String) {
         validate_admin(&e, admin);
-        let mut dids = storage::read_dids(&e);
-        if !did::is_registered(&dids, &did) {
-            panic_with_error!(e, ContractError::DidNotFound)
+        let mut vaults = storage::read_vaults(&e);
+
+        if !vault::is_registered(&vaults, &did) {
+            panic_with_error!(e, ContractError::VaultNotFound)
         }
 
-        let did_struct = dids.get_unchecked(did.clone());
-        dids.set(
+        let vault = vaults.get_unchecked(did.clone());
+
+        vaults.set(
             did.clone(),
-            Did {
+            Vault {
                 did,
-                is_revoked: true,
-                vcs: did_struct.vcs,
+                revoked: true,
+                vcs: vault.vcs,
             },
         );
-        storage::write_dids(&e, &dids);
+
+        storage::write_vaults(&e, &vaults);
     }
 
-    fn register_did(e: Env, admin: Address, did: String) {
+    fn register_vault(e: Env, admin: Address, did: String) {
         validate_admin(&e, admin);
-        let mut dids = storage::read_dids(&e);
+        let mut vaults = storage::read_vaults(&e);
 
-        if did::is_registered(&dids, &did) {
-            panic_with_error!(e, ContractError::DuplicatedDID)
+        if vault::is_registered(&vaults, &did) {
+            panic_with_error!(e, ContractError::VaultAlreadyRegistered)
         }
 
-        dids.set(
+        vaults.set(
             did.clone(),
-            Did {
+            Vault {
                 did,
-                is_revoked: false,
+                revoked: false,
                 vcs: Vec::new(&e),
             },
         );
-        storage::write_dids(&e, &dids)
+
+        storage::write_vaults(&e, &vaults)
     }
 }
 
@@ -158,14 +136,15 @@ fn validate_admin(e: &Env, admin: Address) {
     admin.require_auth();
 }
 
-fn validate_did(e: &Env, did: &String) {
-    let dids = storage::read_dids(e);
+fn validate_vault(e: &Env, did: &String) {
+    let vaults = storage::read_vaults(e);
 
-    if !did::is_registered(&dids, did) {
-        panic_with_error!(e, ContractError::DidNotFound)
+    if !vault::is_registered(&vaults, did) {
+        panic_with_error!(e, ContractError::VaultNotFound)
     }
-    if did::is_revoked(&dids, did) {
-        panic_with_error!(e, ContractError::DidRevoked)
+
+    if vault::is_revoked(&vaults, did) {
+        panic_with_error!(e, ContractError::VaultRevoked)
     }
 }
 
@@ -174,7 +153,7 @@ fn validate_issuer(
     issuer: &Address,
     did: &String,
     vc_data: &String,
-    issuance_contract_address: &Address,
+    issuance_contract: &Address,
 ) {
     let issuers: Map<Address, Issuer> = storage::read_issuers(e, did);
 
@@ -190,7 +169,7 @@ fn validate_issuer(
             vc_data.clone(),
             did.clone(),
             issuer.clone(),
-            issuance_contract_address.clone(),
+            issuance_contract.clone(),
         )
             .into_val(e),
     );

@@ -1,6 +1,6 @@
-use soroban_sdk::{contracttype, Address, Env, String};
-
 use crate::storage;
+use crate::vault::Vault;
+use soroban_sdk::{contracttype, Address, Env, String};
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -18,20 +18,25 @@ pub fn store_vc(
     issuance_contract: &Address,
     recipient_did: &String,
 ) {
-    let vc = VerifiableCredential {
+    let mut vaults = storage::read_vaults(e);
+    let mut vcs = vaults.get_unchecked(recipient_did.clone()).vcs;
+    let new_vc = VerifiableCredential {
         id: vc_id.clone(),
         data: vc_data.clone(),
         holder_did: recipient_did.clone(),
         issuance_contract: issuance_contract.clone(),
     };
-    let mut vcs = storage::read_vcs(e);
-    let mut dids = storage::read_dids(e);
-    let mut did = dids.get_unchecked(recipient_did.clone());
 
-    did.vcs.push_back(vc_id.clone());
-    dids.set(recipient_did.clone(), did);
-    storage::write_dids(e, &dids);
+    vcs.push_back(new_vc);
 
-    vcs.set(vc_id.clone(), vc);
-    storage::write_vcs(e, &vcs);
+    vaults.set(
+        recipient_did.clone(),
+        Vault {
+            did: recipient_did.clone(),
+            revoked: false,
+            vcs,
+        },
+    );
+
+    storage::write_vaults(e, &vaults);
 }

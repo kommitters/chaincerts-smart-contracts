@@ -4,6 +4,7 @@ mod did;
 mod error;
 mod issuer;
 mod storage;
+mod vault;
 mod vault_trait;
 mod verifiable_credential;
 

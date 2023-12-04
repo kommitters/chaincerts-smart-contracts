@@ -47,14 +47,14 @@ impl VCIssuanceTrait for VCIssuanceContract {
         admin: Address,
         vc_data: String,
         recipient_did: String,
-        storage_address: Address,
+        vault_contract: Address,
     ) -> String {
         validate_admin(&e, &admin);
 
         let vc_id = verifiable_credential::generate_id(&e);
         let contract_address = e.current_contract_address();
 
-        let client = vault_contract::Client::new(&e, &storage_address);
+        let client = vault_contract::Client::new(&e, &vault_contract);
         client.store_vc(&vc_id, &vc_data, &recipient_did, &admin, &contract_address);
         verifiable_credential::add_vc(&e, &vc_id);
 

@@ -7,7 +7,6 @@ use soroban_sdk::{contracttype, Address, Env, String};
 pub struct VerifiableCredential {
     pub id: String,
     pub data: String,
-    pub holder_did: String,
     pub issuance_contract: Address,
 }
 
@@ -23,7 +22,6 @@ pub fn store_vc(
     let new_vc = VerifiableCredential {
         id: vc_id.clone(),
         data: vc_data.clone(),
-        holder_did: recipient_did.clone(),
         issuance_contract: issuance_contract.clone(),
     };
 

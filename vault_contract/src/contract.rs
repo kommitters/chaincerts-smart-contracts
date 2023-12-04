@@ -4,9 +4,8 @@ use crate::issuer::Issuer;
 use crate::storage;
 use crate::vault;
 use crate::vault::Vault;
-use crate::verifiable_credential;
-
 use crate::vault_trait::VaultTrait;
+use crate::verifiable_credential;
 use soroban_sdk::{
     contract, contractimpl, contractmeta, panic_with_error, Address, Env, IntoVal, Map, String, Vec,
 };

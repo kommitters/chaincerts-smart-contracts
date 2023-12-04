@@ -1,6 +1,5 @@
 #![no_std]
 mod contract;
-mod did;
 mod error;
 mod issuer;
 mod storage;

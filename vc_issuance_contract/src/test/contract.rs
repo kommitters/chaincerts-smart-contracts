@@ -107,7 +107,7 @@ fn test_revoke_vc_with_invalid_vc() {
     contract.initialize(&admin, &Some(10));
 
     let vc_id = String::from_slice(&env, "vc_id1");
-    let date = String::from_slice(&env, "28-11-2023");
+    let date = String::from_slice(&env, "2023-12-05T21:37:44.389Z");
 
     contract.revoke(&admin, &vc_id, &date);
 }
@@ -125,7 +125,7 @@ fn test_revoke_vc() {
     let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did);
     let vc_id = contract.issue(&admin, &vc_data, &recipient_did, &vault_contract_id);
 
-    let date = String::from_slice(&env, "28-11-2023");
+    let date = String::from_slice(&env, "2023-12-05T21:37:44.389Z");
 
     contract.revoke(&admin, &vc_id, &date);
 }
@@ -159,7 +159,7 @@ fn test_verify_vc_with_revoked_vc() {
     } = VCIssuanceContractTest::setup();
     let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did);
     let vc_id = contract.issue(&admin, &vc_data, &recipient_did, &vault_contract_id);
-    let date = String::from_slice(&env, "28-11-2023");
+    let date = String::from_slice(&env, "2023-12-05T21:37:44.389Z");
 
     contract.revoke(&admin, &vc_id, &date);
 

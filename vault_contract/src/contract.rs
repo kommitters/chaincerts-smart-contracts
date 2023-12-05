@@ -38,14 +38,18 @@ impl VaultTrait for VaultContract {
 
     fn authorize_issuer(e: Env, admin: Address, issuer: Address, did: String) {
         validate_admin(&e, admin);
-        validate_vault(&e, &did);
+
+        let vaults = storage::read_vaults(&e);
+        validate_vault(&e, &vaults, &did);
 
         issuer::authorize_issuer(&e, &issuer, &did);
     }
 
     fn revoke_issuer(e: Env, admin: Address, issuer: Address, did: String) {
         validate_admin(&e, admin);
-        validate_vault(&e, &did);
+
+        let vaults = storage::read_vaults(&e);
+        validate_vault(&e, &vaults, &did);
 
         issuer::revoke_issuer(&e, &issuer, &did)
     }
@@ -58,52 +62,19 @@ impl VaultTrait for VaultContract {
         issuer: Address,
         issuance_contract: Address,
     ) {
-        validate_vault(&e, &recipient_did);
+        let mut vaults = storage::read_vaults(&e);
+        validate_vault(&e, &vaults, &recipient_did);
+
         validate_issuer(&e, &issuer, &recipient_did, &vc_data, &issuance_contract);
 
-        verifiable_credential::store_vc(&e, &vc_id, &vc_data, &issuance_contract, &recipient_did);
-    }
-
-    fn get_vault(e: Env, vc_id: String) -> Vault {
-        let vaults = storage::read_vaults(&e);
-
-        match vaults.get(vc_id) {
-            Some(vc) => vc,
-            None => panic_with_error!(&e, ContractError::VaultNotFound),
-        }
-    }
-
-    fn list_vaults(e: Env) -> Vec<Vault> {
-        let vaults = storage::read_vaults(&e);
-        let mut values_vec = Vec::new(&e);
-
-        for value in vaults.values() {
-            values_vec.push_front(value);
-        }
-
-        values_vec
-    }
-
-    fn revoke_vault(e: Env, admin: Address, did: String) {
-        validate_admin(&e, admin);
-        let mut vaults = storage::read_vaults(&e);
-
-        if !vault::is_registered(&vaults, &did) {
-            panic_with_error!(e, ContractError::VaultNotFound)
-        }
-
-        let vault = vaults.get_unchecked(did.clone());
-
-        vaults.set(
-            did.clone(),
-            Vault {
-                did,
-                revoked: true,
-                vcs: vault.vcs,
-            },
+        verifiable_credential::store_vc(
+            &e,
+            &mut vaults,
+            vc_id,
+            vc_data,
+            issuance_contract,
+            recipient_did,
         );
-
-        storage::write_vaults(&e, &vaults);
     }
 
     fn register_vault(e: Env, admin: Address, did: String) {
@@ -125,6 +96,41 @@ impl VaultTrait for VaultContract {
 
         storage::write_vaults(&e, &vaults)
     }
+
+    fn revoke_vault(e: Env, admin: Address, did: String) {
+        validate_admin(&e, admin);
+        let mut vaults = storage::read_vaults(&e);
+
+        if !vault::is_registered(&vaults, &did) {
+            panic_with_error!(e, ContractError::VaultNotFound)
+        }
+
+        let vault = vaults.get_unchecked(did.clone());
+
+        vaults.set(
+            did.clone(),
+            Vault {
+                revoked: true,
+                ..vault
+            },
+        );
+
+        storage::write_vaults(&e, &vaults);
+    }
+
+    fn get_vault(e: Env, did: String) -> Vault {
+        let vaults = storage::read_vaults(&e);
+
+        match vaults.get(did) {
+            Some(vault) => vault,
+            None => panic_with_error!(&e, ContractError::VaultNotFound),
+        }
+    }
+
+    fn list_vaults(e: Env) -> Vec<Vault> {
+        let vaults = storage::read_vaults(&e);
+        vaults.values()
+    }
 }
 
 fn validate_admin(e: &Env, admin: Address) {
@@ -135,14 +141,12 @@ fn validate_admin(e: &Env, admin: Address) {
     admin.require_auth();
 }
 
-fn validate_vault(e: &Env, did: &String) {
-    let vaults = storage::read_vaults(e);
-
-    if !vault::is_registered(&vaults, did) {
+fn validate_vault(e: &Env, vaults: &Map<String, Vault>, did: &String) {
+    if !vault::is_registered(vaults, did) {
         panic_with_error!(e, ContractError::VaultNotFound)
     }
 
-    if vault::is_revoked(&vaults, did) {
+    if vault::is_revoked(vaults, did) {
         panic_with_error!(e, ContractError::VaultRevoked)
     }
 }

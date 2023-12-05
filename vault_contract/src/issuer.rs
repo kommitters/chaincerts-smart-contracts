@@ -9,13 +9,13 @@ pub struct Issuer {
     pub is_revoked: bool,
 }
 
-pub fn authorize_issuer(e: &Env, issuer_pk: &Address, did: &String) {
+pub fn authorize_issuer(e: &Env, issuer: &Address, did: &String) {
     let mut issuers: Map<Address, Issuer> = storage::read_issuers(e, did);
 
     issuers.set(
-        issuer_pk.clone(),
+        issuer.clone(),
         Issuer {
-            public_key: issuer_pk.clone(),
+            public_key: issuer.clone(),
             is_revoked: false,
         },
     );

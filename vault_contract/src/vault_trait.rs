@@ -2,16 +2,16 @@ use crate::vault::Vault;
 use soroban_sdk::{Address, Env, String, Vec};
 
 pub trait VaultTrait {
-    /// Initializes the Vault Contract by setting the admin and the initial DIDs.
+    /// Initializes the vault contract by setting the admin and creating a vault for each DID.
     fn initialize(e: Env, admin: Address, dids: Vec<String>);
 
-    /// Authorizes an issuer adding it to the issuers map.
+    /// Authorizes an issuer for a vault.
     fn authorize_issuer(e: Env, admin: Address, issuer: Address, did: String);
 
-    /// Revokes an issuer setting its is_revoked property to true.
+    /// Revokes an issuer for a vault.
     fn revoke_issuer(e: Env, admin: Address, issuer: Address, did: String);
 
-    /// Stores the verifiable credential.
+    /// Stores a verifiable credential in the recipient's vault.
     fn store_vc(
         e: Env,
         vc_id: String,
@@ -21,15 +21,15 @@ pub trait VaultTrait {
         issuance_contract: Address,
     );
 
-    /// Retrieves a vault using its unique identifier.
-    fn get_vault(e: Env, vc_id: String) -> Vault;
+    /// Registers a vault given its DID.
+    fn register_vault(e: Env, admin: Address, did: String);
 
-    /// Retrieves all the vaults in a vec.
-    fn list_vaults(e: Env) -> Vec<Vault>;
-
-    /// Revokes a vault given its DID URI.
+    /// Revokes a vault given its DID.
     fn revoke_vault(e: Env, admin: Address, did: String);
 
-    /// Registers a new vault given a DID URI.
-    fn register_vault(e: Env, admin: Address, did: String);
+    /// Retrieves a vault given its DID.
+    fn get_vault(e: Env, did: String) -> Vault;
+
+    /// Retrieves the list of vaults.
+    fn list_vaults(e: Env) -> Vec<Vault>;
 }

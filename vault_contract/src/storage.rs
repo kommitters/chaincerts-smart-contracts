@@ -7,7 +7,7 @@ use soroban_sdk::{contracttype, Address, Env, Map, String};
 pub enum DataKey {
     Admin,           // Address
     Issuers(String), // Map<Address, Issuer>
-    Vaults,          // Map<Vault>
+    Vaults,          // Map<String, Vault>
 }
 
 pub fn has_admin(e: &Env) -> bool {

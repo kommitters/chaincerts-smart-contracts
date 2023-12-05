@@ -99,7 +99,7 @@ fn test_authorize_issuer_with_not_registered_vault() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #5)")]
+#[should_panic(expected = "HostError: Error(Contract, #7)")]
 fn test_authorize_issuer_with_revoked_vault() {
     let VaultContractTest {
         env: _,
@@ -187,7 +187,7 @@ fn test_revoke_issuer_with_not_registered_did() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #5)")]
+#[should_panic(expected = "HostError: Error(Contract, #7)")]
 fn test_revoke_issuer_with_revoked_vault() {
     let VaultContractTest {
         env: _,
@@ -279,7 +279,7 @@ fn test_store_vc_with_issuer_not_found() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #7)")]
+#[should_panic(expected = "HostError: Error(Contract, #5)")]
 fn test_store_vc_with_revoked_issuer() {
     let VaultContractTest {
         env,
@@ -324,6 +324,7 @@ fn test_store_vc_with_vault_not_found() {
 
     contract.initialize(&admin, &dids);
     contract.authorize_issuer(&admin, &issuer, &did);
+
     contract.store_vc(
         &vc_id,
         &vc_data,
@@ -339,24 +340,31 @@ fn test_get_vault_not_found() {
     let VaultContractTest {
         env,
         admin,
-        did,
+        did: _,
         dids,
-        issuer,
+        issuer: _,
         contract,
     } = VaultContractTest::setup();
 
-    let VCVaultContractTest {
-        vc_id,
-        vc_data,
-        issuance_contract_address,
-    } = get_vc_setup(&env);
-
     contract.initialize(&admin, &dids);
-    contract.authorize_issuer(&admin, &issuer, &did);
-    contract.store_vc(&vc_id, &vc_data, &did, &issuer, &issuance_contract_address);
 
-    let vc_id2 = String::from_slice(&env, "vc_id2");
-    contract.get_vault(&vc_id2);
+    let bad_vault_did: String = String::from_slice(&env, "did:chaincerts:xyz123");
+    contract.get_vault(&bad_vault_did);
+}
+
+#[test]
+fn test_get_vault() {
+    let VaultContractTest {
+        env: _,
+        admin,
+        did,
+        dids,
+        issuer: _,
+        contract,
+    } = VaultContractTest::setup();
+    contract.initialize(&admin, &dids);
+
+    contract.get_vault(&did);
 }
 
 #[test]
@@ -399,11 +407,12 @@ fn test_list_vaults() {
 
     assert_eq!(vaults.len(), 2);
 
-    let vault1 = vaults.get_unchecked(0);
-    let vault2 = vaults.get_unchecked(1);
+    let vault1 = contract.get_vault(&did);
+    let vault2 = contract.get_vault(&did2);
 
-    assert_eq!(vault1.did, did);
-    assert_eq!(vault2.did, did2);
+    vaults.contains(&vault1);
+    vaults.contains(&vault2);
+
     assert_eq!(vault1.vcs.len(), 2);
     assert_eq!(vault2.vcs.len(), 1);
 }

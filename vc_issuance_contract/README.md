@@ -127,7 +127,7 @@ soroban contract invoke \
   revoke \
   --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
   --vc_id "t5iwuct2njbbcdu2nfwr32ib" \
-  --date "01/01/2010 14:10:10"
+  --date "2023-12-05T21:37:44.389Z"
 ```
 
 ## Contract Errors

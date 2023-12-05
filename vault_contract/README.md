@@ -36,15 +36,15 @@ Represents a verifiable credential with essential attributes for comprehensive i
 }
 ```
 
-### DidWithVCs
+### Vault
 Represents a structured entity that encapsulates a DID along with its corresponding verifiable credentials.
 
 #### Attributes
 
 | Name            | Type                           | Description                                                |
 | --------------- | ------------------------------ | ---------------------------------------------------------- |
-| `did`           | `String`                       | The DID associated with the structure. |
-| `is_revoked`    | `bool`                         | Indicates whether the DID has been revoked (`true` if revoked, `false` otherwise). |
+| `did`           | `String`                       | The DID associated with the vault. |
+| `revoked`    | `bool`                         | Indicates whether the vault has been revoked (`true` if revoked, `false` otherwise). |
 | `vcs`           | `Vec<VerifiableCredential>`    | List of Verifiable Credentials associated with the given DID. |
 
 
@@ -141,8 +141,8 @@ fn store_vc(
     vc_id: String,
     vc_data: String,
     recipient_did: String,
-    issuer_pk: Address,
-    issuance_contract_address: Address,
+    issuer: Address,
+    issuance_contract: Address,
 );
 ```
 
@@ -162,68 +162,11 @@ soroban contract invoke \
   --issuance_contract_address CBRM3HA7GLEI6QQ3O55RUKVRDSQASARUPKK6NXKXKKPWEYLE533GDYQD
 ```
 
-### Get VC
-Retrieves a verifiable credential using its unique identifier.
+### Revoke Vault
+Revokes a vault based on its DID URI to prevent the issuance of verifiable credentials. The admin account is the only party authorized to invoke this function.
 
 ```rust
-fn get_vc(e: Env, vc_id: String) -> VerifiableCredential;
-```
-
-#### Output
-```bash
-{
-  "id": "",
-  "data": "", 
-  "holder_did": "",  
-  "issuance_contract": ""
-}
-```
-#### Example
-
-```bash
-soroban contract invoke \
-  --id CONTRACT_ID \
-  --source SOURCE_ACCOUNT_SECRET_KEY \
-  --network testnet \
-  -- \
-  get_vc \
-  --vc_id "t5iwuct2njbbcdu2nfwr32ib"
-
-# Output: VerifiableCredential
-
-{
-  "data": "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y",
-  "holder_did": "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h",
-  "id": "t5iwuct2njbbcdu2nfwr32ib",
-  "issuance_contract": "CBWDZIBI5NZ77EPSZLJDS3RTM57D3CIBKAIIOFER2TZEZATUYBASYF65"
-}
-```
-
-### List verifiable credentials
-Retrieves the list of verifiable credentials from the storage grouped by DID.
-
-```rust
-fn list_vcs(e: Env) -> Map<String, DidWithVCs>;
-```
-
-#### Output
-
-```bash
-{
-  "DID.did":
-  {
-    "did": "",
-    "is_revoked": bool,
-    "vcs": [
-      {
-        "data": "",
-        "holder_did": "",
-        "id": "",
-        "issuance_contract": ""
-      }
-    ]
-  }
-}
+fn revoke_vault(e: Env, admin: Address, did: String);
 ```
 
 #### Example
@@ -234,52 +177,16 @@ soroban contract invoke \
   --source SOURCE_ACCOUNT_SECRET_KEY \
   --network testnet \
   -- \
-  list_vcs
-
-#Output: Map with DIDWithVcs grouped by DID
-
-{
-  "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h":
-  {
-    "did": "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h",
-    "is_revoked": false,
-    "vcs": [
-      {
-        "data": "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y",
-        "holder_did": "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h",
-        "id": "t5iwuct2njbbcdu2nfwr32ib",
-        "issuance_contract": "CBWDZIBI5NZ77EPSZLJDS3RTM57D3CIBKAIIOFER2TZEZATUYBASYF65"
-      }
-    ]
-  }
-}
-```
-
-### Revoke DID
-Revokes a DID based on its DID URI to prevent the issuance of verifiable credentials to the specific DID. The admin account is the only party authorized to invoke this function.
-
-```rust
-fn revoke_did(e: Env, admin: Address, did: String);
-```
-
-#### Example
-
-```bash
-soroban contract invoke \
-  --id CONTRACT_ID \
-  --source SOURCE_ACCOUNT_SECRET_KEY \
-  --network testnet \
-  -- \
-  revoke_did \
+  revoke_vault \
   --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
   --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h" 
 ```
 
-### Register DID
-Registers a new DID in the vault given a DID URI. The admin account is the only party authorized to invoke this function.
+### Register Vault
+Registers a new vault with the associated DID URI. The admin account is the only party authorized to invoke this function.
 
 ```rust
-fn register_did(e: Env, admin: Address, did: String);
+fn register_vault(e: Env, admin: Address, did: String);
 ```
 
 #### Example
@@ -290,7 +197,7 @@ soroban contract invoke \
   --source SOURCE_ACCOUNT_SECRET_KEY \
   --network testnet \
   -- \
-  register_did \
+  register_vault \
   --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
   --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h" 
 ```
@@ -347,11 +254,10 @@ To develop and test the smart contract, you need to install Rust and the Soroban
 | 2 | `NotAuthorized` | Invoker lacks the necessary authorization as the contract administrator |
 | 3 | `EmptyDIDs` | The array of DIDs is empty |
 | 4 | `IssuerNotFound` | The specified issuer was not found |
-| 5 | `DidRevoked` | The DID cannot perform the action because it has been revoked |
-| 6 | `DidNotFound` | The specified DID was not found |
-| 7 | `IssuerRevoked` | The issuer cannot perform the action because it has been revoked |
-| 8 | `VCNotFound` | The Verifiable Credential (VC) was not found |
-| 9 | `DuplicatedDID` | The DID is already registered |
+| 5 | `IssuerRevoked` | The issuer cannot perform the action because it has been revoked |
+| 6 | `VaultNotFound` | The specified DID was not found |
+| 5 | `VaultRevoked` | The DID cannot perform the action because it has been revoked |
+| 8 | `VaultAlreadyRegistered` | The vault was already registered |
 
 ## Changelog
 Features and bug fixes are listed in the [CHANGELOG][changelog] file.
@@ -390,4 +296,3 @@ This software is licensed under the [Apache License 2.0][license] © kommit.
 [kommit-github]: https://github.com/kommitters
 [kommit-x]: https://twitter.com/kommitco
 [kommit-linkedin]: https://www.linkedin.com/company/kommit-co
-[stellar]: https://stellar.org

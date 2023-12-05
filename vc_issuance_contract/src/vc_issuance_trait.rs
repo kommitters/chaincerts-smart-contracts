@@ -10,7 +10,7 @@ pub trait VCIssuanceTrait {
         admin: Address,
         recipient_did: String,
         vc_data: String,
-        storage_address: Address,
+        vault_contract: Address,
     ) -> String;
 
     /// Verifies if the Verifiable Credential is not revoked

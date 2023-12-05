@@ -83,7 +83,7 @@ fn test_authorize_issuer_with_invalid_admin() {
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #6)")]
-fn test_authorize_issuer_with_not_registered_did() {
+fn test_authorize_issuer_with_not_registered_vault() {
     let VaultContractTest {
         env,
         admin,
@@ -99,8 +99,8 @@ fn test_authorize_issuer_with_not_registered_did() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #5)")]
-fn test_authorize_issuer_with_revoked_did() {
+#[should_panic(expected = "HostError: Error(Contract, #7)")]
+fn test_authorize_issuer_with_revoked_vault() {
     let VaultContractTest {
         env: _,
         admin,
@@ -111,7 +111,7 @@ fn test_authorize_issuer_with_revoked_did() {
     } = VaultContractTest::setup();
 
     contract.initialize(&admin, &dids);
-    contract.revoke_did(&admin, &did);
+    contract.revoke_vault(&admin, &did);
     contract.authorize_issuer(&admin, &issuer, &did);
 }
 
@@ -187,8 +187,8 @@ fn test_revoke_issuer_with_not_registered_did() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #5)")]
-fn test_revoke_issuer_with_revoked_did() {
+#[should_panic(expected = "HostError: Error(Contract, #7)")]
+fn test_revoke_issuer_with_revoked_vault() {
     let VaultContractTest {
         env: _,
         admin,
@@ -199,7 +199,7 @@ fn test_revoke_issuer_with_revoked_did() {
     } = VaultContractTest::setup();
 
     contract.initialize(&admin, &dids);
-    contract.revoke_did(&admin, &did);
+    contract.revoke_vault(&admin, &did);
     contract.revoke_issuer(&admin, &issuer, &did);
 }
 
@@ -279,7 +279,7 @@ fn test_store_vc_with_issuer_not_found() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #7)")]
+#[should_panic(expected = "HostError: Error(Contract, #5)")]
 fn test_store_vc_with_revoked_issuer() {
     let VaultContractTest {
         env,
@@ -305,7 +305,7 @@ fn test_store_vc_with_revoked_issuer() {
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #6)")]
-fn test_store_vc_with_did_not_found() {
+fn test_store_vc_with_vault_not_found() {
     let VaultContractTest {
         env,
         admin,
@@ -324,6 +324,7 @@ fn test_store_vc_with_did_not_found() {
 
     contract.initialize(&admin, &dids);
     contract.authorize_issuer(&admin, &issuer, &did);
+
     contract.store_vc(
         &vc_id,
         &vc_data,
@@ -334,59 +335,40 @@ fn test_store_vc_with_did_not_found() {
 }
 
 #[test]
-fn test_get_vc() {
+#[should_panic(expected = "HostError: Error(Contract, #6)")]
+fn test_get_vault_not_found() {
     let VaultContractTest {
         env,
         admin,
-        did,
+        did: _,
         dids,
-        issuer,
+        issuer: _,
         contract,
     } = VaultContractTest::setup();
 
-    let VCVaultContractTest {
-        vc_id,
-        vc_data,
-        issuance_contract_address,
-    } = get_vc_setup(&env);
-
     contract.initialize(&admin, &dids);
-    contract.authorize_issuer(&admin, &issuer, &did);
-    contract.store_vc(&vc_id, &vc_data, &did, &issuer, &issuance_contract_address);
-    let vc = contract.get_vc(&vc_id);
 
-    assert_eq!(vc_id, vc.id);
-    assert_eq!(vc_data, vc.data);
+    let bad_vault_did: String = String::from_slice(&env, "did:chaincerts:xyz123");
+    contract.get_vault(&bad_vault_did);
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #8)")]
-fn test_get_vc_not_found() {
+fn test_get_vault() {
     let VaultContractTest {
-        env,
+        env: _,
         admin,
         did,
         dids,
-        issuer,
+        issuer: _,
         contract,
     } = VaultContractTest::setup();
-
-    let VCVaultContractTest {
-        vc_id,
-        vc_data,
-        issuance_contract_address,
-    } = get_vc_setup(&env);
-
     contract.initialize(&admin, &dids);
-    contract.authorize_issuer(&admin, &issuer, &did);
-    contract.store_vc(&vc_id, &vc_data, &did, &issuer, &issuance_contract_address);
 
-    let vc_id2 = String::from_slice(&env, "vc_id2");
-    contract.get_vc(&vc_id2);
+    contract.get_vault(&did);
 }
 
 #[test]
-fn test_list_vcs() {
+fn test_list_vaults() {
     let VaultContractTest {
         env,
         admin,
@@ -421,19 +403,22 @@ fn test_list_vcs() {
         &issuance_contract_address,
     );
 
-    let dids_with_vcs = contract.list_vcs();
-    let did_with_vc1 = dids_with_vcs.get_unchecked(did.clone());
-    let did_with_vc2 = dids_with_vcs.get_unchecked(did2.clone());
+    let vaults = contract.list_vaults();
 
-    assert_eq!(dids_with_vcs.len(), 2);
-    assert_eq!(did_with_vc1.did, did);
-    assert_eq!(did_with_vc2.did, did2);
-    assert_eq!(did_with_vc1.vcs.len(), 2);
-    assert_eq!(did_with_vc2.vcs.len(), 1);
+    assert_eq!(vaults.len(), 2);
+
+    let vault1 = contract.get_vault(&did);
+    let vault2 = contract.get_vault(&did2);
+
+    vaults.contains(&vault1);
+    vaults.contains(&vault2);
+
+    assert_eq!(vault1.vcs.len(), 2);
+    assert_eq!(vault2.vcs.len(), 1);
 }
 
 #[test]
-fn test_register_did() {
+fn test_register_vault() {
     let VaultContractTest {
         env,
         admin,
@@ -445,12 +430,12 @@ fn test_register_did() {
     let did2 = String::from_slice(&env, "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h");
 
     contract.initialize(&admin, &dids);
-    contract.register_did(&admin, &did2);
+    contract.register_vault(&admin, &did2);
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #9)")]
-fn test_register_did_with_duplicated_did() {
+#[should_panic(expected = "HostError: Error(Contract, #8)")]
+fn test_register_vault_with_duplicated_did() {
     let VaultContractTest {
         env: _,
         admin,
@@ -461,12 +446,12 @@ fn test_register_did_with_duplicated_did() {
     } = VaultContractTest::setup();
 
     contract.initialize(&admin, &dids);
-    contract.register_did(&admin, &duplicated_did);
+    contract.register_vault(&admin, &duplicated_did);
 }
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #2)")]
-fn test_register_did_with_invalid_admin() {
+fn test_register_vault_with_invalid_admin() {
     let VaultContractTest {
         env,
         admin,
@@ -479,11 +464,11 @@ fn test_register_did_with_invalid_admin() {
     let invalid_admin = Address::random(&env);
 
     contract.initialize(&admin, &dids);
-    contract.register_did(&invalid_admin, &did2);
+    contract.register_vault(&invalid_admin, &did2);
 }
 
 #[test]
-fn test_revoke_did() {
+fn test_revoke_vault() {
     let VaultContractTest {
         env: _,
         admin,
@@ -494,12 +479,12 @@ fn test_revoke_did() {
     } = VaultContractTest::setup();
 
     contract.initialize(&admin, &dids);
-    contract.revoke_did(&admin, &did);
+    contract.revoke_vault(&admin, &did);
 }
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #2)")]
-fn test_revoke_did_with_invalid_admin() {
+fn test_revoke_vault_with_invalid_admin() {
     let VaultContractTest {
         env,
         admin,
@@ -511,12 +496,12 @@ fn test_revoke_did_with_invalid_admin() {
     let invalid_admin = Address::random(&env);
 
     contract.initialize(&admin, &dids);
-    contract.revoke_did(&invalid_admin, &did);
+    contract.revoke_vault(&invalid_admin, &did);
 }
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #6)")]
-fn test_revoke_did_with_no_registered_did() {
+fn test_revoke_vault_with_no_registered_did() {
     let VaultContractTest {
         env,
         admin,
@@ -528,5 +513,5 @@ fn test_revoke_did_with_no_registered_did() {
     let invalid_did = String::from_slice(&env, "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h");
 
     contract.initialize(&admin, &dids);
-    contract.revoke_did(&admin, &invalid_did);
+    contract.revoke_vault(&admin, &invalid_did);
 }

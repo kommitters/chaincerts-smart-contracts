@@ -3,9 +3,14 @@ resolver = "2"
 
 members = ["deployer_contract", "vault_contract", "vc_issuance_contract"]
 
-[profile.release-with-logs]
-inherits = "release"
-debug-assertions = true
+[workspace.package]
+version = "0.0.0"
+edition = "2021"
+license = "Apache-2.0"
+repository = "https://github.com/kommitters/chaincerts-smart-contracts"
+
+[workspace.dependencies]
+soroban-sdk = { version = "=20.0.0-rc2.2" }
 
 [profile.release]
 opt-level = "z"
@@ -17,8 +22,6 @@ panic = "abort"
 codegen-units = 1
 lto = true
 
-[workspace.dependencies.soroban-sdk]
-version = "20.0.0-rc2"
-
-[workspace.dependencies.soroban-auth]
-version = "0.8.3"
+[profile.release-with-logs]
+inherits = "release"
+debug-assertions = true

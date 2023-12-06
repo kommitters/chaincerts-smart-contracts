@@ -11,10 +11,31 @@ With this smart contract, you will be able to:
 - Verify a verifiable credential.
 - Revoke a verifiable credential.
 
+## Types
+
+### Revocation
+Represents a revoked verifiable credential.
+
+### Attributes
+
+| Name         | Type      | Values                                            |
+| ------------ | --------- | ------------------------------------------------- |
+| `vc_id` | `String` | The verifiable credential id.                      |
+| `date`    | `String`    | The date of revocation. |
+
+### Example
+
+```bash
+{
+  "vc_id": "a4tkzct2njbbcdu2nfwr32ib",
+  "date": "2023-12-05T21:37:44.389Z"
+}
+```
+
 ## Functions
 
 ### Initialize
-Initializes the contract by setting the contract admin and the limit amount of verifiable credentials that can be issued. The maximum amount allowed is **100**; if no amount is provided, the default value is **20**.
+Initializes the contract by setting the contract admin and the limit amount of verifiable credentials that can be issued. The maximum amount allowed is **100**; if no amount is provided, the default value is **20**. An error will be triggered if the contract has already been initialized.
 
 ```rust
 fn initialize(e: Env, admin: Address, amount: Option<u32>);
@@ -70,7 +91,7 @@ soroban contract invoke \
 ```
 
 ### Verify
-Verifies the verifiable credential status, returning a map indicating if it is **valid** or **revoked**. If the status is revoked, it additionally provides the date of revocation.
+Verifies the verifiable credential status, returning a map indicating if it is **valid** or **revoked**. If the status is revoked, it additionally provides the date of revocation. An error will be triggered if the verifiable credential is not registered.
 
 ```rust
 fn verify(e: Env, vc_id: String) -> Map<String, String>;
@@ -80,9 +101,7 @@ fn verify(e: Env, vc_id: String) -> Map<String, String>;
 
 Returns a map with the VC status.
 
-#### Example
-
-<!-- TODO: Add other example -->
+###  Example: When the VC status is valid:
 
 ```bash
 soroban contract invoke \
@@ -100,8 +119,32 @@ soroban contract invoke \
 }
 ```
 
+###  Example: When the VC status is revoked:
+
+```bash
+soroban contract invoke \
+  --id CONTRACT_ID \
+  --source SOURCE_ACCOUNT_SECRET_KEY \
+  --rpc-url https://soroban-testnet.stellar.org:443 \
+  --network-passphrase 'Test SDF Network ; September 2015' \
+  -- \
+  verify \
+  --vc_id "d2tqrct2njbbcdu2nfwr32ib"
+
+# Output: VC Status
+{
+    "status": "revoked", 
+    "since": "2023-12-05T21:37:44.389Z"
+}
+```
+
 ### Revoke
-Revokes a verifiable credential. The admin account is the only party authorized to invoke this function.
+Revokes a verifiable credential given its id and the date of revocation. The admin account is the only party authorized to invoke this function.
+
+A contract error will be triggered if:
+
+- Invoker is not the contract admin.
+- Verifiable credential is not registered.
 
 ```rust
 fn revoke(e: Env, admin: Address, vc_id: String, date: String);

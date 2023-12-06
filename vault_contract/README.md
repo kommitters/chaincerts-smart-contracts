@@ -87,7 +87,7 @@ The following functions define the behavior of the Vault smart contract.
 
 ### Initialize
 
-Initializes the contract by setting the admin and creating a vault for each DID.
+Initializes the contract by setting the admin and creating a vault for each DID. An error will be triggered if the contract has already been initialized.
 
 ```rust
 fn initialize(e: Env, admin: Address, dids: Vec<String>);
@@ -139,7 +139,12 @@ soroban contract invoke \
 ```
 
 ### Revoke Issuer
-Revokes an issuer to prevent the issuance of verifiable credentials to a specific DID in the vault. This function is exclusively accessible to the admin account for invocation.
+Revokes an issuer for a specific vault. The admin account is the only party authorized to invoke this function.
+
+A contract error will be triggered if:
+- Invoker is not the contract admin.
+- Vault is not registered.
+- Vault is registered but revoked.
 
 ```rust
 fn revoke_issuer(e: Env, admin: Address, issuer: Address, did: String);
@@ -161,7 +166,14 @@ soroban contract invoke \
 ```
 
 ### Store VC
-Stores a verifiable credential related to a holder's DID. This function is invoked by the issuer within the vc_issuance_contract smart contract.
+Stores a verifiable credential into a vault given the recipient DID. The admin account is the only party authorized to invoke this function.
+
+A contract error will be triggered if:
+
+- Issuer is not registered.
+- Issuer is registered but revoked.
+- Vault is not registered.
+- Vault is registered but revoked.
 
 ```rust
 fn store_vc(
@@ -187,12 +199,16 @@ soroban contract invoke \
   --vc_id "t5iwuct2njbbcdu2nfwr32ib" \
   --vc_data "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y" \
   --recipient_did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h" \
-  --issuer_pk GDSOFBSZMFIY5BMZT3R5FCQK6MJAR2PGDSWHOMHZFGFFGKUO32DBNJKC \
-  --issuance_contract CBRM3HA7GLEI6QQ3O55RUKVRDSQASARUPKK6NXKXKKPWEYLE533GDYQD
+  --issuer GDSOFBSZMFIY5BMZT3R5FCQK6MJAR2PGDSWHOMHZFGFFGKUO32DBNJKC \
+  --issuance_contract CAVN6QFZP2WMB5WIF5EVBBW3LUDDJ62BWLP23EBCX56AS2HGXFIJXK7R
 ```
 
 ### Register Vault
 Registers a vault given its DID. The admin account is the only party authorized to invoke this function.
+
+A contract error will be triggered if:
+- Invoker is not the contract admin.
+- Vault is already registered.
 
 ```rust
 fn register_vault(e: Env, admin: Address, did: String);
@@ -213,7 +229,11 @@ soroban contract invoke \
 ```
 
 ### Revoke Vault
-Revokes a vault based on its DID to prevent the issuance of verifiable credentials. The admin account is the only party authorized to invoke this function.
+Revokes a vault. The admin account is the only party authorized to invoke this function.
+
+A contract error will be triggered if:
+- Invoker is not the contract admin.
+- Vault is not registered.
 
 ```rust
 fn revoke_vault(e: Env, admin: Address, did: String);
@@ -270,14 +290,14 @@ soroban contract invoke \
 ```
 
 ### List Vaults
-Retrieves all the vaults
+Retrieves all the vaults.
 
 ```rust
 fn list_vaults(e: Env) -> Vec<Vault>;
 ```
 
 #### Output
-Returns a list of vault.
+Returns a list of vaults.
 
 #### Example
 
@@ -315,9 +335,10 @@ soroban contract invoke \
 | 3    | `EmptyDIDs`              | The array of DIDs is empty                                              |
 | 4    | `IssuerNotFound`         | The specified issuer was not found                                      |
 | 5    | `IssuerRevoked`          | The issuer cannot perform the action because it has been revoked        |
-| 6    | `VaultNotFound`          | The specified DID was not found                                         |
-| 5    | `VaultRevoked`           | The DID cannot perform the action because it has been revoked           |
+| 6    | `VaultNotFound`          | The specified Vault given its DID was not found                         |
+| 5    | `VaultRevoked`           | The action cannot be performed because the vault has been revoked       |
 | 8    | `VaultAlreadyRegistered` | The vault was already registered                                        |
+
 
 ## Development
 

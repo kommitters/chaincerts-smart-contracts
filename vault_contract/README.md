@@ -1,30 +1,50 @@
 # Vault Smart Contract
+The Vault smart contract is a secure repository for safeguarding verifiable credentials (VCs).
 
 ## Features
-The vault smart contract is a secure repository for safeguarding verifiable credentials (VCs). With this smart contract, you will be able to:
+With this smart contract, you will be able to:
 
-- Authorize issuers to emit certificates for specific DIDs(Decentralized Identifiers) in the vault.
-- Revoke an issuer's authority for a particular DID.
-- Store a verifiable credential.
-- Retrieve a specific verifiable credential using its identifier.
-- Retrieve a list of verifiable credentials organized by DID.
-- Register new DIDs in the vault.
-- Revoke DIDs in the vault.
+- Authorize an issuer to store verifiable credentials in a vault.
+- Revoke an issuer for a specific vault.
+- Store a verifiable credential in the recipient's vault.
+- Register a vault given its DID.
+- Revoke a vault given its DID.
+- Retrieve a vault given its DID.
+- List all vaults.
 
 ## Types
 
+### Issuer
+Represents an authorized entity that issues verifiable credentials to a vault.
+
+### Attributes
+
+| Name         | Type      | Values                                            |
+| ------------ | --------- | ------------------------------------------------- |
+| `public_key` | `Address` | Issuer's public key address.                      |
+| `revoked`    | `bool`    | Boolean indicating whether the issuer is revoked. |
+
+### Example
+
+```bash
+{
+  "public_key": "GDSOFBSZMFIY5BMZT3R5FCQK6MJAR2PGDSWHOMHZFGFFGKUO32DBNJKC",
+  "revoked": false
+}
+```
+
 ### VerifiableCredential
-Represents a verifiable credential with essential attributes for comprehensive identification and validation.
+Represents a digitally signed statement made by an issuer about a DID subject.
 
 #### Attributes
 
-| Name                   | Type                 | Description                                                |
-| ---------------------- | -------------------- | ---------------------------------------------------------- |
-| `id`                   | `String`             | Unique identifier for the verifiable credential (e.g., `t5iwuct2njbbcdu2nfwr32ib`). |
-| `data`                 | `String`             | The encrypted payload encapsulating the actual data within the credential, utilizing the X25519KeyAgreementKey2020 algorithm for heightened security.|
-| `issuance_contract`    | `Address`            | The address of the smart contract responsible for credential issuance. |
+| Name                | Type      | Values                                                                         |
+| ------------------- | --------- | ------------------------------------------------------------------------------ |
+| `id`                | `String`  | Unique identifier (e.g., `t5iwuct2njbbcdu2nfwr32ib`).                          |
+| `data`              | `String`  | VC data encrypted utilizing a key agreement algorithm for heightened security. |
+| `issuance_contract` | `Address` | Smart contract address responsible for verifiable credential issuance.         |
 
-#### Example 
+#### Example
 
 ```bash
 {
@@ -35,15 +55,15 @@ Represents a verifiable credential with essential attributes for comprehensive i
 ```
 
 ### Vault
-Represents a structured entity that encapsulates a DID along with its corresponding verifiable credentials.
+Represents a secure container associated with a specific DID, capable of storing a collection of verifiable credentials.
 
 #### Attributes
 
-| Name            | Type                           | Description                                                |
-| --------------- | ------------------------------ | ---------------------------------------------------------- |
-| `did`           | `String`                       | The DID associated with the vault. |
-| `revoked`    | `bool`                         | Indicates whether the vault has been revoked (`true` if revoked, `false` otherwise). |
-| `vcs`           | `Vec<VerifiableCredential>`    | List of Verifiable Credentials associated with the given DID. |
+| Name      | Type                        | Values                                                     |
+| --------- | --------------------------- | ---------------------------------------------------------- |
+| `did`     | `String`                    | DID URI (e.g., `did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h`). |
+| `revoked` | `bool`                      | Boolean indicating whether the vault is revoked.           |
+| `vcs`     | `Vec<VerifiableCredential>` | List of [VerifiableCredentials](#verifiablecredential).    |
 
 
 #### Example
@@ -66,7 +86,8 @@ Represents a structured entity that encapsulates a DID along with its correspond
 The following functions define the behavior of the Vault smart contract.
 
 ### Initialize
-Initializes the vault contract by configuring the administrator and initial Decentralized Identifiers (DIDs).
+
+Initializes the contract by setting the admin and creating a vault for each DID.
 
 ```rust
 fn initialize(e: Env, admin: Address, dids: Vec<String>);
@@ -78,16 +99,24 @@ fn initialize(e: Env, admin: Address, dids: Vec<String>);
 soroban contract invoke \
   --id CONTRACT_ID \
   --source SOURCE_ACCOUNT_SECRET_KEY \
-  --network testnet \
+  --rpc-url https://soroban-testnet.stellar.org:443 \
+  --network-passphrase 'Test SDF Network ; September 2015' \
   -- \
   initialize \
   --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
   --dids '["did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h"]'
+
 ```
 
 ### Authorize Issuer
 
-Authorizes an issuer to issue verifiable credentials for a specific DID. If the DID is already registered or revoked, a specific error will be triggered. This function is exclusively accessible to the admin account for invocation.
+Authorizes an issuer to store verifiable credentials in a vault given its DID. The admin account is the only party authorized to invoke this function.
+
+A contract error will be triggered if:
+- Invoker is not the contract admin.
+- Vault is not registered.
+- Vault is registered but revoked.
+
 
 ```rust
 fn authorize_issuer(e: Env, admin: Address, issuer: Address, did: String);
@@ -99,12 +128,14 @@ fn authorize_issuer(e: Env, admin: Address, issuer: Address, did: String);
 soroban contract invoke \
   --id CONTRACT_ID \
   --source SOURCE_ACCOUNT_SECRET_KEY \
-  --network testnet \
+  --rpc-url https://soroban-testnet.stellar.org:443 \
+  --network-passphrase 'Test SDF Network ; September 2015' \
   -- \
   authorize_issuer \
   --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
   --issuer GDSOFBSZMFIY5BMZT3R5FCQK6MJAR2PGDSWHOMHZFGFFGKUO32DBNJKC \
   --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h"
+
 ```
 
 ### Revoke Issuer
@@ -120,7 +151,8 @@ fn revoke_issuer(e: Env, admin: Address, issuer: Address, did: String);
 soroban contract invoke \
   --id CONTRACT_ID \
   --source SOURCE_ACCOUNT_SECRET_KEY \
-  --network testnet \
+  --rpc-url https://soroban-testnet.stellar.org:443 \
+  --network-passphrase 'Test SDF Network ; September 2015' \
   -- \
   revoke_issuer \
   --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
@@ -148,7 +180,8 @@ fn store_vc(
 soroban contract invoke \
   --id CONTRACT_ID \
   --source SOURCE_ACCOUNT_SECRET_KEY \
-  --network testnet \
+  --rpc-url https://soroban-testnet.stellar.org:443 \
+  --network-passphrase 'Test SDF Network ; September 2015' \
   -- \
   store_vc \
   --vc_id "t5iwuct2njbbcdu2nfwr32ib" \
@@ -171,11 +204,12 @@ fn register_vault(e: Env, admin: Address, did: String);
 soroban contract invoke \
   --id CONTRACT_ID \
   --source SOURCE_ACCOUNT_SECRET_KEY \
-  --network testnet \
+  --rpc-url https://soroban-testnet.stellar.org:443 \
+  --network-passphrase 'Test SDF Network ; September 2015' \
   -- \
   register_vault \
   --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
-  --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h" 
+  --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h"
 ```
 
 ### Revoke Vault
@@ -191,11 +225,12 @@ fn revoke_vault(e: Env, admin: Address, did: String);
 soroban contract invoke \
   --id CONTRACT_ID \
   --source SOURCE_ACCOUNT_SECRET_KEY \
-  --network testnet \
+  --rpc-url https://soroban-testnet.stellar.org:443 \
+  --network-passphrase 'Test SDF Network ; September 2015' \
   -- \
   revoke_vault \
   --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
-  --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h" 
+  --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h"
 ```
 
 ### Get Vault
@@ -218,7 +253,7 @@ soroban contract invoke \
   --network-passphrase 'Test SDF Network ; September 2015' \
   -- \
   get_vault \
-  --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h" 
+  --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h"
 
 # Output: VAULT
 {
@@ -273,16 +308,16 @@ soroban contract invoke \
 
 ## Contract Errors
 
-| Code | Error | Description |
-| --- | --- | --- |
-| 1 | `AlreadyInitialized` | Contract has already been initialized |
-| 2 | `NotAuthorized` | Invoker lacks the necessary authorization as the contract administrator |
-| 3 | `EmptyDIDs` | The array of DIDs is empty |
-| 4 | `IssuerNotFound` | The specified issuer was not found |
-| 5 | `IssuerRevoked` | The issuer cannot perform the action because it has been revoked |
-| 6 | `VaultNotFound` | The specified DID was not found |
-| 5 | `VaultRevoked` | The DID cannot perform the action because it has been revoked |
-| 8 | `VaultAlreadyRegistered` | The vault was already registered |
+| Code | Error                    | Description                                                             |
+| ---- | ------------------------ | ----------------------------------------------------------------------- |
+| 1    | `AlreadyInitialized`     | Contract has already been initialized                                   |
+| 2    | `NotAuthorized`          | Invoker lacks the necessary authorization as the contract administrator |
+| 3    | `EmptyDIDs`              | The array of DIDs is empty                                              |
+| 4    | `IssuerNotFound`         | The specified issuer was not found                                      |
+| 5    | `IssuerRevoked`          | The issuer cannot perform the action because it has been revoked        |
+| 6    | `VaultNotFound`          | The specified DID was not found                                         |
+| 5    | `VaultRevoked`           | The DID cannot perform the action because it has been revoked           |
+| 8    | `VaultAlreadyRegistered` | The vault was already registered                                        |
 
 ## Development
 

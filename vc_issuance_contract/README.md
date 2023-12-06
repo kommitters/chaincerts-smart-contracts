@@ -1,10 +1,11 @@
 # Verifiable Credentials Issuance Smart Contract
 
+The verifiable credentials (VCs) issuance smart contract establishes the rules for issuing, transferring, and revoking verifiable credentials. It acts as the governing framework, ensuring the secure and standardized management of on-chain verifiable credentials.
 
 This smart contract prioritizes security and privacy by avoiding the persistence of structured data or personal information. Data is handled exclusively in an encrypted form, with access granted only to owners through cryptographic mechanisms. This approach is particularly critical in insecure communication channels such as blockchain ledgers. For more details, refer to the [W3C KeyAgreement specification](https://www.w3.org/TR/did-core/#dfn-keyagreement).
 
 ## Features
-The verifiable credentials (VCs) issuance smart contract establishes the rules for issuing, transferring, and revoking verifiable credentials. It acts as the governing framework, ensuring the secure and standardized management of on-chain verifiable credentials. With this smart contract, you will be able to:
+With this smart contract, you will be able to:
 
 - Issue a verifiable credential.
 - Verify a verifiable credential.
@@ -13,10 +14,10 @@ The verifiable credentials (VCs) issuance smart contract establishes the rules f
 ## Functions
 
 ### Initialize
-Initializes the VC Issuance Contract by setting the admin.
+Initializes the contract by setting the contract admin and the limit amount of verifiable credentials that can be issued. The maximum amount allowed is **100**; if no amount is provided, the default value is **20**.
 
 ```rust
-fn initialize(e: Env, admin: Address);
+fn initialize(e: Env, admin: Address, amount: Option<u32>);
 ```
 
 #### Example:
@@ -25,14 +26,15 @@ fn initialize(e: Env, admin: Address);
 soroban contract invoke \
   --id CONTRACT_ID \
   --source SOURCE_ACCOUNT_SECRET_KEY \
-  --network testnet \
+  --rpc-url https://soroban-testnet.stellar.org:443 \
+  --network-passphrase 'Test SDF Network ; September 2015' \
   -- \
   initialize \
-  --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA 
+  --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA
 ```
 
-### Issue:
- Issues a new verifiable credential and returns the Verifiable Credential id as a string. The admin account is the only party authorized to invoke this function.
+### Issue
+Issues a verifiable credential by making a cross-contract call to the Vault to store the VC, and returns the VC id. The admin account is the only party authorized to invoke this function.
 
 ```rust
 fn issue(
@@ -40,7 +42,7 @@ fn issue(
     admin: Address,
     recipient_did: String,
     vc_data: String,
-    storage_address: Address,
+    vault_contract: Address,
 ) -> String;
 ```
 
@@ -54,20 +56,21 @@ Returns the verifiable credential id.
 soroban contract invoke \
   --id CONTRACT_ID \
   --source SOURCE_ACCOUNT_SECRET_KEY \
-  --network testnet \
+  --rpc-url https://soroban-testnet.stellar.org:443 \
+  --network-passphrase 'Test SDF Network ; September 2015' \
   -- \
   issue \
   --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
   --vc_data "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y" \
-  --storage_address GR2RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA
+  --vault_contract CBRM3HA7GLEI6QQ3O55RUKVRDSQASARUPKK6NXKXKKPWEYLE533GDYQD
 
-# Ouput: VC ID
+# Output: VC ID
 
 "t5iwuct2njbbcdu2nfwr32ib"
 ```
 
 ### Verify
-Verifies if the verifiable credential has been revoked, returning a struct indicating its status as either "valid" or "revoked". If the status is `"revoked"`, it additionally provides the date on which the verifiable credential was revoked.
+Verifies the verifiable credential status, returning a map indicating if it is **valid** or **revoked**. If the status is revoked, it additionally provides the date of revocation.
 
 ```rust
 fn verify(e: Env, vc_id: String) -> Map<String, String>;
@@ -75,42 +78,30 @@ fn verify(e: Env, vc_id: String) -> Map<String, String>;
 
 #### Output
 
-Returns a struct with the VC status.
-
-```bash
-# Valid VC
-{
-    "status": "valid"
-}
-
-# Revoked VC
-
-{
-    "status": "revoked", 
-    "since": ""
-}
-```
+Returns a map with the VC status.
 
 #### Example
+
+<!-- TODO: Add other example -->
 
 ```bash
 soroban contract invoke \
   --id CONTRACT_ID \
   --source SOURCE_ACCOUNT_SECRET_KEY \
-  --network testnet \
+  --rpc-url https://soroban-testnet.stellar.org:443 \
+  --network-passphrase 'Test SDF Network ; September 2015' \
   -- \
   verify \
   --vc_id "t5iwuct2njbbcdu2nfwr32ib"
 
 # Output: VC Status
-
 {
     "status": "valid"
 }
 ```
 
 ### Revoke
-Revokes a verifiable credential in a specific date. The admin account is the only party authorized to invoke this function.
+Revokes a verifiable credential. The admin account is the only party authorized to invoke this function.
 
 ```rust
 fn revoke(e: Env, admin: Address, vc_id: String, date: String);
@@ -122,7 +113,8 @@ fn revoke(e: Env, admin: Address, vc_id: String, date: String);
 soroban contract invoke \
   --id CONTRACT_ID \
   --source SOURCE_ACCOUNT_SECRET_KEY \
-  --network testnet \
+  --rpc-url https://soroban-testnet.stellar.org:443 \
+  --network-passphrase 'Test SDF Network ; September 2015' \
   -- \
   revoke \
   --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
@@ -132,12 +124,12 @@ soroban contract invoke \
 
 ## Contract Errors
 
-| Code | Error | Description |
-| --- | --- | --- |
-| 1 | `AlreadyInitialized` | Contract has already been initialized |
-| 2 | `NotAuthorized` | Invoker lacks the necessary authorization as the contract administrator |
-| 3 | `AmountLimitExceeded` | The amount exceeds the issuance contract's capacity for certificates |
-| 4 | `VCNotFound` | The Verifiable Credential (VC) was not found |
+| Code | Error                 | Description                                                             |
+| ---- | --------------------- | ----------------------------------------------------------------------- |
+| 1    | `AlreadyInitialized`  | Contract has already been initialized                                   |
+| 2    | `NotAuthorized`       | Invoker is not the contract admin                                       |
+| 3    | `AmountLimitExceeded` | Provided amount exceeds the maximum allowed                             |
+| 4    | `VCNotFound`          | Verifiable credential not found                                         |
 
 ## Development
 

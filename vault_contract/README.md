@@ -3,7 +3,7 @@
 ## Features
 The vault smart contract is a secure repository for safeguarding verifiable credentials (VCs). With this smart contract, you will be able to:
 
-- Authorize issuers to emit certificates for specific DIDs(Decentralized Identifiers).
+- Authorize issuers to emit certificates for specific DIDs(Decentralized Identifiers) in the vault.
 - Revoke an issuer's authority for a particular DID.
 - Store a verifiable credential.
 - Retrieve a specific verifiable credential using its identifier.
@@ -22,7 +22,6 @@ Represents a verifiable credential with essential attributes for comprehensive i
 | ---------------------- | -------------------- | ---------------------------------------------------------- |
 | `id`                   | `String`             | Unique identifier for the verifiable credential (e.g., `t5iwuct2njbbcdu2nfwr32ib`). |
 | `data`                 | `String`             | The encrypted payload encapsulating the actual data within the credential, utilizing the X25519KeyAgreementKey2020 algorithm for heightened security.|
-| `holder_did`           | `String`             | The DID of the credential holder. |
 | `issuance_contract`    | `Address`            | The address of the smart contract responsible for credential issuance. |
 
 #### Example 
@@ -31,7 +30,6 @@ Represents a verifiable credential with essential attributes for comprehensive i
 {
   "id": "t5iwuct2njbbcdu2nfwr32ib",
   "data": "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y",
-  "holder_did": "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h",
   "issuance_contract": "CBWDZIBI5NZ77EPSZLJDS3RTM57D3CIBKAIIOFER2TZEZATUYBASYF65"
 }
 ```
@@ -52,25 +50,23 @@ Represents a structured entity that encapsulates a DID along with its correspond
 ```bash
 {
   "did": "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h",
-  "is_revoked": false,
+  "revoked": false,
   "vcs": [
     {
       "id": "t5iwuct2njbbcdu2nfwr32ib",
       "data": "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y",
-      "holder_did": "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h",
       "issuance_contract": "CBWDZIBI5NZ77EPSZLJDS3RTM57D3CIBKAIIOFER2TZEZATUYBASYF65"
     }
   ]
 }
 ```
 
-
 ## Functions
 
 The following functions define the behavior of the Vault smart contract.
 
 ### Initialize
-Initiates the vault contract by configuring the administrator and initial Decentralized Identifiers (DIDs).
+Initializes the vault contract by configuring the administrator and initial Decentralized Identifiers (DIDs).
 
 ```rust
 fn initialize(e: Env, admin: Address, dids: Vec<String>);
@@ -162,28 +158,8 @@ soroban contract invoke \
   --issuance_contract_address CBRM3HA7GLEI6QQ3O55RUKVRDSQASARUPKK6NXKXKKPWEYLE533GDYQD
 ```
 
-### Revoke Vault
-Revokes a vault based on its DID URI to prevent the issuance of verifiable credentials. The admin account is the only party authorized to invoke this function.
-
-```rust
-fn revoke_vault(e: Env, admin: Address, did: String);
-```
-
-#### Example
-
-```bash
-soroban contract invoke \
-  --id CONTRACT_ID \
-  --source SOURCE_ACCOUNT_SECRET_KEY \
-  --network testnet \
-  -- \
-  revoke_vault \
-  --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
-  --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h" 
-```
-
 ### Register Vault
-Registers a new vault with the associated DID URI. The admin account is the only party authorized to invoke this function.
+Registers a vault given its DID. The admin account is the only party authorized to invoke this function.
 
 ```rust
 fn register_vault(e: Env, admin: Address, did: String);
@@ -202,11 +178,117 @@ soroban contract invoke \
   --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h" 
 ```
 
+### Revoke Vault
+Revokes a vault based on its DID to prevent the issuance of verifiable credentials. The admin account is the only party authorized to invoke this function.
+
+```rust
+fn revoke_vault(e: Env, admin: Address, did: String);
+```
+
+#### Example
+
+```bash
+soroban contract invoke \
+  --id CONTRACT_ID \
+  --source SOURCE_ACCOUNT_SECRET_KEY \
+  --network testnet \
+  -- \
+  revoke_vault \
+  --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
+  --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h" 
+```
+
+### Get Vault
+Retrieves a vault given its DID.
+
+```rust
+fn get_vault(e: Env, did: String) -> Vault;
+```
+
+#### Output
+Returns a vault.
+
+#### Example
+
+```bash
+soroban contract invoke \
+  --id CONTRACT_ID \
+  --source SOURCE_ACCOUNT_SECRET_KEY \
+  --rpc-url https://soroban-testnet.stellar.org:443 \
+  --network-passphrase 'Test SDF Network ; September 2015' \
+  -- \
+  get_vault \
+  --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h" 
+
+# Output: VAULT
+{
+  "did": "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h",
+  "revoked": false,
+  "vcs": [
+    {
+      "id": "t5iwuct2njbbcdu2nfwr32ib",
+      "data": "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y",
+      "issuance_contract": "CBWDZIBI5NZ77EPSZLJDS3RTM57D3CIBKAIIOFER2TZEZATUYBASYF65"
+    }
+  ]
+}
+```
+
+### List Vaults
+Retrieves all the vaults
+
+```rust
+fn list_vaults(e: Env) -> Vec<Vault>;
+```
+
+#### Output
+Returns a list of vault.
+
+#### Example
+
+```bash
+soroban contract invoke \
+  --id CONTRACT_ID \
+  --source SOURCE_ACCOUNT_SECRET_KEY \
+  --rpc-url https://soroban-testnet.stellar.org:443 \
+  --network-passphrase 'Test SDF Network ; September 2015' \
+  -- \
+  list_vaults
+
+# Output: LIST OF VAULTS
+[
+  {
+    "did": "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h",
+    "revoked": false,
+    "vcs": [
+      {
+        "id": "t5iwuct2njbbcdu2nfwr32ib",
+        "data": "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y",
+        "issuance_contract": "CBWDZIBI5NZ77EPSZLJDS3RTM57D3CIBKAIIOFER2TZEZATUYBASYF65"
+      }
+    ]
+  }
+]
+```
+
+## Contract Errors
+
+| Code | Error | Description |
+| --- | --- | --- |
+| 1 | `AlreadyInitialized` | Contract has already been initialized |
+| 2 | `NotAuthorized` | Invoker lacks the necessary authorization as the contract administrator |
+| 3 | `EmptyDIDs` | The array of DIDs is empty |
+| 4 | `IssuerNotFound` | The specified issuer was not found |
+| 5 | `IssuerRevoked` | The issuer cannot perform the action because it has been revoked |
+| 6 | `VaultNotFound` | The specified DID was not found |
+| 5 | `VaultRevoked` | The DID cannot perform the action because it has been revoked |
+| 8 | `VaultAlreadyRegistered` | The vault was already registered |
+
 ## Development
 
 ### Pre-requirements
 
-To develop and test the smart contract, you need to install Rust and the Soroban CLI. The process is outlined in the Soroban setup documentation, which can be accessed at [Soroban setup][soroban-setup].
+In order to develop and test the smart contract, you need to install Rust and Soroban CLI. The process is outlined in the Soroban setup documentation, which can be accessed at [Soroban setup][soroban-setup].
 
 ### Setup
 
@@ -241,23 +323,10 @@ To develop and test the smart contract, you need to install Rust and the Soroban
         --source SOURCE_ACCOUNT_SECRET_KEY \
         --rpc-url https://soroban-testnet.stellar.org:443 \
         --network-passphrase 'Test SDF Network ; September 2015' \
-        --wasm target/wasm32-unknown-unknown/release/vault_contract.wasm
+        --wasm target/wasm32-unknown-unknown/release/soroban_did_contract.wasm
 
     CONTRACT_ID
     ```
-
-## Contract Errors
-
-| Code | Error | Description |
-| --- | --- | --- |
-| 1 | `AlreadyInitialized` | Contract has already been initialized |
-| 2 | `NotAuthorized` | Invoker lacks the necessary authorization as the contract administrator |
-| 3 | `EmptyDIDs` | The array of DIDs is empty |
-| 4 | `IssuerNotFound` | The specified issuer was not found |
-| 5 | `IssuerRevoked` | The issuer cannot perform the action because it has been revoked |
-| 6 | `VaultNotFound` | The specified DID was not found |
-| 5 | `VaultRevoked` | The DID cannot perform the action because it has been revoked |
-| 8 | `VaultAlreadyRegistered` | The vault was already registered |
 
 ## Changelog
 Features and bug fixes are listed in the [CHANGELOG][changelog] file.

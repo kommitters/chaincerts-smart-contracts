@@ -1,3 +1,5 @@
+[![CHAINCERTS_LOGO](https://github.com/kommitters/chaincerts-smart-contracts/assets/39246879/5c7c3c50-f435-43ad-87e5-dad223eaa12a)][chaincerts.co]
+
 # Vault Smart Contract
 The Vault smart contract is a secure repository for safeguarding verifiable credentials (VCs).
 

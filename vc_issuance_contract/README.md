@@ -1,6 +1,8 @@
-# Verifiable Credentials Issuance Smart Contract
+[![CHAINCERTS_LOGO](https://github.com/kommitters/chaincerts-smart-contracts/assets/39246879/5c7c3c50-f435-43ad-87e5-dad223eaa12a)][chaincerts.co]
 
-The verifiable credentials (VCs) issuance smart contract establishes the rules for issuing, transferring, and revoking verifiable credentials. It acts as the governing framework, ensuring the secure and standardized management of on-chain verifiable credentials.
+# Verifiable Credential Issuance Smart Contract
+
+The verifiable credential (VC) issuance smart contract establishes the rules for issuing, transferring, and revoking verifiable credentials. It acts as the governing framework, ensuring the secure and standardized management of on-chain verifiable credentials.
 
 This smart contract prioritizes security and privacy by avoiding the persistence of structured data or personal information. Data is handled exclusively in an encrypted form, with access granted only to owners through cryptographic mechanisms. This approach is particularly critical in insecure communication channels such as blockchain ledgers. For more details, refer to the [W3C KeyAgreement specification](https://www.w3.org/TR/did-core/#dfn-keyagreement).
 
@@ -133,7 +135,7 @@ soroban contract invoke \
 
 # Output: VC Status
 {
-    "status": "revoked", 
+    "status": "revoked",
     "since": "2023-12-05T21:37:44.389Z"
 }
 ```

@@ -86,6 +86,7 @@ soroban contract invoke \
   --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
   --vc_data "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y" \
   --vault_contract CBRM3HA7GLEI6QQ3O55RUKVRDSQASARUPKK6NXKXKKPWEYLE533GDYQD
+  --recipient_did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h"
 
 # Output: VC ID
 
@@ -103,7 +104,7 @@ fn verify(e: Env, vc_id: String) -> Map<String, String>;
 
 Returns a map with the VC status.
 
-###  Example: When the VC status is valid:
+###  Example - VC is valid
 
 ```bash
 soroban contract invoke \
@@ -121,7 +122,7 @@ soroban contract invoke \
 }
 ```
 
-###  Example: When the VC status is revoked:
+###  Example - VC is revoked
 
 ```bash
 soroban contract invoke \

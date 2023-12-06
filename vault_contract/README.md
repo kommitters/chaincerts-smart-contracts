@@ -168,7 +168,7 @@ soroban contract invoke \
 ```
 
 ### Store VC
-Stores a verifiable credential into a vault given the recipient DID. The admin account is the only party authorized to invoke this function.
+Stores a verifiable credential into a vault given the recipient DID. The issuer account is the only party authorized to invoke this function.
 
 A contract error will be triggered if:
 
@@ -231,7 +231,7 @@ soroban contract invoke \
 ```
 
 ### Revoke Vault
-Revokes a vault. The admin account is the only party authorized to invoke this function.
+Revokes a vault given its DID. The admin account is the only party authorized to invoke this function.
 
 A contract error will be triggered if:
 - Invoker is not the contract admin.
@@ -324,6 +324,22 @@ soroban contract invoke \
         "issuance_contract": "CBWDZIBI5NZ77EPSZLJDS3RTM57D3CIBKAIIOFER2TZEZATUYBASYF65"
       }
     ]
+  },
+  {
+    "did": "did:chaincerts:5ppl9sm47frl0tpj7g3lp6eo",
+    "revoked": true,
+    "vcs": [
+      {
+        "id": "t5iwuct2njbbcdu2nfwr32ib",
+        "data": "gzLDVsdtPc6w8tOhyiaftVPu9gI8J+/8UKlIAmTVNkiV0QAAfahvqhgMY2ZNLHnksFA15XiLDiXb6Yam39rcif94XrsVnXZ7UKuhOFqgMew",
+        "issuance_contract": "CBCA3EDJOEHHVH3X2RGWQNUDWVHP2JZHFYVGSSCDWD3RI3IUYY4FKLD4"
+      },
+      {
+        "id": "wqzrxs3eq2v90i5un1ph7k8l",
+        "data": "Pc1hVUB2Mz8jXw9rEk7NxF4Lg5vmB3rYscAItJfRqiD0dVxkpwZqXlO2eau7YcDIoZaVlqSRF7sQ1B2YnmfIY",
+        "issuance_contract": "CBRM3HA7GLEI6QQ3O55RUKVRDSQASARUPKK6NXKXKKPWEYLE533GDYQD"
+      }
+    ]
   }
 ]
 ```
@@ -333,13 +349,13 @@ soroban contract invoke \
 | Code | Error                    | Description                                                             |
 | ---- | ------------------------ | ----------------------------------------------------------------------- |
 | 1    | `AlreadyInitialized`     | Contract has already been initialized                                   |
-| 2    | `NotAuthorized`          | Invoker lacks the necessary authorization as the contract administrator |
-| 3    | `EmptyDIDs`              | The array of DIDs is empty                                              |
-| 4    | `IssuerNotFound`         | The specified issuer was not found                                      |
-| 5    | `IssuerRevoked`          | The issuer cannot perform the action because it has been revoked        |
-| 6    | `VaultNotFound`          | The specified Vault given its DID was not found                         |
-| 5    | `VaultRevoked`           | The action cannot be performed because the vault has been revoked       |
-| 8    | `VaultAlreadyRegistered` | The vault was already registered                                        |
+| 2    | `NotAuthorized`          | Invoker is not the contract admin                                       |
+| 3    | `EmptyDIDs`              | Array of DIDs is empty                                              |
+| 4    | `IssuerNotFound`         | Specified issuer was not found                                      |
+| 5    | `IssuerRevoked`          | Issuer cannot perform the action because it has been revoked        |
+| 6    | `VaultNotFound`          | Specified Vault given its DID was not found                         |
+| 5    | `VaultRevoked`           | Action cannot be performed because the vault has been revoked       |
+| 8    | `VaultAlreadyRegistered` | Vault was already registered                                        |
 
 
 ## Development
@@ -381,7 +397,7 @@ In order to develop and test the smart contract, you need to install Rust and So
         --source SOURCE_ACCOUNT_SECRET_KEY \
         --rpc-url https://soroban-testnet.stellar.org:443 \
         --network-passphrase 'Test SDF Network ; September 2015' \
-        --wasm target/wasm32-unknown-unknown/release/soroban_did_contract.wasm
+        --wasm target/wasm32-unknown-unknown/release/vault_contract.wasm
 
     CONTRACT_ID
     ```

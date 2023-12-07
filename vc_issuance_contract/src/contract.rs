@@ -51,12 +51,15 @@ impl VCIssuanceTrait for VCIssuanceContract {
     ) -> String {
         validate_admin(&e, &admin);
 
+        let vcs = storage::read_vcs(&e);
+        validate_vc_amount(&e, &vcs);
+
         let vc_id = verifiable_credential::generate_id(&e);
         let contract_address = e.current_contract_address();
 
         let client = vault_contract::Client::new(&e, &vault_contract);
         client.store_vc(&vc_id, &vc_data, &recipient_did, &admin, &contract_address);
-        verifiable_credential::add_vc(&e, &vc_id);
+        verifiable_credential::add_vc(&e, &vc_id, vcs);
 
         vc_id
     }
@@ -94,6 +97,13 @@ fn validate_admin(e: &Env, admin: &Address) {
         panic_with_error!(e, ContractError::NotAuthorized)
     }
     admin.require_auth();
+}
+
+fn validate_vc_amount(e: &Env, vcs: &Vec<String>) {
+    let amount = storage::read_amount(e);
+    if amount == vcs.len() {
+        panic_with_error!(e, ContractError::IssuanceLimitExceeded);
+    }
 }
 
 fn validate_vc(e: &Env, vc_id: &String) {

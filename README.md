@@ -1,4 +1,4 @@
-[![CHAINCERTS_LOGO](https://github.com/kommitters/chaincerts-smart-contracts/assets/1649973/a43a4a8b-932b-47e5-af63-470e35ab9330)][chaincerts.co]
+[![CHAINCERTS_LOGO](https://github.com/kommitters/chaincerts-smart-contracts/assets/39246879/5c7c3c50-f435-43ad-87e5-dad223eaa12a)][chaincerts.co]
 
 Issue, store, and verify your credentials backed by smart contracts on Soroban.
 
@@ -79,7 +79,7 @@ This software is licensed under the [Apache License 2.0][license] © kommit.
 [w3c-did-core-spec]: https://www.w3.org/TR/did-core/
 [w3c-vcs-spec]:https://www.w3.org/TR/vc-data-model
 [did-repo]: https://github.com/kommitters/soroban-did-contract
-[vcs-issuance-repo]: https://github.com/kommitters/chaincerts-smart-contracts/tree/main/issuance_contract
+[vcs-issuance-repo]: https://github.com/kommitters/chaincerts-smart-contracts/tree/main/vc_issuance_contract
 [vcs-storage-repo]: https://github.com/kommitters/chaincerts-smart-contracts/tree/main/vault_contract
 [kommit-website]: https://kommit.co
 [kommit-github]: https://github.com/kommitters

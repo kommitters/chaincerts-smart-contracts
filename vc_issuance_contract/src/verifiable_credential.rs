@@ -1,10 +1,9 @@
-use soroban_sdk::{Env, String};
+use soroban_sdk::{Env, String, Vec};
 
 use crate::base32;
 use crate::storage;
 
-pub fn add_vc(e: &Env, vc_id: &String) {
-    let mut vcs = storage::read_vcs(e);
+pub fn add_vc(e: &Env, vc_id: &String, mut vcs: Vec<String>) {
     vcs.push_front(vc_id.clone());
 
     storage::write_vcs(e, &vcs);

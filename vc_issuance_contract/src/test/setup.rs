@@ -38,6 +38,7 @@ pub fn create_vc(
     admin: &Address,
     contract: &VCIssuanceContractClient,
     recipient_did: &String,
+    amount: &Option<u32>,
 ) -> Address {
     let vault_admin = Address::random(env);
 
@@ -48,7 +49,7 @@ pub fn create_vc(
     vault_client.initialize(&vault_admin, &dids);
     vault_client.authorize_issuer(&vault_admin, admin, recipient_did);
 
-    contract.initialize(admin, &None);
+    contract.initialize(admin, amount);
     vault_contract_id
 }
 

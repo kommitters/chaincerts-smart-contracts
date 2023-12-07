@@ -168,7 +168,7 @@ soroban contract invoke \
 ```
 
 ### Store VC
-Stores a verifiable credential into a vault given the recipient DID. The issuer account is the only party authorized to invoke this function.
+Stores a verifiable credential into a vault given the recipient DID. An authorized issuer must invoke this function.
 
 A contract error will be triggered if:
 

@@ -59,6 +59,11 @@ soroban contract invoke \
 ### Issue
 Issues a verifiable credential by making a cross-contract call to the Vault to store the VC, and returns the VC id. The admin account is the only party authorized to invoke this function.
 
+A contract error will be triggered if:
+
+- The issuance exceeds the predefined amount.
+- Invoker is not the contract admin.
+
 ```rust
 fn issue(
     e: Env,

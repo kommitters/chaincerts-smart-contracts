@@ -94,7 +94,7 @@ fn test_issue_with_invalid_admin() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #3)")]
+#[should_panic(expected = "HostError: Error(Contract, #5)")]
 fn test_issue_when_amount_is_exceeded() {
     let VCIssuanceContractTest {
         env,

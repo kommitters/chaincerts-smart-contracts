@@ -175,12 +175,13 @@ soroban contract invoke \
 
 ## Contract Errors
 
-| Code | Error                 | Description                                                             |
-| ---- | --------------------- | ----------------------------------------------------------------------- |
-| 1    | `AlreadyInitialized`  | Contract has already been initialized                                   |
-| 2    | `NotAuthorized`       | Invoker is not the contract admin                                       |
-| 3    | `AmountLimitExceeded` | Provided amount exceeds the maximum allowed                             |
-| 4    | `VCNotFound`          | Verifiable credential not found                                         |
+| Code | Error                   | Description                                                             |
+| ---- | ----------------------- | ----------------------------------------------------------------------- |
+| 1    | `AlreadyInitialized`    | Contract has already been initialized                                   |
+| 2    | `NotAuthorized`         | Invoker is not the contract admin                                       |
+| 3    | `AmountLimitExceeded`   | Provided amount exceeds the maximum allowed                             |
+| 4    | `VCNotFound`            | Verifiable credential not found                                          |
+| 5    | `IssuanceLimitExceeded` | Contract issuance limit exceeded                                        |
 
 ## Development
 

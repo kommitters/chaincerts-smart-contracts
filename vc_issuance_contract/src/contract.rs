@@ -102,7 +102,7 @@ fn validate_admin(e: &Env, admin: &Address) {
 fn validate_vc_amount(e: &Env, vcs: &Vec<String>) {
     let amount = storage::read_amount(e);
     if amount == vcs.len() {
-        panic_with_error!(e, ContractError::AmountLimitExceeded);
+        panic_with_error!(e, ContractError::IssuanceLimitExceeded);
     }
 }
 

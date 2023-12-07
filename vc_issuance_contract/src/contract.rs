@@ -27,7 +27,7 @@ impl VCIssuanceTrait for VCIssuanceContract {
         if storage::has_admin(&e) {
             panic_with_error!(e, ContractError::AlreadyInitialized);
         }
-        if amount.map_or(false, |a| a > MAX_AMOUNT) {
+        if amount.is_some() && amount.unwrap() > MAX_AMOUNT {
             panic_with_error!(e, ContractError::AmountLimitExceeded);
         }
 
@@ -47,15 +47,19 @@ impl VCIssuanceTrait for VCIssuanceContract {
         admin: Address,
         vc_data: String,
         recipient_did: String,
-        storage_address: Address,
+        vault_contract: Address,
     ) -> String {
         validate_admin(&e, &admin);
 
-        let vc_id = verifiable_credential::generate_id(&e);
+        let vcs = storage::read_vcs(&e);
+        validate_vc_amount(&e, &vcs);
 
-        let client = vault_contract::Client::new(&e, &storage_address);
-        client.store_vc(&vc_id, &vc_data, &recipient_did, &admin, &storage_address);
-        verifiable_credential::add_vc(&e, &vc_id);
+        let vc_id = verifiable_credential::generate_id(&e);
+        let contract_address = e.current_contract_address();
+
+        let client = vault_contract::Client::new(&e, &vault_contract);
+        client.store_vc(&vc_id, &vc_data, &recipient_did, &admin, &contract_address);
+        verifiable_credential::add_vc(&e, &vc_id, vcs);
 
         vc_id
     }
@@ -81,13 +85,7 @@ impl VCIssuanceTrait for VCIssuanceContract {
 
         let mut revocations = storage::read_vcs_revocations(&e);
 
-        revocations.set(
-            vc_id.clone(),
-            Revocation {
-                vc_id: vc_id.clone(),
-                date,
-            },
-        );
+        revocations.set(vc_id.clone(), Revocation { vc_id, date });
 
         storage::write_vcs_revocations(&e, &revocations);
     }
@@ -99,6 +97,13 @@ fn validate_admin(e: &Env, admin: &Address) {
         panic_with_error!(e, ContractError::NotAuthorized)
     }
     admin.require_auth();
+}
+
+fn validate_vc_amount(e: &Env, vcs: &Vec<String>) {
+    let amount = storage::read_amount(e);
+    if amount == vcs.len() {
+        panic_with_error!(e, ContractError::IssuanceLimitExceeded);
+    }
 }
 
 fn validate_vc(e: &Env, vc_id: &String) {

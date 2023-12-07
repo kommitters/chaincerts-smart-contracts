@@ -1,36 +1,35 @@
-use crate::did::DidWithVCs;
-use crate::verifiable_credential::VerifiableCredential;
-use soroban_sdk::{Address, Env, Map, String, Vec};
+use crate::vault::Vault;
+use soroban_sdk::{Address, Env, String, Vec};
 
 pub trait VaultTrait {
-    /// Initializes the Vault Contract by setting the admin and the initial DIDs.
+    /// Initializes the vault contract by setting the admin and creating a vault for each DID.
     fn initialize(e: Env, admin: Address, dids: Vec<String>);
 
-    /// Authorizes an issuer adding it to the issuers map.
+    /// Authorizes an issuer for a vault.
     fn authorize_issuer(e: Env, admin: Address, issuer: Address, did: String);
 
-    /// Revokes an issuer setting its is_revoked property to true.
+    /// Revokes an issuer for a vault.
     fn revoke_issuer(e: Env, admin: Address, issuer: Address, did: String);
 
-    /// Stores the verifiable credential.
+    /// Stores a verifiable credential in the recipient's vault.
     fn store_vc(
         e: Env,
         vc_id: String,
         vc_data: String,
         recipient_did: String,
-        issuer_pk: Address,
-        issuance_contract_address: Address,
+        issuer: Address,
+        issuance_contract: Address,
     );
 
-    /// Retrieves a verifiable credential using its unique identifier.
-    fn get_vc(e: Env, vc_id: String) -> VerifiableCredential;
+    /// Registers a vault given its DID.
+    fn register_vault(e: Env, admin: Address, did: String);
 
-    /// Retrieves the list of verifiable credentials from the storage grouped by DID.
-    fn list_vcs(e: Env) -> Map<String, DidWithVCs>;
+    /// Revokes a vault given its DID.
+    fn revoke_vault(e: Env, admin: Address, did: String);
 
-    /// Revokes a DID given its DID URI.
-    fn revoke_did(e: Env, admin: Address, did: String);
+    /// Retrieves a vault given its DID.
+    fn get_vault(e: Env, did: String) -> Vault;
 
-    /// Registers a new DID given a DID URI.
-    fn register_did(e: Env, admin: Address, did: String);
+    /// Retrieves the list of vaults.
+    fn list_vaults(e: Env) -> Vec<Vault>;
 }

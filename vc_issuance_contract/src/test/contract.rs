@@ -72,7 +72,7 @@ fn test_issue() {
         contract,
     } = VCIssuanceContractTest::setup();
 
-    let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did);
+    let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did, &None);
     contract.issue(&admin, &vc_data, &recipient_did, &vault_contract_id);
 }
 
@@ -89,8 +89,24 @@ fn test_issue_with_invalid_admin() {
     } = VCIssuanceContractTest::setup();
     let invalid_admin = Address::random(&env);
 
-    let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did);
+    let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did, &None);
     contract.issue(&invalid_admin, &vc_data, &recipient_did, &vault_contract_id);
+}
+
+#[test]
+#[should_panic(expected = "HostError: Error(Contract, #5)")]
+fn test_issue_when_amount_is_exceeded() {
+    let VCIssuanceContractTest {
+        env,
+        admin,
+        amount: _,
+        vc_data,
+        recipient_did,
+        contract,
+    } = VCIssuanceContractTest::setup();
+    let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did, &Some(1));
+    contract.issue(&admin, &vc_data, &recipient_did, &vault_contract_id);
+    contract.issue(&admin, &vc_data, &recipient_did, &vault_contract_id);
 }
 
 #[test]
@@ -107,7 +123,7 @@ fn test_revoke_vc_with_invalid_vc() {
     contract.initialize(&admin, &Some(10));
 
     let vc_id = String::from_slice(&env, "vc_id1");
-    let date = String::from_slice(&env, "28-11-2023");
+    let date = String::from_slice(&env, "2023-12-05T21:37:44.389Z");
 
     contract.revoke(&admin, &vc_id, &date);
 }
@@ -122,10 +138,10 @@ fn test_revoke_vc() {
         recipient_did,
         contract,
     } = VCIssuanceContractTest::setup();
-    let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did);
+    let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did, &None);
     let vc_id = contract.issue(&admin, &vc_data, &recipient_did, &vault_contract_id);
 
-    let date = String::from_slice(&env, "28-11-2023");
+    let date = String::from_slice(&env, "2023-12-05T21:37:44.389Z");
 
     contract.revoke(&admin, &vc_id, &date);
 }
@@ -140,7 +156,7 @@ fn test_verify_vc() {
         recipient_did,
         contract,
     } = VCIssuanceContractTest::setup();
-    let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did);
+    let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did, &None);
     let vc_id = contract.issue(&admin, &vc_data, &recipient_did, &vault_contract_id);
 
     let valid_vc_map = get_valid_vc_map(&env);
@@ -157,9 +173,9 @@ fn test_verify_vc_with_revoked_vc() {
         recipient_did,
         contract,
     } = VCIssuanceContractTest::setup();
-    let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did);
+    let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did, &None);
     let vc_id = contract.issue(&admin, &vc_data, &recipient_did, &vault_contract_id);
-    let date = String::from_slice(&env, "28-11-2023");
+    let date = String::from_slice(&env, "2023-12-05T21:37:44.389Z");
 
     contract.revoke(&admin, &vc_id, &date);
 

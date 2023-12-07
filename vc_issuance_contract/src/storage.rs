@@ -25,6 +25,11 @@ pub fn write_admin(e: &Env, id: &Address) {
     e.storage().instance().set(&key, id);
 }
 
+pub fn read_amount(e: &Env) -> u32 {
+    let key = DataKey::Amount;
+    e.storage().instance().get(&key).unwrap()
+}
+
 pub fn write_amount(e: &Env, amount: &u32) {
     let key = DataKey::Amount;
     e.storage().instance().set(&key, amount)

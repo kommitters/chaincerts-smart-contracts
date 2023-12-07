@@ -8,4 +8,5 @@ pub enum ContractError {
     NotAuthorized = 2,
     AmountLimitExceeded = 3,
     VCNotFound = 4,
+    IssuanceLimitExceeded = 5,
 }

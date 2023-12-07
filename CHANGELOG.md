@@ -1,6 +1,12 @@
 # Changelog
 
-## 0.12.0 (11.28.2023)
+## 0.13.0 (07.12.2023)
+
+- [Contracts improvements](https://github.com/kommitters/chaincerts-smart-contracts/pull/155)
+- [Implement improvements in Vault and VC Issuance contracts](https://github.com/kommitters/chaincerts-smart-contracts/pull/156)
+- [Add contracts documentation and issuance limit validation](https://github.com/kommitters/chaincerts-smart-contracts/pull/154)
+
+## 0.12.0 (28.11.2023)
 
 - [Update docs](https://github.com/kommitters/chaincerts-smart-contracts/pull/148)
 - [Reference new DID contract](https://github.com/kommitters/chaincerts-smart-contracts/pull/150)

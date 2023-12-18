@@ -26,7 +26,7 @@ impl VerificationMethod {
     pub fn new(env: &Env, id: String, blockchain_account_id: Address, controller: String) -> Self {
         VerificationMethod {
             id,
-            type_: String::from_slice(env, "Ed25519VerificationKey2020"),
+            type_: String::from_str(env, "Ed25519VerificationKey2020"),
             controller,
             blockchain_account_id,
         }

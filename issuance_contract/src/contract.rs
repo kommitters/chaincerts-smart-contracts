@@ -58,7 +58,7 @@ impl IssuanceTrait for IssuanceContract {
         // This lifetime bump includes the contract instance itself and all entries in storage().instance()
         e.storage()
             .instance()
-            .bump(LEDGERS_THRESHOLD, LEDGERS_TO_LIVE)
+            .extend_ttl(LEDGERS_THRESHOLD, LEDGERS_TO_LIVE)
     }
 
     /// Distribute Credentials to recipients.

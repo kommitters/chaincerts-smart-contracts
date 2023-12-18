@@ -53,26 +53,26 @@ impl<'a> DIDContractTest<'a> {
     fn setup() -> Self {
         let env: Env = Default::default();
         env.mock_all_auths();
-        let id = String::from_slice(&env, "did:chaincerts::ABC123");
-        let authentication = String::from_slice(&env, "did:chaincerts:ABC123#key1");
-        let authentication_address = Address::random(&env);
+        let id = String::from_str(&env, "did:chaincerts::ABC123");
+        let authentication = String::from_str(&env, "did:chaincerts:ABC123#key1");
+        let authentication_address = Address::generate(&env);
         let authentication_params = (authentication.clone(), authentication_address.clone());
-        let shared_address = Address::random(&env);
+        let shared_address = Address::generate(&env);
         let context = vec![
             &env,
-            String::from_slice(&env, "https://www.w3.org/ns/did/v1"),
-            String::from_slice(&env, "https://www.example.com/context/v1"),
+            String::from_str(&env, "https://www.w3.org/ns/did/v1"),
+            String::from_str(&env, "https://www.example.com/context/v1"),
         ];
         let method = Method {
-            type_: String::from_slice(&env, "otp"),
+            type_: String::from_str(&env, "otp"),
             verified: true,
             timestamp: 1684872059,
             service: OptionMethodService::None,
         };
         let verification_processes = vec![&env, method];
         let service = Service {
-            type_: String::from_slice(&env, "VerifiableCredential"),
-            service_endpoint: String::from_slice(&env, "https://did.chaincerts.co/ABC123"),
+            type_: String::from_str(&env, "VerifiableCredential"),
+            service_endpoint: String::from_str(&env, "https://did.chaincerts.co/ABC123"),
         };
         let services = vec![&env, service];
         let public_add_cap = Option::None;
@@ -91,28 +91,28 @@ impl<'a> DIDContractTest<'a> {
         let issuer_id1: String = "did:chaincerts:ISSUER1".into_val(&env);
         let issuer_id2: String = "did:chaincerts:ISSUER2".into_val(&env);
         let cap1 = CapabilityInvocation {
-            id: String::from_slice(&env, "did:chaincerts:ABC123#capability-1"),
+            id: String::from_str(&env, "did:chaincerts:ABC123#capability-1"),
             type_: CapType::AddCredential,
             invoker: OptionString::Some(issuer_id1.clone()),
-            invoker_address: OptionAddress::Some(Address::random(&env)),
+            invoker_address: OptionAddress::Some(Address::generate(&env)),
             credential: OptionString::None,
         };
         let cap2 = CapabilityInvocation {
-            id: String::from_slice(&env, "did:chaincerts:ABC123#capability-2"),
+            id: String::from_str(&env, "did:chaincerts:ABC123#capability-2"),
             type_: CapType::AddCredential,
             invoker: OptionString::Some(issuer_id2),
-            invoker_address: OptionAddress::Some(Address::random(&env)),
+            invoker_address: OptionAddress::Some(Address::generate(&env)),
             credential: OptionString::None,
         };
         let cap3_read = CapabilityInvocation {
-            id: String::from_slice(&env, "did:chaincerts:ABC123#capability-3"),
+            id: String::from_str(&env, "did:chaincerts:ABC123#capability-3"),
             type_: CapType::ReadCredential,
             invoker: OptionString::Some(issuer_id1),
             invoker_address: OptionAddress::Some(shared_address.clone()),
             credential: OptionString::Some(credential_did.clone()),
         };
         let cap4_public_read = CapabilityInvocation {
-            id: String::from_slice(&env, "did:chaincerts:ABC123#capability-4"),
+            id: String::from_str(&env, "did:chaincerts:ABC123#capability-4"),
             type_: CapType::PublicRead,
             invoker: OptionString::None,
             invoker_address: OptionAddress::None,
@@ -122,9 +122,9 @@ impl<'a> DIDContractTest<'a> {
         let cid1: String = "QmdtyfTYbVS3K9iYqBPjXxn4mbB7aBvEjYGzYWnzRcMrEC".into_val(&env);
         let cids = vec![&env, cid1];
         let credential_subject = CredentialSubject::new(
-            String::from_slice(&env, "c8b875a2-3f5d-4a63-b1c8-791be9b01c02"),
-            String::from_slice(&env, "Test"),
-            String::from_slice(&env, "Test subject"),
+            String::from_str(&env, "c8b875a2-3f5d-4a63-b1c8-791be9b01c02"),
+            String::from_str(&env, "Test"),
+            String::from_str(&env, "Test subject"),
         );
 
         DIDContractTest {
@@ -151,8 +151,8 @@ impl<'a> DIDContractTest<'a> {
 #[test]
 fn test_successful_execution_of_did_contract_capabilities() {
     let test = DIDContractTest::setup();
-    let new_credential_did = String::from_slice(&test.env, "did:chaincerts:");
-    let issuer = String::from_slice(&test.env, "did:chaincerts:ISSUER1");
+    let new_credential_did = String::from_str(&test.env, "did:chaincerts:");
+    let issuer = String::from_str(&test.env, "did:chaincerts:ISSUER1");
     let verifiable_credential1 = VerifiableCredential {
         id: test.credential_did.clone(),
         issuer: issuer.clone(),
@@ -214,11 +214,11 @@ fn test_successful_execution_of_did_contract_capabilities() {
         1
     );
 
-    let key_id = String::from_slice(&test.env, "did:chaincerts::ABC#key2");
+    let key_id = String::from_str(&test.env, "did:chaincerts::ABC#key2");
     test.did_contract.add_authentication(
         &test.authentication_address,
         &key_id,
-        &Address::random(&test.env),
+        &Address::generate(&test.env),
     );
     assert_eq!(
         test.did_contract.public_did_document().authentication.len(),
@@ -235,7 +235,7 @@ fn test_successful_execution_of_did_contract_capabilities() {
     test.did_contract.add_verification_method(
         &test.authentication_address,
         &key_id,
-        &Address::random(&test.env),
+        &Address::generate(&test.env),
     );
     assert_eq!(
         test.did_contract
@@ -259,7 +259,7 @@ fn test_successful_execution_of_did_contract_capabilities() {
 #[test]
 fn test_public_and_shared_credential_capability() {
     let test = DIDContractTest::setup();
-    let invoker = String::from_slice(&test.env, "did:chaincerts:ISSUER1");
+    let invoker = String::from_str(&test.env, "did:chaincerts:ISSUER1");
     let verifiable_credential1 = VerifiableCredential {
         id: test.credential_did,
         issuer: invoker.clone(),
@@ -317,7 +317,7 @@ fn test_retrieve_did_public_document() {
 
     let verifiable_method = VerificationMethod {
         id: test.authentication.clone(),
-        type_: String::from_slice(&test.env, "Ed25519VerificationKey2020"),
+        type_: String::from_str(&test.env, "Ed25519VerificationKey2020"),
         controller: test.id.clone(),
         blockchain_account_id: test.authentication_address,
     };
@@ -338,12 +338,12 @@ fn test_retrieve_did_public_document() {
 fn test_remove_verification_method_when_remove_verification_with_auth() {
     let test = DIDContractTest::setup();
 
-    let key_id = String::from_slice(&test.env, "did:chaincerts::ABC#key2");
+    let key_id = String::from_str(&test.env, "did:chaincerts::ABC#key2");
 
     test.did_contract.add_authentication(
         &test.authentication_address,
         &key_id,
-        &Address::random(&test.env),
+        &Address::generate(&test.env),
     );
 
     test.did_contract
@@ -368,7 +368,7 @@ fn test_initialize_an_already_initialized_did_contract() {
 #[should_panic(expected = "HostError: Error(Contract, #2)")]
 fn test_when_invalid_address() {
     let test = DIDContractTest::setup();
-    let invalid_address = Address::random(&test.env);
+    let invalid_address = Address::generate(&test.env);
 
     test.did_contract
         .get_capability_invocation(&invalid_address);
@@ -440,7 +440,7 @@ fn test_deposit_credential_when_not_share_cap_set() {
 #[should_panic(expected = "HostError: Error(Contract, #2)")]
 fn test_deposit_credential_when_no_shared_cap_set() {
     let test = DIDContractTest::setup();
-    let issuer = String::from_slice(&test.env, "did:chaincerts:ISSUER1");
+    let issuer = String::from_str(&test.env, "did:chaincerts:ISSUER1");
 
     test.did_contract.add_capability(
         &test.authentication_address,
@@ -448,14 +448,14 @@ fn test_deposit_credential_when_no_shared_cap_set() {
     );
 
     test.did_contract
-        .get_shared_credentials(&Address::random(&test.env), &issuer);
+        .get_shared_credentials(&Address::generate(&test.env), &issuer);
 }
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #9)")]
 fn test_deposit_credential_already_in_the_did_contract() {
     let test = DIDContractTest::setup();
-    let issuer = String::from_slice(&test.env, "did:chaincerts:ISSUER1");
+    let issuer = String::from_str(&test.env, "did:chaincerts:ISSUER1");
     let verifiable_credential1 = VerifiableCredential {
         id: test.credential_did,
         issuer,
@@ -500,7 +500,7 @@ fn test_revoke_credential_when_no_chaincerts_in_did_contract() {
 fn test_revoke_credential_when_chaincert_not_found() {
     let test = DIDContractTest::setup();
     let issuer_org1 = test.capability_invocations.get_unchecked(0);
-    let issuer = String::from_slice(&test.env, "did:chaincerts:ISSUER1");
+    let issuer = String::from_str(&test.env, "did:chaincerts:ISSUER1");
     let new_chaincert: String = "did:chaincerts:abc123#credential-invalid".into_val(&test.env);
     let verifiable_credential1 = VerifiableCredential {
         id: test.credential_did,
@@ -543,13 +543,13 @@ fn test_remove_authentication_with_only_one_authentication() {
 #[should_panic(expected = "HostError: Error(Contract, #2)")]
 fn test_remove_authentication_with_non_existent_key() {
     let test = DIDContractTest::setup();
-    let key_id = String::from_slice(&test.env, "did:chaincerts::ABC#key2");
-    let invalid_key_id = String::from_slice(&test.env, "did:chaincerts::ABC#key_invalid");
+    let key_id = String::from_str(&test.env, "did:chaincerts::ABC#key2");
+    let invalid_key_id = String::from_str(&test.env, "did:chaincerts::ABC#key_invalid");
 
     test.did_contract.add_authentication(
         &test.authentication_address,
         &key_id,
-        &Address::random(&test.env),
+        &Address::generate(&test.env),
     );
 
     test.did_contract
@@ -569,13 +569,13 @@ fn test_remove_verification_method_with_only_one_authentication() {
 #[should_panic(expected = "HostError: Error(Contract, #3)")]
 fn test_remove_verification_method_with_non_existent_key() {
     let test = DIDContractTest::setup();
-    let key_id = String::from_slice(&test.env, "did:chaincerts::ABC#key2");
-    let invalid_key_id = String::from_slice(&test.env, "did:chaincerts::ABC#key_invalid");
+    let key_id = String::from_str(&test.env, "did:chaincerts::ABC#key2");
+    let invalid_key_id = String::from_str(&test.env, "did:chaincerts::ABC#key_invalid");
 
     test.did_contract.add_verification_method(
         &test.authentication_address,
         &key_id,
-        &Address::random(&test.env),
+        &Address::generate(&test.env),
     );
 
     test.did_contract
@@ -587,10 +587,10 @@ fn test_remove_verification_method_with_non_existent_key() {
 fn test_add_invalid_public_read_cap() {
     let test = DIDContractTest::setup();
     let invalid_cap = CapabilityInvocation {
-        id: String::from_slice(&test.env, "did:chaincerts:ABC123#capability-11"),
+        id: String::from_str(&test.env, "did:chaincerts:ABC123#capability-11"),
         type_: CapType::PublicRead,
         invoker: OptionString::None,
-        invoker_address: OptionAddress::Some(Address::random(&test.env)),
+        invoker_address: OptionAddress::Some(Address::generate(&test.env)),
         credential: OptionString::Some(test.public_credential_did),
     };
 
@@ -602,7 +602,7 @@ fn test_add_invalid_public_read_cap() {
 fn test_add_invalid_read_credential_cap() {
     let test = DIDContractTest::setup();
     let invalid_cap = CapabilityInvocation {
-        id: String::from_slice(&test.env, "did:chaincerts:ABC123#capability-11"),
+        id: String::from_str(&test.env, "did:chaincerts:ABC123#capability-11"),
         type_: CapType::ReadCredential,
         invoker: OptionString::None,
         invoker_address: OptionAddress::None,
@@ -617,7 +617,7 @@ fn test_add_invalid_read_credential_cap() {
 fn test_add_invalid_add_credential_cap() {
     let test = DIDContractTest::setup();
     let invalid_cap = CapabilityInvocation {
-        id: String::from_slice(&test.env, "did:chaincerts:ABC123#capability-11"),
+        id: String::from_str(&test.env, "did:chaincerts:ABC123#capability-11"),
         type_: CapType::AddCredential,
         invoker: OptionString::None,
         invoker_address: OptionAddress::None,
@@ -632,7 +632,7 @@ fn test_add_invalid_add_credential_cap() {
 fn test_initialize_with_public_add_cap() {
     let test = DIDContractTest::setup();
     let public_add_cap = CapabilityInvocation {
-        id: String::from_slice(&test.env, "did:chaincerts:ABC123#capability-1"),
+        id: String::from_str(&test.env, "did:chaincerts:ABC123#capability-1"),
         type_: CapType::PublicAdd,
         invoker: OptionString::None,
         invoker_address: OptionAddress::None,
@@ -667,7 +667,7 @@ fn test_initialize_with_public_add_cap() {
 fn test_initialize_with_invalid_public_add_cap() {
     let test = DIDContractTest::setup();
     let invalid_public_add_cap = Option::Some(CapabilityInvocation {
-        id: String::from_slice(&test.env, "did:chaincerts:ABC123#capability-1"),
+        id: String::from_str(&test.env, "did:chaincerts:ABC123#capability-1"),
         type_: CapType::AddCredential,
         invoker: OptionString::None,
         invoker_address: OptionAddress::None,

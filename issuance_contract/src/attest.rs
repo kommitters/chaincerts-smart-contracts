@@ -31,7 +31,7 @@ pub fn is_valid(data: &CredentialData, credential: &String, signature: &String) 
 pub fn valid_status(e: &Env, credential_data: CredentialData) -> CredentialStatus {
     let expiration_date = credential_data.expiration_date;
     CredentialStatus {
-        status: String::from_slice(e, "valid"),
+        status: String::from_str(e, "valid"),
         expiration_date,
         revocation_date: OptionU64::None,
     }
@@ -41,7 +41,7 @@ pub fn revoked_status(e: &Env, revoked_credential: RevokedCredential) -> Credent
     let expiration_date = revoked_credential.credential_data.expiration_date;
     let revocation_date = revoked_credential.revocation_date;
     CredentialStatus {
-        status: String::from_slice(e, "revoked"),
+        status: String::from_str(e, "revoked"),
         expiration_date,
         revocation_date: OptionU64::Some(revocation_date),
     }
@@ -49,7 +49,7 @@ pub fn revoked_status(e: &Env, revoked_credential: RevokedCredential) -> Credent
 
 pub fn invalid_status(e: &Env) -> CredentialStatus {
     CredentialStatus {
-        status: String::from_slice(e, "invalid"),
+        status: String::from_str(e, "invalid"),
         expiration_date: OptionU64::None,
         revocation_date: OptionU64::None,
     }

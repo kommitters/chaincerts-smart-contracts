@@ -62,7 +62,7 @@ impl DIDContract {
         // This lifetime bump includes the contract instance itself and all entries in storage().instance()
         env.storage()
             .instance()
-            .bump(LEDGERS_THRESHOLD, LEDGERS_TO_LIVE)
+            .extend_ttl(LEDGERS_THRESHOLD, LEDGERS_TO_LIVE)
     }
 
     /// Add capability invocation

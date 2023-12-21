@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.14.0 (21.12.2023)
+- [Bump `soroban-sdk` to `20.0.0`](https://github.com/kommitters/chaincerts-smart-contracts/issues/160)
+- [Extend Instance TTL on initialization to 31 days in ledgers](https://github.com/kommitters/chaincerts-smart-contracts/pull/163)
+
 ## 0.13.0 (07.12.2023)
 
 - [Contracts improvements](https://github.com/kommitters/chaincerts-smart-contracts/pull/155)

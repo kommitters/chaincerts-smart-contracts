@@ -17,14 +17,15 @@ pub fn generate_id(e: &Env) -> String {
 
     let str_id = core::str::from_utf8(id.as_ref()).unwrap();
 
-    String::from_slice(e, str_id)
+    String::from_str(e, str_id)
 }
 
 fn get_random_bytes(e: &Env) -> [u8; 15] {
     let mut random_bytes = [0u8; 15];
 
     for byte in &mut random_bytes {
-        *byte = e.prng().u64_in_range(0..256) as u8;
+        let rand_number: u64 = e.prng().gen_range(0..256);
+        *byte = rand_number as u8;
     }
 
     random_bytes

@@ -33,7 +33,7 @@ impl VaultTrait for VaultContract {
 
         e.storage()
             .instance()
-            .bump(LEDGERS_THRESHOLD, LEDGERS_TO_EXTEND);
+            .extend_ttl(LEDGERS_THRESHOLD, LEDGERS_TO_EXTEND);
     }
 
     fn authorize_issuer(e: Env, admin: Address, issuer: Address, did: String) {

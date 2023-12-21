@@ -25,35 +25,32 @@ fn test_from_contract() {
 
     // Deploy contract using deployer, and include an init function to call.
     let salt = BytesN::from_array(&env, &[0; 32]);
-    let address = Address::random(&env);
+    let address = Address::generate(&env);
     let init_args = did_init_args(&env, &address);
     let (contract_id, init_result) = client.deploy(&client.address, &wasm_id, &salt, &init_args);
     assert!(init_result.is_void());
 
     let expected_did_document = DIDDocument {
-        id: String::from_slice(&env, "did:chaincerts:ABC123"),
-        authentication: vec![
-            &env,
-            String::from_slice(&env, "did:chaincerts:ABC123#key-1"),
-        ],
+        id: String::from_str(&env, "did:chaincerts:ABC123"),
+        authentication: vec![&env, String::from_str(&env, "did:chaincerts:ABC123#key-1")],
         context: vec![
             &env,
-            String::from_slice(&env, "https://www.w3.org/ns/did/v1"),
-            String::from_slice(&env, "https://www.example.com/context/v1"),
+            String::from_str(&env, "https://www.w3.org/ns/did/v1"),
+            String::from_str(&env, "https://www.example.com/context/v1"),
         ],
         services: vec![
             &env,
             Service {
-                type_: String::from_slice(&env, "VerifiableCredential"),
-                service_endpoint: String::from_slice(&env, "https://did.chaincerts.co/ABC123"),
+                type_: String::from_str(&env, "VerifiableCredential"),
+                service_endpoint: String::from_str(&env, "https://did.chaincerts.co/ABC123"),
             },
         ],
         verification_method: vec![
             &env,
             VerificationMethod {
-                id: String::from_slice(&env, "did:chaincerts:ABC123#key-1"),
-                type_: String::from_slice(&env, "Ed25519VerificationKey2020"),
-                controller: String::from_slice(&env, "did:chaincerts:ABC123"),
+                id: String::from_str(&env, "did:chaincerts:ABC123#key-1"),
+                type_: String::from_str(&env, "Ed25519VerificationKey2020"),
+                controller: String::from_str(&env, "did:chaincerts:ABC123"),
                 blockchain_account_id: address,
             },
         ],
@@ -76,11 +73,11 @@ fn test_deploy_from_address() {
     let wasm_hash = env.deployer().upload_contract_wasm(contract::WASM);
 
     // Define a deployer address that needs to authorize the deployment.
-    let deployer = Address::random(&env);
+    let deployer = Address::generate(&env);
 
     // Deploy contract using deployer, and include an init function to call.
     let salt = BytesN::from_array(&env, &[0; 32]);
-    let address = Address::random(&env);
+    let address = Address::generate(&env);
     let init_fn_args = did_init_args(&env, &address);
     env.mock_all_auths();
     let (contract_id, init_result) =
@@ -89,29 +86,26 @@ fn test_deploy_from_address() {
     assert!(init_result.is_void());
 
     let expected_did_document = DIDDocument {
-        id: String::from_slice(&env, "did:chaincerts:ABC123"),
-        authentication: vec![
-            &env,
-            String::from_slice(&env, "did:chaincerts:ABC123#key-1"),
-        ],
+        id: String::from_str(&env, "did:chaincerts:ABC123"),
+        authentication: vec![&env, String::from_str(&env, "did:chaincerts:ABC123#key-1")],
         context: vec![
             &env,
-            String::from_slice(&env, "https://www.w3.org/ns/did/v1"),
-            String::from_slice(&env, "https://www.example.com/context/v1"),
+            String::from_str(&env, "https://www.w3.org/ns/did/v1"),
+            String::from_str(&env, "https://www.example.com/context/v1"),
         ],
         services: vec![
             &env,
             Service {
-                type_: String::from_slice(&env, "VerifiableCredential"),
-                service_endpoint: String::from_slice(&env, "https://did.chaincerts.co/ABC123"),
+                type_: String::from_str(&env, "VerifiableCredential"),
+                service_endpoint: String::from_str(&env, "https://did.chaincerts.co/ABC123"),
             },
         ],
         verification_method: vec![
             &env,
             VerificationMethod {
-                id: String::from_slice(&env, "did:chaincerts:ABC123#key-1"),
-                type_: String::from_slice(&env, "Ed25519VerificationKey2020"),
-                controller: String::from_slice(&env, "did:chaincerts:ABC123"),
+                id: String::from_str(&env, "did:chaincerts:ABC123#key-1"),
+                type_: String::from_str(&env, "Ed25519VerificationKey2020"),
+                controller: String::from_str(&env, "did:chaincerts:ABC123"),
                 blockchain_account_id: address,
             },
         ],
@@ -124,26 +118,26 @@ fn test_deploy_from_address() {
 }
 
 fn did_init_args(env: &Env, address: &Address) -> Vec<Val> {
-    let id = String::from_slice(env, "did:chaincerts:ABC123");
+    let id = String::from_str(env, "did:chaincerts:ABC123");
     let authentication_params = (
-        String::from_slice(env, "did:chaincerts:ABC123#key-1"),
+        String::from_str(env, "did:chaincerts:ABC123#key-1"),
         address,
     );
     let context = vec![
         env,
-        String::from_slice(env, "https://www.w3.org/ns/did/v1"),
-        String::from_slice(env, "https://www.example.com/context/v1"),
+        String::from_str(env, "https://www.w3.org/ns/did/v1"),
+        String::from_str(env, "https://www.example.com/context/v1"),
     ];
     let method = Method {
-        type_: String::from_slice(env, "otp"),
+        type_: String::from_str(env, "otp"),
         verified: true,
         timestamp: 1684872059,
         service: OptionMethodService::None,
     };
     let verification_processes = vec![env, method];
     let service = Service {
-        type_: String::from_slice(env, "VerifiableCredential"),
-        service_endpoint: String::from_slice(env, "https://did.chaincerts.co/ABC123"),
+        type_: String::from_str(env, "VerifiableCredential"),
+        service_endpoint: String::from_str(env, "https://did.chaincerts.co/ABC123"),
     };
     let services = vec![env, service];
     let public_add_cap: Option<CapabilityInvocation> = Option::None;

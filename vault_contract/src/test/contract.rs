@@ -75,7 +75,7 @@ fn test_authorize_issuer_with_invalid_admin() {
         contract,
     } = VaultContractTest::setup();
 
-    let invalid_admin = Address::random(&env);
+    let invalid_admin = Address::generate(&env);
     contract.initialize(&admin, &dids);
 
     contract.authorize_issuer(&invalid_admin, &issuer, &did);
@@ -93,7 +93,7 @@ fn test_authorize_issuer_with_not_registered_vault() {
         contract,
     } = VaultContractTest::setup();
     contract.initialize(&admin, &dids);
-    let invalid_did = String::from_slice(&env, "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h");
+    let invalid_did = String::from_str(&env, "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h");
 
     contract.authorize_issuer(&admin, &issuer, &invalid_did);
 }
@@ -146,7 +146,7 @@ fn test_revoke_issuer_with_invalid_admin() {
     contract.initialize(&admin, &dids);
     contract.authorize_issuer(&admin, &issuer, &did);
 
-    let invalid_admin = Address::random(&env);
+    let invalid_admin = Address::generate(&env);
     contract.revoke_issuer(&invalid_admin, &issuer, &did);
 }
 
@@ -165,7 +165,7 @@ fn test_revoke_issuer_when_issuer_is_not_found() {
     contract.initialize(&admin, &dids);
     contract.authorize_issuer(&admin, &issuer, &did);
 
-    let invalid_issuer = Address::random(&env);
+    let invalid_issuer = Address::generate(&env);
     contract.revoke_issuer(&admin, &invalid_issuer, &did);
 }
 
@@ -181,7 +181,7 @@ fn test_revoke_issuer_with_not_registered_did() {
         contract,
     } = VaultContractTest::setup();
     contract.initialize(&admin, &dids);
-    let invalid_did = String::from_slice(&env, "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h");
+    let invalid_did = String::from_str(&env, "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h");
 
     contract.revoke_issuer(&admin, &issuer, &invalid_did);
 }
@@ -259,7 +259,7 @@ fn test_store_vc_with_issuer_not_found() {
         contract,
     } = VaultContractTest::setup();
 
-    let invalid_issuer = Address::random(&env);
+    let invalid_issuer = Address::generate(&env);
 
     let VCVaultContractTest {
         vc_id,
@@ -314,7 +314,7 @@ fn test_store_vc_with_vault_not_found() {
         issuer,
         contract,
     } = VaultContractTest::setup();
-    let invalid_did = String::from_slice(&env, "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h");
+    let invalid_did = String::from_str(&env, "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h");
 
     let VCVaultContractTest {
         vc_id,
@@ -348,7 +348,7 @@ fn test_get_vault_not_found() {
 
     contract.initialize(&admin, &dids);
 
-    let bad_vault_did: String = String::from_slice(&env, "did:chaincerts:xyz123");
+    let bad_vault_did: String = String::from_str(&env, "did:chaincerts:xyz123");
     contract.get_vault(&bad_vault_did);
 }
 
@@ -384,9 +384,9 @@ fn test_list_vaults() {
         issuance_contract_address,
     } = get_vc_setup(&env);
 
-    let vc_id2 = String::from_slice(&env, "vc_id2");
-    let vc_id3 = String::from_slice(&env, "vc_id3");
-    let did2 = String::from_slice(&env, "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h");
+    let vc_id2 = String::from_str(&env, "vc_id2");
+    let vc_id3 = String::from_str(&env, "vc_id3");
+    let did2 = String::from_str(&env, "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h");
     let dids = vec![&env, did.clone(), did2.clone()];
 
     contract.initialize(&admin, &dids);
@@ -427,7 +427,7 @@ fn test_register_vault() {
         issuer: _,
         contract,
     } = VaultContractTest::setup();
-    let did2 = String::from_slice(&env, "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h");
+    let did2 = String::from_str(&env, "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h");
 
     contract.initialize(&admin, &dids);
     contract.register_vault(&admin, &did2);
@@ -460,8 +460,8 @@ fn test_register_vault_with_invalid_admin() {
         issuer: _,
         contract,
     } = VaultContractTest::setup();
-    let did2 = String::from_slice(&env, "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h");
-    let invalid_admin = Address::random(&env);
+    let did2 = String::from_str(&env, "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h");
+    let invalid_admin = Address::generate(&env);
 
     contract.initialize(&admin, &dids);
     contract.register_vault(&invalid_admin, &did2);
@@ -493,7 +493,7 @@ fn test_revoke_vault_with_invalid_admin() {
         issuer: _,
         contract,
     } = VaultContractTest::setup();
-    let invalid_admin = Address::random(&env);
+    let invalid_admin = Address::generate(&env);
 
     contract.initialize(&admin, &dids);
     contract.revoke_vault(&invalid_admin, &did);
@@ -510,7 +510,7 @@ fn test_revoke_vault_with_no_registered_did() {
         issuer: _,
         contract,
     } = VaultContractTest::setup();
-    let invalid_did = String::from_slice(&env, "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h");
+    let invalid_did = String::from_str(&env, "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h");
 
     contract.initialize(&admin, &dids);
     contract.revoke_vault(&admin, &invalid_did);

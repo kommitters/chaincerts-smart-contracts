@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.14.0 (21.12.2023)
+- [Update soroban SDK to v20.0.0 in v0.14 and extend TTL instance ](https://github.com/kommitters/chaincerts-smart-contracts/pull/163)
+
 ## 0.13.0 (07.12.2023)
 
 - [Contracts improvements](https://github.com/kommitters/chaincerts-smart-contracts/pull/155)

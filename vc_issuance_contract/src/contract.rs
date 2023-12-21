@@ -8,8 +8,10 @@ use soroban_sdk::{
     contract, contractimpl, contractmeta, map, panic_with_error, Address, Env, Map, String, Vec,
 };
 
-const LEDGERS_THRESHOLD: u32 = 1;
-const LEDGERS_TO_EXTEND: u32 = 535_000;
+// MAXIMUM ENTRY TTL:
+// 31 days, 12 ledger close per minute.
+// (12 * 60 * 24 * 31) - 1
+const LEDGERS_TO_EXTEND: u32 = 535_679;
 const DEFAULT_AMOUNT: u32 = 20;
 const MAX_AMOUNT: u32 = 100;
 
@@ -40,7 +42,7 @@ impl VCIssuanceTrait for VCIssuanceContract {
 
         e.storage()
             .instance()
-            .bump(LEDGERS_THRESHOLD, LEDGERS_TO_EXTEND);
+            .extend_ttl(LEDGERS_TO_EXTEND, LEDGERS_TO_EXTEND);
     }
     fn issue(
         e: Env,
@@ -68,10 +70,10 @@ impl VCIssuanceTrait for VCIssuanceContract {
         validate_vc(&e, &vc_id);
         let revocations = storage::read_vcs_revocations(&e);
 
-        let status_str = String::from_slice(&e, "status");
-        let since_str = String::from_slice(&e, "since");
-        let revoked_str = String::from_slice(&e, "revoked");
-        let valid_str = String::from_slice(&e, "valid");
+        let status_str = String::from_str(&e, "status");
+        let since_str = String::from_str(&e, "since");
+        let revoked_str = String::from_str(&e, "revoked");
+        let valid_str = String::from_str(&e, "valid");
 
         match revocations.get(vc_id) {
             Some(revocation) => map![&e, (status_str, revoked_str), (since_str, revocation.date)],

@@ -15,12 +15,12 @@ impl<'a> VCIssuanceContractTest<'a> {
     pub fn setup() -> Self {
         let env: Env = Default::default();
         env.mock_all_auths();
-        let admin = Address::random(&env);
+        let admin = Address::generate(&env);
         let contract =
             VCIssuanceContractClient::new(&env, &env.register_contract(None, VCIssuanceContract));
         let amount = Some(10);
-        let vc_data = String::from_slice(&env, "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y");
-        let recipient_did = String::from_slice(&env, "did:chaincerts:pe4t2r94dftr1n1gf6jikt6a");
+        let vc_data = String::from_str(&env, "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y");
+        let recipient_did = String::from_str(&env, "did:chaincerts:pe4t2r94dftr1n1gf6jikt6a");
 
         VCIssuanceContractTest {
             env,
@@ -40,7 +40,7 @@ pub fn create_vc(
     recipient_did: &String,
     amount: &Option<u32>,
 ) -> Address {
-    let vault_admin = Address::random(env);
+    let vault_admin = Address::generate(env);
 
     let vault_contract_id = env.register_contract_wasm(None, vault_contract::WASM);
     let vault_client = vault_contract::Client::new(env, &vault_contract_id);
@@ -54,16 +54,16 @@ pub fn create_vc(
 }
 
 pub fn get_revoked_vc_map(env: &Env, date: String) -> Map<String, String> {
-    let status_str = String::from_slice(env, "status");
-    let since_str = String::from_slice(env, "since");
-    let revoked_str = String::from_slice(env, "revoked");
+    let status_str = String::from_str(env, "status");
+    let since_str = String::from_str(env, "since");
+    let revoked_str = String::from_str(env, "revoked");
 
     map![env, (status_str, revoked_str), (since_str, date)]
 }
 
 pub fn get_valid_vc_map(env: &Env) -> Map<String, String> {
-    let status_str = String::from_slice(env, "status");
-    let valid_str = String::from_slice(env, "valid");
+    let status_str = String::from_str(env, "status");
+    let valid_str = String::from_str(env, "valid");
 
     map![env, (status_str, valid_str)]
 }

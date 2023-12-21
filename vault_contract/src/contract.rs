@@ -10,8 +10,10 @@ use soroban_sdk::{
     contract, contractimpl, contractmeta, panic_with_error, Address, Env, IntoVal, Map, String, Vec,
 };
 
-const LEDGERS_THRESHOLD: u32 = 1;
-const LEDGERS_TO_EXTEND: u32 = 535_000;
+// MAXIMUM ENTRY TTL:
+// 31 days, 12 ledger close per minute.
+// (12 * 60 * 24 * 31) - 1
+const LEDGERS_TO_EXTEND: u32 = 535_679;
 
 contractmeta!(
     key = "Description",
@@ -33,7 +35,7 @@ impl VaultTrait for VaultContract {
 
         e.storage()
             .instance()
-            .bump(LEDGERS_THRESHOLD, LEDGERS_TO_EXTEND);
+            .extend_ttl(LEDGERS_TO_EXTEND, LEDGERS_TO_EXTEND);
     }
 
     fn authorize_issuer(e: Env, admin: Address, issuer: Address, did: String) {

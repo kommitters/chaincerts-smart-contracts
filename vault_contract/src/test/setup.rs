@@ -14,10 +14,10 @@ impl<'a> VaultContractTest<'a> {
     pub fn setup() -> Self {
         let env: Env = Default::default();
         env.mock_all_auths();
-        let admin = Address::random(&env);
-        let did = String::from_slice(&env, "did:chaincerts:5ppl9sm47frl0tpj7g3lp6eo");
+        let admin = Address::generate(&env);
+        let did = String::from_str(&env, "did:chaincerts:5ppl9sm47frl0tpj7g3lp6eo");
         let dids = vec![&env, did.clone()];
-        let issuer = Address::random(&env);
+        let issuer = Address::generate(&env);
 
         let contract = VaultContractClient::new(&env, &env.register_contract(None, VaultContract));
         VaultContractTest {
@@ -38,9 +38,9 @@ pub struct VCVaultContractTest {
 }
 
 pub fn get_vc_setup(env: &Env) -> VCVaultContractTest {
-    let vc_id = String::from_slice(env, "vc_id");
-    let vc_data = String::from_slice(env, "vc_data");
-    let issuance_contract_address = Address::random(env);
+    let vc_id = String::from_str(env, "vc_id");
+    let vc_data = String::from_str(env, "vc_data");
+    let issuance_contract_address = Address::generate(env);
 
     VCVaultContractTest {
         vc_id,

@@ -352,10 +352,9 @@ soroban contract invoke \
 | 2    | `NotAuthorized`          | Invoker is not the contract admin                                       |
 | 3    | `EmptyDIDs`              | Array of DIDs is empty                                              |
 | 4    | `IssuerNotFound`         | Specified issuer was not found                                      |
-| 5    | `IssuerRevoked`          | Issuer cannot perform the action because it has been revoked        |
-| 6    | `VaultNotFound`          | Specified Vault given its DID was not found                         |
-| 5    | `VaultRevoked`           | Action cannot be performed because the vault has been revoked       |
-| 8    | `VaultAlreadyRegistered` | Vault was already registered                                        |
+| 5    | `VaultNotFound`          | Specified Vault given its DID was not found                         |
+| 6    | `VaultRevoked`           | Action cannot be performed because the vault has been revoked       |
+| 7    | `VaultAlreadyRegistered` | Vault was already registered                                        |
 
 
 ## Development

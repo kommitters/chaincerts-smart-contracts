@@ -116,6 +116,22 @@ fn test_authorize_issuer_with_revoked_vault() {
 }
 
 #[test]
+fn test_set_authorized_issuers() {
+    let VaultContractTest {
+        env,
+        admin,
+        did,
+        dids,
+        issuer,
+        contract,
+    } = VaultContractTest::setup();
+    let issuers = vec![&env, issuer.clone()];
+
+    contract.initialize(&admin, &dids);
+    contract.set_authorized_issuers(&admin, &issuers, &did);
+}
+
+#[test]
 fn test_revoke_issuer() {
     let VaultContractTest {
         env: _env,

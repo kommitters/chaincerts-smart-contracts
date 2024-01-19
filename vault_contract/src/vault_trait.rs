@@ -8,6 +8,9 @@ pub trait VaultTrait {
     /// Authorizes an issuer for a vault.
     fn authorize_issuer(e: Env, admin: Address, issuer: Address, did: String);
 
+    /// Authorizes a list of issuers for a vault.
+    fn set_authorized_issuers(e: Env, admin: Address, issuers: Vec<Address>, did: String);
+
     /// Revokes an issuer for a vault.
     fn revoke_issuer(e: Env, admin: Address, issuer: Address, did: String);
 

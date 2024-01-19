@@ -1,6 +1,5 @@
 use crate::error::ContractError;
 use crate::issuer;
-use crate::issuer::Issuer;
 use crate::storage;
 use crate::vault;
 use crate::vault::Vault;
@@ -45,6 +44,15 @@ impl VaultTrait for VaultContract {
         validate_vault(&e, &vaults, &did);
 
         issuer::authorize_issuer(&e, &issuer, &did);
+    }
+
+    fn set_authorized_issuers(e: Env, admin: Address, issuers: Vec<Address>, did: String) {
+        validate_admin(&e, admin);
+
+        let vaults = storage::read_vaults(&e);
+        validate_vault(&e, &vaults, &did);
+
+        issuer::set_authorized_issuers(&e, &issuers, &did);
     }
 
     fn revoke_issuer(e: Env, admin: Address, issuer: Address, did: String) {
@@ -160,13 +168,10 @@ fn validate_issuer(
     vc_data: &String,
     issuance_contract: &Address,
 ) {
-    let issuers: Map<Address, Issuer> = storage::read_issuers(e, did);
+    let issuers: Vec<Address> = storage::read_issuers(e, did);
 
-    if !issuer::is_registered(&issuers, issuer) {
+    if !issuer::is_authorized(&issuers, issuer) {
         panic_with_error!(e, ContractError::IssuerNotFound)
-    }
-    if issuer::is_revoked(&issuers, issuer) {
-        panic_with_error!(e, ContractError::IssuerRevoked)
     }
 
     issuer.require_auth_for_args(

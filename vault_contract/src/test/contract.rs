@@ -82,7 +82,7 @@ fn test_authorize_issuer_with_invalid_admin() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #5)")]
+#[should_panic(expected = "HostError: Error(Contract, #6)")]
 fn test_authorize_issuer_with_not_registered_vault() {
     let VaultContractTest {
         env,
@@ -99,7 +99,24 @@ fn test_authorize_issuer_with_not_registered_vault() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #6)")]
+#[should_panic(expected = "HostError: Error(Contract, #5)")]
+fn test_authorize_issuer_with_already_authorized_issuer() {
+    let VaultContractTest {
+        env: _,
+        admin,
+        did,
+        dids,
+        issuer,
+        contract,
+    } = VaultContractTest::setup();
+
+    contract.initialize(&admin, &dids);
+    contract.authorize_issuer(&admin, &issuer, &did);
+    contract.authorize_issuer(&admin, &issuer, &did);
+}
+
+#[test]
+#[should_panic(expected = "HostError: Error(Contract, #7)")]
 fn test_authorize_issuer_with_revoked_vault() {
     let VaultContractTest {
         env: _,
@@ -150,7 +167,7 @@ fn test_set_authorized_issuers_with_invalid_admin() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #5)")]
+#[should_panic(expected = "HostError: Error(Contract, #6)")]
 fn test_set_authorized_issuers_with_not_registered_vault() {
     let VaultContractTest {
         env,
@@ -168,7 +185,7 @@ fn test_set_authorized_issuers_with_not_registered_vault() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #6)")]
+#[should_panic(expected = "HostError: Error(Contract, #7)")]
 fn test_set_authorized_issuers_with_revoked_vault() {
     let VaultContractTest {
         env,
@@ -240,7 +257,7 @@ fn test_revoke_issuer_when_issuer_is_not_found() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #5)")]
+#[should_panic(expected = "HostError: Error(Contract, #6)")]
 fn test_revoke_issuer_with_not_registered_did() {
     let VaultContractTest {
         env,
@@ -257,7 +274,7 @@ fn test_revoke_issuer_with_not_registered_did() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #6)")]
+#[should_panic(expected = "HostError: Error(Contract, #7)")]
 fn test_revoke_issuer_with_revoked_vault() {
     let VaultContractTest {
         env: _,
@@ -374,7 +391,7 @@ fn test_store_vc_with_revoked_issuer() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #5)")]
+#[should_panic(expected = "HostError: Error(Contract, #6)")]
 fn test_store_vc_with_vault_not_found() {
     let VaultContractTest {
         env,
@@ -405,7 +422,7 @@ fn test_store_vc_with_vault_not_found() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #5)")]
+#[should_panic(expected = "HostError: Error(Contract, #6)")]
 fn test_get_vault_not_found() {
     let VaultContractTest {
         env,
@@ -504,7 +521,7 @@ fn test_register_vault() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #7)")]
+#[should_panic(expected = "HostError: Error(Contract, #8)")]
 fn test_register_vault_with_duplicated_did() {
     let VaultContractTest {
         env: _,
@@ -570,7 +587,7 @@ fn test_revoke_vault_with_invalid_admin() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #5)")]
+#[should_panic(expected = "HostError: Error(Contract, #6)")]
 fn test_revoke_vault_with_no_registered_did() {
     let VaultContractTest {
         env,

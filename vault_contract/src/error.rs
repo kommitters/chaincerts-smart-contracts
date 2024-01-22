@@ -8,7 +8,8 @@ pub enum ContractError {
     NotAuthorized = 2,
     EmptyDIDs = 3,
     IssuerNotAuthorized = 4,
-    VaultNotFound = 5,
-    VaultRevoked = 6,
-    VaultAlreadyRegistered = 7,
+    IssuerAlreadyAuthorized = 5,
+    VaultNotFound = 6,
+    VaultRevoked = 7,
+    VaultAlreadyRegistered = 8,
 }

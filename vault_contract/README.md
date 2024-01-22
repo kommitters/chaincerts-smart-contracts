@@ -6,8 +6,8 @@ The Vault smart contract is a secure repository for safeguarding verifiable cred
 ## Features
 With this smart contract, you will be able to:
 
-- Authorize an issuer to store verifiable credentials in a vault.
 - Authorize a list of issuers to store verifiable credentials in a vault.
+- Authorize an issuer to store verifiable credentials in a vault.
 - Revoke an issuer for a specific vault.
 - Store a verifiable credential in the recipient's vault.
 - Register a vault given its DID.
@@ -91,36 +91,6 @@ soroban contract invoke \
 
 ```
 
-### Authorize Issuer
-
-Authorizes an issuer to store verifiable credentials in a vault given its DID. The admin account is the only party authorized to invoke this function.
-
-A contract error will be triggered if:
-- Invoker is not the contract admin.
-- Vault is not registered.
-- Vault is registered but revoked.
-
-
-```rust
-fn authorize_issuer(e: Env, admin: Address, issuer: Address, did: String);
-```
-
-#### Example
-
-```bash
-soroban contract invoke \
-  --id CONTRACT_ID \
-  --source SOURCE_ACCOUNT_SECRET_KEY \
-  --rpc-url https://soroban-testnet.stellar.org:443 \
-  --network-passphrase 'Test SDF Network ; September 2015' \
-  -- \
-  authorize_issuer \
-  --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
-  --issuer GDSOFBSZMFIY5BMZT3R5FCQK6MJAR2PGDSWHOMHZFGFFGKUO32DBNJKC \
-  --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h"
-
-```
-
 ### Authorize Issuers
 
 Authorizes a list of issuers to store verifiable credentials in a vault given its DID. The admin account is the only party authorized to invoke this function.
@@ -147,6 +117,37 @@ soroban contract invoke \
   set_authorized_issuers \
   --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
   --issuers '["GDSOFBSZMFIY5BMZT3R5FCQK6MJAR2PGDSWHOMHZFGFFGKUO32DBNJKC", "GAH6Q4PBWCW2WZAGTEWAL3GUY3YZ2ISGBHGKG44BPFADUQNW6HOWL3GC"]' \
+  --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h"
+
+```
+
+### Authorize Issuer
+
+Authorizes an issuer to store verifiable credentials in a vault given its DID. The admin account is the only party authorized to invoke this function.
+
+A contract error will be triggered if:
+- Invoker is not the contract admin.
+- Issuer is already authorized.
+- Vault is not registered.
+- Vault is registered but revoked.
+
+
+```rust
+fn authorize_issuer(e: Env, admin: Address, issuer: Address, did: String);
+```
+
+#### Example
+
+```bash
+soroban contract invoke \
+  --id CONTRACT_ID \
+  --source SOURCE_ACCOUNT_SECRET_KEY \
+  --rpc-url https://soroban-testnet.stellar.org:443 \
+  --network-passphrase 'Test SDF Network ; September 2015' \
+  -- \
+  authorize_issuer \
+  --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
+  --issuer GDSOFBSZMFIY5BMZT3R5FCQK6MJAR2PGDSWHOMHZFGFFGKUO32DBNJKC \
   --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h"
 
 ```
@@ -362,9 +363,10 @@ soroban contract invoke \
 | 2    | `NotAuthorized`          | Invoker is not the contract admin                                       |
 | 3    | `EmptyDIDs`              | Array of DIDs is empty                                              |
 | 4    | `IssuerNotAuthorized`    | Specified issuer is not authorized                                      |
-| 5    | `VaultNotFound`          | Specified Vault given its DID was not found                         |
-| 6    | `VaultRevoked`           | Action cannot be performed because the vault has been revoked       |
-| 7    | `VaultAlreadyRegistered` | Vault was already registered                                        |
+| 5    | `IssuerAlreadyAuthorized`| Specified issuer is already authorized                                      |
+| 6    | `VaultNotFound`          | Specified Vault given its DID was not found                         |
+| 7    | `VaultRevoked`           | Action cannot be performed because the vault has been revoked       |
+| 8    | `VaultAlreadyRegistered` | Vault was already registered                                        |
 
 
 ## Development

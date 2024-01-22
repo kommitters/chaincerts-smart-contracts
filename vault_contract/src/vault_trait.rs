@@ -5,6 +5,9 @@ pub trait VaultTrait {
     /// Initializes the vault contract by setting the admin and creating a vault for each DID.
     fn initialize(e: Env, admin: Address, dids: Vec<String>);
 
+    /// Authorizes a list of issuers for a vault.
+    fn authorize_issuers(e: Env, admin: Address, issuers: Vec<Address>, did: String);
+
     /// Authorizes an issuer for a vault.
     fn authorize_issuer(e: Env, admin: Address, issuer: Address, did: String);
 

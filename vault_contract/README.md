@@ -6,6 +6,7 @@ The Vault smart contract is a secure repository for safeguarding verifiable cred
 ## Features
 With this smart contract, you will be able to:
 
+- Authorize a list of issuers to store verifiable credentials in a vault.
 - Authorize an issuer to store verifiable credentials in a vault.
 - Revoke an issuer for a specific vault.
 - Store a verifiable credential in the recipient's vault.
@@ -15,26 +16,6 @@ With this smart contract, you will be able to:
 - List all vaults.
 
 ## Types
-
-### Issuer
-Represents an authorized entity that issues verifiable credentials to a vault.
-
-### Attributes
-
-| Name         | Type      | Values                                            |
-| ------------ | --------- | ------------------------------------------------- |
-| `public_key` | `Address` | Issuer's public key address.                      |
-| `revoked`    | `bool`    | Boolean indicating whether the issuer is revoked. |
-
-### Example
-
-```bash
-{
-  "public_key": "GDSOFBSZMFIY5BMZT3R5FCQK6MJAR2PGDSWHOMHZFGFFGKUO32DBNJKC",
-  "revoked": false
-}
-```
-
 ### VerifiableCredential
 Represents a digitally signed statement made by an issuer about a DID subject.
 
@@ -110,12 +91,43 @@ soroban contract invoke \
 
 ```
 
+### Authorize Issuers
+
+Set a list of issuers as authorized issuers to store verifiable credentials in a vault given its DID. The admin account is the only party authorized to invoke this function.
+
+A contract error will be triggered if:
+- Invoker is not the contract admin.
+- Vault is not registered.
+- Vault is registered but revoked.
+
+
+```rust
+fn authorize_issuers(e: Env, admin: Address, issuers: Vec<Address>, did: String);
+```
+
+#### Example
+
+```bash
+soroban contract invoke \
+  --id CONTRACT_ID \
+  --source SOURCE_ACCOUNT_SECRET_KEY \
+  --rpc-url https://soroban-testnet.stellar.org:443 \
+  --network-passphrase 'Test SDF Network ; September 2015' \
+  -- \
+  authorize_issuers \
+  --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
+  --issuers '["GDSOFBSZMFIY5BMZT3R5FCQK6MJAR2PGDSWHOMHZFGFFGKUO32DBNJKC", "GAH6Q4PBWCW2WZAGTEWAL3GUY3YZ2ISGBHGKG44BPFADUQNW6HOWL3GC"]' \
+  --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h"
+
+```
+
 ### Authorize Issuer
 
 Authorizes an issuer to store verifiable credentials in a vault given its DID. The admin account is the only party authorized to invoke this function.
 
 A contract error will be triggered if:
 - Invoker is not the contract admin.
+- Issuer is already authorized.
 - Vault is not registered.
 - Vault is registered but revoked.
 
@@ -172,8 +184,7 @@ Stores a verifiable credential into a vault given the recipient DID. An authoriz
 
 A contract error will be triggered if:
 
-- Issuer is not registered.
-- Issuer is registered but revoked.
+- Issuer is not authorized.
 - Vault is not registered.
 - Vault is registered but revoked.
 
@@ -351,10 +362,10 @@ soroban contract invoke \
 | 1    | `AlreadyInitialized`     | Contract has already been initialized                                   |
 | 2    | `NotAuthorized`          | Invoker is not the contract admin                                       |
 | 3    | `EmptyDIDs`              | Array of DIDs is empty                                              |
-| 4    | `IssuerNotFound`         | Specified issuer was not found                                      |
-| 5    | `IssuerRevoked`          | Issuer cannot perform the action because it has been revoked        |
+| 4    | `IssuerNotAuthorized`    | Specified issuer is not authorized                                      |
+| 5    | `IssuerAlreadyAuthorized`| Specified issuer is already authorized                                      |
 | 6    | `VaultNotFound`          | Specified Vault given its DID was not found                         |
-| 5    | `VaultRevoked`           | Action cannot be performed because the vault has been revoked       |
+| 7    | `VaultRevoked`           | Action cannot be performed because the vault has been revoked       |
 | 8    | `VaultAlreadyRegistered` | Vault was already registered                                        |
 
 

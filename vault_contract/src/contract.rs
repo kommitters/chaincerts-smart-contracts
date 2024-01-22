@@ -37,7 +37,7 @@ impl VaultTrait for VaultContract {
             .extend_ttl(LEDGERS_TO_EXTEND, LEDGERS_TO_EXTEND);
     }
 
-    fn set_authorized_issuers(e: Env, admin: Address, issuers: Vec<Address>, did: String) {
+    fn authorize_issuers(e: Env, admin: Address, issuers: Vec<Address>, did: String) {
         validate_admin(&e, admin);
 
         let vaults = storage::read_vaults(&e);

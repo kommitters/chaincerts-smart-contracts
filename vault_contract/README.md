@@ -91,9 +91,9 @@ soroban contract invoke \
 
 ```
 
-### Set Authorized Issuers
+### Authorize Issuers
 
-Authorizes a list of issuers to store verifiable credentials in a vault given its DID. The admin account is the only party authorized to invoke this function.
+Set a list of issuers as authorized issuers to store verifiable credentials in a vault given its DID. The admin account is the only party authorized to invoke this function.
 
 A contract error will be triggered if:
 - Invoker is not the contract admin.

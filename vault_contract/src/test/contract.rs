@@ -145,7 +145,7 @@ fn test_set_authorized_issuers() {
     let issuers = vec![&env, issuer.clone()];
 
     contract.initialize(&admin, &dids);
-    contract.set_authorized_issuers(&admin, &issuers, &did);
+    contract.authorize_issuers(&admin, &issuers, &did);
 }
 
 #[test]
@@ -163,7 +163,7 @@ fn test_set_authorized_issuers_with_invalid_admin() {
     let invalid_admin = Address::generate(&env);
 
     contract.initialize(&admin, &dids);
-    contract.set_authorized_issuers(&invalid_admin, &issuers, &did);
+    contract.authorize_issuers(&invalid_admin, &issuers, &did);
 }
 
 #[test]
@@ -181,7 +181,7 @@ fn test_set_authorized_issuers_with_not_registered_vault() {
     let invalid_did = String::from_str(&env, "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h");
 
     contract.initialize(&admin, &dids);
-    contract.set_authorized_issuers(&admin, &issuers, &invalid_did);
+    contract.authorize_issuers(&admin, &issuers, &invalid_did);
 }
 
 #[test]
@@ -199,7 +199,7 @@ fn test_set_authorized_issuers_with_revoked_vault() {
 
     contract.initialize(&admin, &dids);
     contract.revoke_vault(&admin, &did);
-    contract.set_authorized_issuers(&admin, &issuers, &did);
+    contract.authorize_issuers(&admin, &issuers, &did);
 }
 
 #[test]

@@ -171,7 +171,7 @@ fn validate_issuer(
     let issuers: Vec<Address> = storage::read_issuers(e, did);
 
     if !issuer::is_authorized(&issuers, issuer) {
-        panic_with_error!(e, ContractError::IssuerNotFound)
+        panic_with_error!(e, ContractError::IssuerNotAuthorized)
     }
 
     issuer.require_auth_for_args(

@@ -20,7 +20,7 @@ pub fn revoke_issuer(e: &Env, issuer: &Address, did: &String) {
     if let Some(issuer_index) = issuers.first_index_of(issuer) {
         issuers.remove(issuer_index);
     } else {
-        panic_with_error!(e, ContractError::IssuerNotFound)
+        panic_with_error!(e, ContractError::IssuerNotAuthorized)
     }
 
     storage::write_issuers(e, &issuers, did);

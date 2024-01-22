@@ -5,7 +5,7 @@ use soroban_sdk::{contracttype, Address, Env, Map, String, Vec};
 #[contracttype]
 pub enum DataKey {
     Admin,           // Address
-    Issuers(String), // Vec<String>
+    Issuers(String), // Vec<Address>
     Vaults,          // Map<String, Vault>
 }
 

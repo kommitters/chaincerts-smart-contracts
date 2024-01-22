@@ -102,7 +102,7 @@ A contract error will be triggered if:
 
 
 ```rust
-fn set_authorized_issuers(e: Env, admin: Address, issuers: Vec<Address>, did: String);
+fn authorize_issuers(e: Env, admin: Address, issuers: Vec<Address>, did: String);
 ```
 
 #### Example
@@ -114,7 +114,7 @@ soroban contract invoke \
   --rpc-url https://soroban-testnet.stellar.org:443 \
   --network-passphrase 'Test SDF Network ; September 2015' \
   -- \
-  set_authorized_issuers \
+  authorize_issuers \
   --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
   --issuers '["GDSOFBSZMFIY5BMZT3R5FCQK6MJAR2PGDSWHOMHZFGFFGKUO32DBNJKC", "GAH6Q4PBWCW2WZAGTEWAL3GUY3YZ2ISGBHGKG44BPFADUQNW6HOWL3GC"]' \
   --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h"

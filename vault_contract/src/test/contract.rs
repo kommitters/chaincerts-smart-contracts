@@ -133,7 +133,7 @@ fn test_authorize_issuer_with_revoked_vault() {
 }
 
 #[test]
-fn test_set_authorized_issuers() {
+fn test_authorize_issuers() {
     let VaultContractTest {
         env,
         admin,
@@ -150,7 +150,7 @@ fn test_set_authorized_issuers() {
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #2)")]
-fn test_set_authorized_issuers_with_invalid_admin() {
+fn test_authorize_issuers_with_invalid_admin() {
     let VaultContractTest {
         env,
         admin,
@@ -168,7 +168,7 @@ fn test_set_authorized_issuers_with_invalid_admin() {
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #6)")]
-fn test_set_authorized_issuers_with_not_registered_vault() {
+fn test_authorize_issuers_with_not_registered_vault() {
     let VaultContractTest {
         env,
         admin,
@@ -186,7 +186,7 @@ fn test_set_authorized_issuers_with_not_registered_vault() {
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #7)")]
-fn test_set_authorized_issuers_with_revoked_vault() {
+fn test_authorize_issuers_with_revoked_vault() {
     let VaultContractTest {
         env,
         admin,

@@ -43,7 +43,7 @@ impl VaultTrait for VaultContract {
         let vaults = storage::read_vaults(&e);
         validate_vault(&e, &vaults, &did);
 
-        issuer::set_authorized_issuers(&e, &issuers, &did);
+        issuer::authorize_issuers(&e, &issuers, &did);
     }
 
     fn authorize_issuer(e: Env, admin: Address, issuer: Address, did: String) {

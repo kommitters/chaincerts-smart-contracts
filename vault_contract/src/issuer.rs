@@ -13,7 +13,7 @@ pub fn authorize_issuer(e: &Env, issuer: &Address, did: &String) {
     storage::write_issuers(e, &issuers, did);
 }
 
-pub fn set_authorized_issuers(e: &Env, issuers: &Vec<Address>, did: &String) {
+pub fn authorize_issuers(e: &Env, issuers: &Vec<Address>, did: &String) {
     storage::write_issuers(e, issuers, did);
 }
 

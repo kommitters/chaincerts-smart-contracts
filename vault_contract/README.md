@@ -10,6 +10,7 @@ With this smart contract, you will be able to:
 - Authorize an issuer to store verifiable credentials in a vault.
 - Revoke an issuer for a specific vault.
 - Store a verifiable credential in the recipient's vault.
+- Deploys a DID and registers a vault using the deployed DID.
 - Register a vault given its DID.
 - Revoke a vault given its DID.
 - Retrieve a vault given its DID.
@@ -217,6 +218,35 @@ soroban contract invoke \
 ```
 
 ### Register Vault
+Deploys a DID and registers a vault using the deployed DID. The admin account is the only party authorized to invoke this function.
+
+```rust
+fn register_vault(
+    e: Env,
+    admin: Address,
+    did_wasm_hash: BytesN<32>,
+    did_init_args: Vec<Val>,
+    salt: BytesN<32>,
+) -> (Address, Val);
+```
+
+#### Example
+
+```bash
+soroban contract invoke \
+  --id CONTRACT_ID \
+  --source SOURCE_ACCOUNT_SECRET_KEY \
+  --rpc-url https://soroban-testnet.stellar.org:443 \
+  --network-passphrase 'Test SDF Network ; September 2015' \
+  -- \
+  register_vault \
+  --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
+  --did_wasm_hash e48a9b26734cff6b2e36117784d4474b5f91f9c50044341811816d8d7e7b63a0 \
+  --salt 8752b75c946477e1ef5613d594e2cb25433c886b45117792f00d4c84e6362cec \
+  --did_init_args '[GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA, "chaincerts", ["https://www.w3.org/ns/did/v1", "https://w3id.org/security/suites/ed25519-2020/v1", "https://w3id.org/security/suites/x25519-2020/v1"], [{"id": "keys-1", "type_": "Ed25519VerificationKey2020", "controller": "", "public_key_multibase": "z6MkgpAN9rsVPXJ6DrrvxcsGzKwjdkVdvjNtbQsRiLfsqmuQ", "verification_relationships": ["Authentication", "AssertionMethod"]}, {"id": "keys-2", "type_": "X25519KeyAgreementKey2020", "public_key_multibase": "z6LSnL6WNE3cqZyWBqh9JTQ3DwWNNvXuNVD8oKZL8jdFyuWN", "controller": "",  "verification_relationships": ["KeyAgreement"]}, {"id": "keys-3", "type_": "Ed25519VerificationKey2020", "controller": "", "public_key_multibase": "z6MkgpAN9rsVPXJ6DrrvxcsGzKwjdkVdvjNtbQsRiLfsqmuQ", "verification_relationships": ["Authentication", "AssertionMethod"]}], [{"id": "chaincerts", "service_endpoint": "https://chaincerts.co", "type_": "LinkedDomains"}]]'
+```
+
+### Register Vault With DID
 Registers a vault given its DID. The admin account is the only party authorized to invoke this function.
 
 A contract error will be triggered if:

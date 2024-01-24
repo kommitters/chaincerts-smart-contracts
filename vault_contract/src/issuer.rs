@@ -1,50 +1,34 @@
 use crate::error::ContractError;
 use crate::storage;
-use soroban_sdk::{contracttype, panic_with_error, Address, Env, Map, String};
-
-#[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Issuer {
-    pub public_key: Address,
-    pub revoked: bool,
-}
+use soroban_sdk::{panic_with_error, Address, Env, String, Vec};
 
 pub fn authorize_issuer(e: &Env, issuer: &Address, did: &String) {
-    let mut issuers: Map<Address, Issuer> = storage::read_issuers(e, did);
+    let mut issuers: Vec<Address> = storage::read_issuers(e, did);
 
-    issuers.set(
-        issuer.clone(),
-        Issuer {
-            public_key: issuer.clone(),
-            revoked: false,
-        },
-    );
+    if is_authorized(&issuers, issuer) {
+        panic_with_error!(e, ContractError::IssuerAlreadyAuthorized)
+    }
+    issuers.push_front(issuer.clone());
 
     storage::write_issuers(e, &issuers, did);
+}
+
+pub fn authorize_issuers(e: &Env, issuers: &Vec<Address>, did: &String) {
+    storage::write_issuers(e, issuers, did);
 }
 
 pub fn revoke_issuer(e: &Env, issuer: &Address, did: &String) {
     let mut issuers = storage::read_issuers(e, did);
 
-    if issuers.contains_key(issuer.clone()) {
-        issuers.set(
-            issuer.clone(),
-            Issuer {
-                public_key: issuer.clone(),
-                revoked: true,
-            },
-        )
+    if let Some(issuer_index) = issuers.first_index_of(issuer) {
+        issuers.remove(issuer_index);
     } else {
-        panic_with_error!(e, ContractError::IssuerNotFound)
+        panic_with_error!(e, ContractError::IssuerNotAuthorized)
     }
 
     storage::write_issuers(e, &issuers, did);
 }
 
-pub fn is_registered(issuers: &Map<Address, Issuer>, issuer: &Address) -> bool {
-    issuers.contains_key(issuer.clone())
-}
-
-pub fn is_revoked(issuers: &Map<Address, Issuer>, issuer: &Address) -> bool {
-    issuers.get_unchecked(issuer.clone()).revoked
+pub fn is_authorized(issuers: &Vec<Address>, issuer: &Address) -> bool {
+    issuers.contains(issuer.clone())
 }

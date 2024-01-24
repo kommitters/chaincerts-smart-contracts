@@ -1,7 +1,7 @@
+use super::setup::{get_did_contract_setup, get_vc_setup, DIDContractTest, VCVaultContractTest};
+use crate::did_contract;
 use crate::test::setup::VaultContractTest;
 use soroban_sdk::{testutils::Address as _, vec, Address, String};
-
-use super::setup::{get_vc_setup, VCVaultContractTest};
 
 #[test]
 fn test_initialize() {
@@ -514,26 +514,23 @@ fn test_register_vault() {
         issuer: _,
         contract,
     } = VaultContractTest::setup();
-    let did2 = String::from_str(&env, "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h");
+    let DIDContractTest {
+        did_init_args,
+        did_wasm_hash,
+        salt,
+        context,
+    } = get_did_contract_setup(&env, &admin);
 
     contract.initialize(&admin, &dids);
-    contract.register_vault(&admin, &did2);
-}
+    let (contract_id, did_document_val) =
+        contract.register_vault(&admin, &did_wasm_hash, &did_init_args, &salt);
 
-#[test]
-#[should_panic(expected = "HostError: Error(Contract, #8)")]
-fn test_register_vault_with_duplicated_did() {
-    let VaultContractTest {
-        env: _,
-        admin,
-        did: duplicated_did,
-        dids,
-        issuer: _,
-        contract,
-    } = VaultContractTest::setup();
+    let client = did_contract::Client::new(&env, &contract_id);
+    let did_document = client.get_did();
 
-    contract.initialize(&admin, &dids);
-    contract.register_vault(&admin, &duplicated_did);
+    assert!(did_document_val.is_object());
+    assert!(did_document.context == context);
+    assert!(contract_id.to_string().len() > 0)
 }
 
 #[test]
@@ -547,11 +544,66 @@ fn test_register_vault_with_invalid_admin() {
         issuer: _,
         contract,
     } = VaultContractTest::setup();
+    let DIDContractTest {
+        did_init_args,
+        did_wasm_hash,
+        salt,
+        context: _,
+    } = get_did_contract_setup(&env, &admin);
+    let invalid_admin = Address::generate(&env);
+
+    contract.initialize(&admin, &dids);
+    contract.register_vault(&invalid_admin, &did_wasm_hash, &did_init_args, &salt);
+}
+
+#[test]
+fn test_register_vault_with_did() {
+    let VaultContractTest {
+        env,
+        admin,
+        did: _,
+        dids,
+        issuer: _,
+        contract,
+    } = VaultContractTest::setup();
+    let did2 = String::from_str(&env, "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h");
+
+    contract.initialize(&admin, &dids);
+    contract.register_vault_with_did(&admin, &did2);
+}
+
+#[test]
+#[should_panic(expected = "HostError: Error(Contract, #8)")]
+fn test_register_vault_with_did_with_duplicated_did() {
+    let VaultContractTest {
+        env: _,
+        admin,
+        did: duplicated_did,
+        dids,
+        issuer: _,
+        contract,
+    } = VaultContractTest::setup();
+
+    contract.initialize(&admin, &dids);
+    contract.register_vault_with_did(&admin, &duplicated_did);
+}
+
+#[test]
+#[should_panic(expected = "HostError: Error(Contract, #2)")]
+fn test_register_vault_with_did_with_invalid_admin() {
+    let VaultContractTest {
+        env,
+        admin,
+        did: _,
+        dids,
+        issuer: _,
+        contract,
+    } = VaultContractTest::setup();
     let did2 = String::from_str(&env, "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h");
     let invalid_admin = Address::generate(&env);
 
     contract.initialize(&admin, &dids);
-    contract.register_vault(&invalid_admin, &did2);
+    contract.register_vault_with_did(&invalid_admin, &did2);
 }
 
 #[test]

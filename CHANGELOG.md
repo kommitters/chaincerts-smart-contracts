@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.15.0 (24.01.2024)
+- [Add function to set authorized issuers](https://github.com/kommitters/chaincerts-smart-contracts/issues/167)
+- [Implement new `register_vault` function to deploy DID and register it in a vault](https://github.com/kommitters/chaincerts-smart-contracts/issues/168)
+- Bump `soroban-sdk` to `20.2.0`
+
 ## 0.14.0 (21.12.2023)
 - [Bump `soroban-sdk` to `20.0.0`](https://github.com/kommitters/chaincerts-smart-contracts/issues/160)
 - [Extend Instance TTL on initialization to 31 days in ledgers](https://github.com/kommitters/chaincerts-smart-contracts/pull/163)

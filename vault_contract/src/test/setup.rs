@@ -83,7 +83,11 @@ pub fn did_init_args(e: &Env, admin: &Address) -> Vec<Val> {
                 "z6MkgpAN9rsVPXJ6DrrvxcsGzKwjdkVdvjNtbQsRiLfsqmuQ",
             ),
             controller: String::from_str(e, ""),
-            verification_relationships: vec![e, VerificationRelationship::KeyAgreement],
+            verification_relationships: vec![
+                e,
+                VerificationRelationship::Authentication,
+                VerificationRelationship::AssertionMethod,
+            ],
         },
     ];
 

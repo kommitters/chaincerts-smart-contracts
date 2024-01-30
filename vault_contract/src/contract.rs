@@ -72,6 +72,7 @@ impl VaultTrait for VaultContract {
         vc_data: String,
         recipient_did: String,
         issuer: Address,
+        issuer_did: String,
         issuance_contract: Address,
     ) {
         let mut vaults = storage::read_vaults(&e);
@@ -86,6 +87,7 @@ impl VaultTrait for VaultContract {
             vc_data,
             issuance_contract,
             recipient_did,
+            issuer_did,
         );
     }
 

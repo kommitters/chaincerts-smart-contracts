@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.16.0 (30.01.2024)
+- [Add the Issuer DID to the stored VC struct](https://github.com/kommitters/chaincerts-smart-contracts/issues/173)
+
 ## 0.15.0 (24.01.2024)
 - [Add function to set authorized issuers](https://github.com/kommitters/chaincerts-smart-contracts/issues/167)
 - [Implement new `register_vault` function to deploy DID and register it in a vault](https://github.com/kommitters/chaincerts-smart-contracts/issues/168)

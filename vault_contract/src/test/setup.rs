@@ -39,17 +39,20 @@ pub struct VCVaultContractTest {
     pub vc_id: String,
     pub vc_data: String,
     pub issuance_contract_address: Address,
+    pub issuer_did: String,
 }
 
 pub fn get_vc_setup(env: &Env) -> VCVaultContractTest {
     let vc_id = String::from_str(env, "vc_id");
     let vc_data = String::from_str(env, "vc_data");
     let issuance_contract_address = Address::generate(env);
+    let issuer_did = String::from_str(env, "did:chaincerts:7dotwpyzo2weqj6oto6liic6");
 
     VCVaultContractTest {
         vc_id,
         vc_data,
         issuance_contract_address,
+        issuer_did,
     }
 }
 

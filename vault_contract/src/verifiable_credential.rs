@@ -8,6 +8,7 @@ pub struct VerifiableCredential {
     pub id: String,
     pub data: String,
     pub issuance_contract: Address,
+    pub issuer_did: String,
 }
 
 pub fn store_vc(
@@ -17,12 +18,14 @@ pub fn store_vc(
     data: String,
     issuance_contract: Address,
     recipient_did: String,
+    issuer_did: String,
 ) {
     let mut vcs: Vec<VerifiableCredential> = vaults.get_unchecked(recipient_did.clone()).vcs;
     let new_vc: VerifiableCredential = VerifiableCredential {
         id,
         data,
         issuance_contract,
+        issuer_did,
     };
 
     vcs.push_back(new_vc);

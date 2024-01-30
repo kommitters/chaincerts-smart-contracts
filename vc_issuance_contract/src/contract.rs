@@ -25,7 +25,7 @@ pub struct VCIssuanceContract;
 
 #[contractimpl]
 impl VCIssuanceTrait for VCIssuanceContract {
-    fn initialize(e: Env, admin: Address, amount: Option<u32>) {
+    fn initialize(e: Env, admin: Address, issuer_did: String, amount: Option<u32>) {
         if storage::has_admin(&e) {
             panic_with_error!(e, ContractError::AlreadyInitialized);
         }
@@ -34,6 +34,7 @@ impl VCIssuanceTrait for VCIssuanceContract {
         }
 
         storage::write_admin(&e, &admin);
+        storage::write_issuer_did(&e, &issuer_did);
         storage::write_amount(&e, &amount.unwrap_or(DEFAULT_AMOUNT));
 
         // set initial empty values
@@ -58,9 +59,17 @@ impl VCIssuanceTrait for VCIssuanceContract {
 
         let vc_id = verifiable_credential::generate_id(&e);
         let contract_address = e.current_contract_address();
+        let issuer_did = storage::read_issuer_did(&e);
 
         let client = vault_contract::Client::new(&e, &vault_contract);
-        client.store_vc(&vc_id, &vc_data, &recipient_did, &admin, &contract_address);
+        client.store_vc(
+            &vc_id,
+            &vc_data,
+            &recipient_did,
+            &admin,
+            &issuer_did,
+            &contract_address,
+        );
         verifiable_credential::add_vc(&e, &vc_id, vcs);
 
         vc_id

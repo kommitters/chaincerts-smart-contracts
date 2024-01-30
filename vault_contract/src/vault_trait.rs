@@ -21,6 +21,7 @@ pub trait VaultTrait {
         vc_data: String,
         recipient_did: String,
         issuer: Address,
+        issuer_did: String,
         issuance_contract: Address,
     );
 

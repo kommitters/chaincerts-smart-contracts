@@ -27,6 +27,7 @@ Represents a digitally signed statement made by an issuer about a DID subject.
 | `id`                | `String`  | Unique identifier (e.g., `t5iwuct2njbbcdu2nfwr32ib`).                          |
 | `data`              | `String`  | VC data encrypted utilizing a key agreement algorithm for heightened security. |
 | `issuance_contract` | `Address` | Smart contract address responsible for verifiable credential issuance.         |
+| `issuer_did`        | `String`  | DID of the verifiable credential issuer.                                  |
 
 #### Example
 
@@ -34,7 +35,8 @@ Represents a digitally signed statement made by an issuer about a DID subject.
 {
   "id": "t5iwuct2njbbcdu2nfwr32ib",
   "data": "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y",
-  "issuance_contract": "CBWDZIBI5NZ77EPSZLJDS3RTM57D3CIBKAIIOFER2TZEZATUYBASYF65"
+  "issuance_contract": "CBWDZIBI5NZ77EPSZLJDS3RTM57D3CIBKAIIOFER2TZEZATUYBASYF65",
+  "issuer_did": "did:chaincerts:7dotwpyzo2weqj6oto6liic6"
 }
 ```
 
@@ -59,7 +61,8 @@ Represents a secure container associated with a specific DID, capable of storing
     {
       "id": "t5iwuct2njbbcdu2nfwr32ib",
       "data": "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y",
-      "issuance_contract": "CBWDZIBI5NZ77EPSZLJDS3RTM57D3CIBKAIIOFER2TZEZATUYBASYF65"
+      "issuance_contract": "CBWDZIBI5NZ77EPSZLJDS3RTM57D3CIBKAIIOFER2TZEZATUYBASYF65",
+      "issuer_did": "did:chaincerts:7dotwpyzo2weqj6oto6liic6"
     }
   ]
 }
@@ -196,6 +199,7 @@ fn store_vc(
     vc_data: String,
     recipient_did: String,
     issuer: Address,
+    issuer_did: String,
     issuance_contract: Address,
 );
 ```
@@ -214,6 +218,7 @@ soroban contract invoke \
   --vc_data "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y" \
   --recipient_did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h" \
   --issuer GDSOFBSZMFIY5BMZT3R5FCQK6MJAR2PGDSWHOMHZFGFFGKUO32DBNJKC \
+  --issuer_did "did:chaincerts:7dotwpyzo2weqj6oto6liic6" \
   --issuance_contract CAVN6QFZP2WMB5WIF5EVBBW3LUDDJ62BWLP23EBCX56AS2HGXFIJXK7R
 ```
 
@@ -331,7 +336,8 @@ soroban contract invoke \
     {
       "id": "t5iwuct2njbbcdu2nfwr32ib",
       "data": "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y",
-      "issuance_contract": "CBWDZIBI5NZ77EPSZLJDS3RTM57D3CIBKAIIOFER2TZEZATUYBASYF65"
+      "issuance_contract": "CBWDZIBI5NZ77EPSZLJDS3RTM57D3CIBKAIIOFER2TZEZATUYBASYF65",
+      "issuer_did": "did:chaincerts:7dotwpyzo2weqj6oto6liic6"
     }
   ]
 }
@@ -367,7 +373,8 @@ soroban contract invoke \
       {
         "id": "t5iwuct2njbbcdu2nfwr32ib",
         "data": "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y",
-        "issuance_contract": "CBWDZIBI5NZ77EPSZLJDS3RTM57D3CIBKAIIOFER2TZEZATUYBASYF65"
+        "issuance_contract": "CBWDZIBI5NZ77EPSZLJDS3RTM57D3CIBKAIIOFER2TZEZATUYBASYF65",
+        "issuer_did": "did:chaincerts:7dotwpyzo2weqj6oto6liic6"
       }
     ]
   },
@@ -378,12 +385,14 @@ soroban contract invoke \
       {
         "id": "t5iwuct2njbbcdu2nfwr32ib",
         "data": "gzLDVsdtPc6w8tOhyiaftVPu9gI8J+/8UKlIAmTVNkiV0QAAfahvqhgMY2ZNLHnksFA15XiLDiXb6Yam39rcif94XrsVnXZ7UKuhOFqgMew",
-        "issuance_contract": "CBCA3EDJOEHHVH3X2RGWQNUDWVHP2JZHFYVGSSCDWD3RI3IUYY4FKLD4"
+        "issuance_contract": "CBCA3EDJOEHHVH3X2RGWQNUDWVHP2JZHFYVGSSCDWD3RI3IUYY4FKLD4",
+        "issuer_did": "did:chaincerts:5ppl9sm47frl0tpj7g3lp6eo"
       },
       {
         "id": "wqzrxs3eq2v90i5un1ph7k8l",
         "data": "Pc1hVUB2Mz8jXw9rEk7NxF4Lg5vmB3rYscAItJfRqiD0dVxkpwZqXlO2eau7YcDIoZaVlqSRF7sQ1B2YnmfIY",
-        "issuance_contract": "CBRM3HA7GLEI6QQ3O55RUKVRDSQASARUPKK6NXKXKKPWEYLE533GDYQD"
+        "issuance_contract": "CBRM3HA7GLEI6QQ3O55RUKVRDSQASARUPKK6NXKXKKPWEYLE533GDYQD",
+        "issuer_did": "did:chaincerts:pe4t2r94dftr1n1gf6jikt6a"
       }
     ]
   }

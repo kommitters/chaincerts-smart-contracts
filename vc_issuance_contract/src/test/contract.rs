@@ -9,10 +9,11 @@ fn test_initialize_with_amount() {
         amount,
         vc_data: _,
         recipient_did: _,
+        issuer_did,
         contract,
     } = VCIssuanceContractTest::setup();
 
-    contract.initialize(&admin, &amount);
+    contract.initialize(&admin, &issuer_did, &amount);
 }
 
 #[test]
@@ -23,10 +24,11 @@ fn test_initialize_without_amount() {
         amount: _,
         vc_data: _,
         recipient_did: _,
+        issuer_did,
         contract,
     } = VCIssuanceContractTest::setup();
 
-    contract.initialize(&admin, &None);
+    contract.initialize(&admin, &issuer_did, &None);
 }
 
 #[test]
@@ -38,11 +40,12 @@ fn test_initialize_with_too_high_amount() {
         amount: _,
         vc_data: _,
         recipient_did: _,
+        issuer_did,
         contract,
     } = VCIssuanceContractTest::setup();
     let high_amount = Some(101);
 
-    contract.initialize(&admin, &high_amount);
+    contract.initialize(&admin, &issuer_did, &high_amount);
 }
 
 #[test]
@@ -54,11 +57,12 @@ fn test_initialize_an_already_initialized_contract() {
         amount,
         vc_data: _,
         recipient_did: _,
+        issuer_did,
         contract,
     } = VCIssuanceContractTest::setup();
 
-    contract.initialize(&admin, &amount);
-    contract.initialize(&admin, &amount);
+    contract.initialize(&admin, &issuer_did, &amount);
+    contract.initialize(&admin, &issuer_did, &amount);
 }
 
 #[test]
@@ -69,10 +73,11 @@ fn test_issue() {
         amount: _,
         vc_data,
         recipient_did,
+        issuer_did,
         contract,
     } = VCIssuanceContractTest::setup();
 
-    let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did, &None);
+    let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did, &issuer_did, &None);
     contract.issue(&admin, &vc_data, &recipient_did, &vault_contract_id);
 }
 
@@ -85,11 +90,12 @@ fn test_issue_with_invalid_admin() {
         amount: _,
         vc_data,
         recipient_did,
+        issuer_did,
         contract,
     } = VCIssuanceContractTest::setup();
     let invalid_admin = Address::generate(&env);
 
-    let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did, &None);
+    let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did, &issuer_did, &None);
     contract.issue(&invalid_admin, &vc_data, &recipient_did, &vault_contract_id);
 }
 
@@ -102,9 +108,17 @@ fn test_issue_when_amount_is_exceeded() {
         amount: _,
         vc_data,
         recipient_did,
+        issuer_did,
         contract,
     } = VCIssuanceContractTest::setup();
-    let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did, &Some(1));
+    let vault_contract_id = create_vc(
+        &env,
+        &admin,
+        &contract,
+        &recipient_did,
+        &issuer_did,
+        &Some(1),
+    );
     contract.issue(&admin, &vc_data, &recipient_did, &vault_contract_id);
     contract.issue(&admin, &vc_data, &recipient_did, &vault_contract_id);
 }
@@ -118,9 +132,10 @@ fn test_revoke_vc_with_invalid_vc() {
         amount: _,
         vc_data: _,
         recipient_did: _,
+        issuer_did,
         contract,
     } = VCIssuanceContractTest::setup();
-    contract.initialize(&admin, &Some(10));
+    contract.initialize(&admin, &issuer_did, &Some(10));
 
     let vc_id = String::from_str(&env, "vc_id1");
     let date = String::from_str(&env, "2023-12-05T21:37:44.389Z");
@@ -136,9 +151,10 @@ fn test_revoke_vc() {
         amount: _,
         vc_data,
         recipient_did,
+        issuer_did,
         contract,
     } = VCIssuanceContractTest::setup();
-    let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did, &None);
+    let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did, &issuer_did, &None);
     let vc_id = contract.issue(&admin, &vc_data, &recipient_did, &vault_contract_id);
 
     let date = String::from_str(&env, "2023-12-05T21:37:44.389Z");
@@ -154,9 +170,10 @@ fn test_verify_vc() {
         amount: _,
         vc_data,
         recipient_did,
+        issuer_did,
         contract,
     } = VCIssuanceContractTest::setup();
-    let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did, &None);
+    let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did, &issuer_did, &None);
     let vc_id = contract.issue(&admin, &vc_data, &recipient_did, &vault_contract_id);
 
     let valid_vc_map = get_valid_vc_map(&env);
@@ -171,9 +188,10 @@ fn test_verify_vc_with_revoked_vc() {
         amount: _,
         vc_data,
         recipient_did,
+        issuer_did,
         contract,
     } = VCIssuanceContractTest::setup();
-    let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did, &None);
+    let vault_contract_id = create_vc(&env, &admin, &contract, &recipient_did, &issuer_did, &None);
     let vc_id = contract.issue(&admin, &vc_data, &recipient_did, &vault_contract_id);
     let date = String::from_str(&env, "2023-12-05T21:37:44.389Z");
 

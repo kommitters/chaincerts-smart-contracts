@@ -8,6 +8,7 @@ pub struct VCIssuanceContractTest<'a> {
     pub amount: Option<u32>,
     pub vc_data: String,
     pub recipient_did: String,
+    pub issuer_did: String,
     pub contract: VCIssuanceContractClient<'a>,
 }
 
@@ -21,6 +22,7 @@ impl<'a> VCIssuanceContractTest<'a> {
         let amount = Some(10);
         let vc_data = String::from_str(&env, "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y");
         let recipient_did = String::from_str(&env, "did:chaincerts:pe4t2r94dftr1n1gf6jikt6a");
+        let issuer_did = String::from_str(&env, "did:chaincerts:7dotwpyzo2weqj6oto6liic6");
 
         VCIssuanceContractTest {
             env,
@@ -28,6 +30,7 @@ impl<'a> VCIssuanceContractTest<'a> {
             amount,
             vc_data,
             recipient_did,
+            issuer_did,
             contract,
         }
     }
@@ -38,6 +41,7 @@ pub fn create_vc(
     admin: &Address,
     contract: &VCIssuanceContractClient,
     recipient_did: &String,
+    issuer_did: &String,
     amount: &Option<u32>,
 ) -> Address {
     let vault_admin = Address::generate(env);
@@ -49,7 +53,7 @@ pub fn create_vc(
     vault_client.initialize(&vault_admin, &dids);
     vault_client.authorize_issuer(&vault_admin, admin, recipient_did);
 
-    contract.initialize(admin, amount);
+    contract.initialize(admin, issuer_did, amount);
     vault_contract_id
 }
 

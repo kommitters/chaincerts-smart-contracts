@@ -305,11 +305,19 @@ fn test_store_vc() {
         vc_id,
         vc_data,
         issuance_contract_address,
+        issuer_did,
     } = get_vc_setup(&env);
 
     contract.initialize(&admin, &dids);
     contract.authorize_issuer(&admin, &issuer, &did);
-    contract.store_vc(&vc_id, &vc_data, &did, &issuer, &issuance_contract_address)
+    contract.store_vc(
+        &vc_id,
+        &vc_data,
+        &did,
+        &issuer,
+        &issuer_did,
+        &issuance_contract_address,
+    )
 }
 
 #[test]
@@ -328,10 +336,18 @@ fn test_store_vc_with_empty_issuers() {
         vc_id,
         vc_data,
         issuance_contract_address,
+        issuer_did,
     } = get_vc_setup(&env);
 
     contract.initialize(&admin, &dids);
-    contract.store_vc(&vc_id, &vc_data, &did, &issuer, &issuance_contract_address)
+    contract.store_vc(
+        &vc_id,
+        &vc_data,
+        &did,
+        &issuer,
+        &issuer_did,
+        &issuance_contract_address,
+    )
 }
 
 #[test]
@@ -352,6 +368,7 @@ fn test_store_vc_with_issuer_not_found() {
         vc_id,
         vc_data,
         issuance_contract_address,
+        issuer_did,
     } = get_vc_setup(&env);
 
     contract.initialize(&admin, &dids);
@@ -361,6 +378,7 @@ fn test_store_vc_with_issuer_not_found() {
         &vc_data,
         &did,
         &invalid_issuer,
+        &issuer_did,
         &issuance_contract_address,
     )
 }
@@ -381,13 +399,21 @@ fn test_store_vc_with_revoked_issuer() {
         vc_id,
         vc_data,
         issuance_contract_address,
+        issuer_did,
     } = get_vc_setup(&env);
 
     contract.initialize(&admin, &dids);
     contract.authorize_issuer(&admin, &issuer, &did);
     contract.revoke_issuer(&admin, &issuer, &did);
 
-    contract.store_vc(&vc_id, &vc_data, &did, &issuer, &issuance_contract_address)
+    contract.store_vc(
+        &vc_id,
+        &vc_data,
+        &did,
+        &issuer,
+        &issuer_did,
+        &issuance_contract_address,
+    )
 }
 
 #[test]
@@ -407,6 +433,7 @@ fn test_store_vc_with_vault_not_found() {
         vc_id,
         vc_data,
         issuance_contract_address,
+        issuer_did,
     } = get_vc_setup(&env);
 
     contract.initialize(&admin, &dids);
@@ -417,6 +444,7 @@ fn test_store_vc_with_vault_not_found() {
         &vc_data,
         &invalid_did,
         &issuer,
+        &issuer_did,
         &issuance_contract_address,
     )
 }
@@ -469,6 +497,7 @@ fn test_list_vaults() {
         vc_id,
         vc_data,
         issuance_contract_address,
+        issuer_did,
     } = get_vc_setup(&env);
 
     let vc_id2 = String::from_str(&env, "vc_id2");
@@ -480,13 +509,28 @@ fn test_list_vaults() {
     contract.authorize_issuer(&admin, &issuer, &did);
     contract.authorize_issuer(&admin, &issuer, &did2);
 
-    contract.store_vc(&vc_id, &vc_data, &did, &issuer, &issuance_contract_address);
-    contract.store_vc(&vc_id2, &vc_data, &did, &issuer, &issuance_contract_address);
+    contract.store_vc(
+        &vc_id,
+        &vc_data,
+        &did,
+        &issuer,
+        &issuer_did,
+        &issuance_contract_address,
+    );
+    contract.store_vc(
+        &vc_id2,
+        &vc_data,
+        &did,
+        &issuer,
+        &issuer_did,
+        &issuance_contract_address,
+    );
     contract.store_vc(
         &vc_id3,
         &vc_data,
         &did2,
         &issuer,
+        &issuer_did,
         &issuance_contract_address,
     );
 

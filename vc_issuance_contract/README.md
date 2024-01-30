@@ -37,10 +37,10 @@ Represents a revoked verifiable credential.
 ## Functions
 
 ### Initialize
-Initializes the contract by setting the contract admin and the limit amount of verifiable credentials that can be issued. The maximum amount allowed is **100**; if no amount is provided, the default value is **20**. An error will be triggered if the contract has already been initialized.
+Initializes the contract by setting the contract admin, the issuer DID and the limit amount of verifiable credentials that can be issued. The maximum amount allowed is **100**; if no amount is provided, the default value is **20**. An error will be triggered if the contract has already been initialized.
 
 ```rust
-fn initialize(e: Env, admin: Address, amount: Option<u32>);
+fn initialize(e: Env, admin: Address, issuer_did: String, amount: Option<u32>);
 ```
 
 #### Example:
@@ -53,7 +53,8 @@ soroban contract invoke \
   --network-passphrase 'Test SDF Network ; September 2015' \
   -- \
   initialize \
-  --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA
+  --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
+  --issuer_did "did:chaincerts:7dotwpyzo2weqj6oto6liic6"
 ```
 
 ### Issue

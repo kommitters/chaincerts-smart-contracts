@@ -1,11 +1,11 @@
 use crate::error::ContractError;
 use crate::revocation::Revocation;
 use crate::storage;
-use crate::vault_contract;
 use crate::vc_issuance_trait::VCIssuanceTrait;
 use crate::verifiable_credential;
 use soroban_sdk::{
-    contract, contractimpl, contractmeta, map, panic_with_error, Address, Env, Map, String, Vec,
+    contract, contractimpl, contractmeta, map, panic_with_error, vec, Address, Env, FromVal, Map,
+    String, Symbol, Val, Vec,
 };
 
 // MAXIMUM ENTRY TTL:
@@ -49,7 +49,7 @@ impl VCIssuanceTrait for VCIssuanceContract {
         e: Env,
         admin: Address,
         vc_data: String,
-        recipient_did: String,
+        _recipient_did: String,
         vault_contract: Address,
     ) -> String {
         validate_admin(&e, &admin);
@@ -61,15 +61,18 @@ impl VCIssuanceTrait for VCIssuanceContract {
         let contract_address = e.current_contract_address();
         let issuer_did = storage::read_issuer_did(&e);
 
-        let client = vault_contract::Client::new(&e, &vault_contract);
-        client.store_vc(
-            &vc_id,
-            &vc_data,
-            &recipient_did,
-            &admin,
-            &issuer_did,
-            &contract_address,
-        );
+        let store_vc_args = vec![
+            &e,
+            Val::from_val(&e, &vc_id),
+            Val::from_val(&e, &vc_data),
+            Val::from_val(&e, &admin),
+            Val::from_val(&e, &issuer_did),
+            Val::from_val(&e, &contract_address),
+        ];
+
+        let store_vc_fn = Symbol::new(&e, "store_vc");
+        e.invoke_contract::<()>(&vault_contract, &store_vc_fn, store_vc_args);
+
         verifiable_credential::add_vc(&e, &vc_id, vcs);
 
         vc_id

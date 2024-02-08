@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 
-members = ["deployer_contract", "vault_contract", "vc_issuance_contract"]
+members = ["deployer_contract", "did_contract", "vault_contract", "vc_issuance_contract"]
 
 [workspace.package]
 version = "0.16.0"

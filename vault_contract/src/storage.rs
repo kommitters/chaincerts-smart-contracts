@@ -1,12 +1,20 @@
-use crate::vault::Vault;
-use soroban_sdk::{contracttype, Address, Env, Map, String, Vec};
+// use crate::vault::Vault;
+use crate::verifiable_credential::VerifiableCredential;
+use soroban_sdk::{contracttype, Address, Env, String, Vec};
+
+// MAXIMUM ENTRY TTL:
+// 31 days, 12 ledger close per minute.
+// (12 * 60 * 24 * 31) - 1
+const LEDGERS_TO_EXTEND: u32 = 535_679;
 
 #[derive(Clone)]
 #[contracttype]
 pub enum DataKey {
-    Admin,           // Address
-    Issuers(String), // Vec<Address>
-    Vaults,          // Map<String, Vault>
+    Admin,   // Address
+    Did,     // String
+    Revoked, // Boolean
+    Issuers, // Vec<Address>
+    VCs,     // Vec<VerifiableCredential>
 }
 
 pub fn has_admin(e: &Env) -> bool {
@@ -24,22 +32,43 @@ pub fn write_admin(e: &Env, id: &Address) {
     e.storage().instance().set(&key, id);
 }
 
-pub fn read_issuers(e: &Env, did: &String) -> Vec<Address> {
-    let key = DataKey::Issuers(did.clone());
-    e.storage().instance().get(&key).unwrap_or(Vec::new(e))
+pub fn write_did(e: &Env, did: &String) {
+    let key = DataKey::Did;
+    e.storage().instance().set(&key, did);
 }
 
-pub fn write_issuers(e: &Env, issuers: &Vec<Address>, did: &String) {
-    let key = DataKey::Issuers(did.clone());
-    e.storage().instance().set(&key, issuers)
+pub fn read_revoked(e: &Env) -> bool {
+    let key = DataKey::Revoked;
+    e.storage().instance().get(&key).unwrap()
 }
 
-pub fn read_vaults(e: &Env) -> Map<String, Vault> {
-    let key = DataKey::Vaults;
-    e.storage().instance().get(&key).unwrap_or(Map::new(e))
+pub fn write_revoked(e: &Env, revoked: &bool) {
+    let key = DataKey::Revoked;
+    e.storage().instance().set(&key, revoked);
 }
 
-pub fn write_vaults(e: &Env, vaults: &Map<String, Vault>) {
-    let key = DataKey::Vaults;
-    e.storage().instance().set(&key, vaults)
+pub fn read_issuers(e: &Env) -> Vec<Address> {
+    let key = DataKey::Issuers;
+    e.storage().persistent().get(&key).unwrap_or(Vec::new(e))
+}
+
+pub fn write_issuers(e: &Env, issuers: &Vec<Address>) {
+    let key = DataKey::Issuers;
+    e.storage().persistent().set(&key, issuers)
+}
+
+pub fn read_vcs(e: &Env) -> Vec<VerifiableCredential> {
+    let key = DataKey::VCs;
+    e.storage().persistent().get(&key).unwrap_or(Vec::new(e))
+}
+
+pub fn write_vcs(e: &Env, vcs: &Vec<VerifiableCredential>) {
+    let key = DataKey::VCs;
+    e.storage().persistent().set(&key, vcs)
+}
+
+pub fn extend_ttl_to_instance(e: &Env) {
+    e.storage()
+        .instance()
+        .extend_ttl(LEDGERS_TO_EXTEND, LEDGERS_TO_EXTEND);
 }

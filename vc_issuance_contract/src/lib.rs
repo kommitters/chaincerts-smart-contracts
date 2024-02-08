@@ -11,6 +11,9 @@ mod vault_contract {
         file = "../target/wasm32-unknown-unknown/release/vault_contract.wasm"
     );
 }
+mod did_contract {
+    soroban_sdk::contractimport!(file = "./soroban_did_contract.wasm");
+}
 
 #[cfg(test)]
 mod test;

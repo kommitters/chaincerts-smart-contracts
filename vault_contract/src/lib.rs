@@ -3,7 +3,6 @@ mod contract;
 mod error;
 mod issuer;
 mod storage;
-mod vault;
 mod vault_trait;
 mod verifiable_credential;
 mod did_contract {

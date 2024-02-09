@@ -45,13 +45,7 @@ impl VCIssuanceTrait for VCIssuanceContract {
             .instance()
             .extend_ttl(LEDGERS_TO_EXTEND, LEDGERS_TO_EXTEND);
     }
-    fn issue(
-        e: Env,
-        admin: Address,
-        vc_data: String,
-        _recipient_did: String,
-        vault_contract: Address,
-    ) -> String {
+    fn issue(e: Env, admin: Address, vc_data: String, vault_contract: Address) -> String {
         validate_admin(&e, &admin);
 
         let vcs = storage::read_vcs(&e);

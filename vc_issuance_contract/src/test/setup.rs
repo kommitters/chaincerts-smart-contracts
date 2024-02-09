@@ -22,7 +22,6 @@ pub struct VCIssuanceContractTest<'a> {
     pub admin: Address,
     pub amount: Option<u32>,
     pub vc_data: String,
-    pub recipient_did: String,
     pub issuer_did: String,
     pub contract: VCIssuanceContractClient<'a>,
 }
@@ -36,7 +35,6 @@ impl<'a> VCIssuanceContractTest<'a> {
             VCIssuanceContractClient::new(&env, &env.register_contract(None, VCIssuanceContract));
         let amount = Some(10);
         let vc_data = String::from_str(&env, "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y");
-        let recipient_did = String::from_str(&env, "did:chaincerts:pe4t2r94dftr1n1gf6jikt6a");
         let issuer_did = String::from_str(&env, "did:chaincerts:7dotwpyzo2weqj6oto6liic6");
 
         VCIssuanceContractTest {
@@ -44,7 +42,6 @@ impl<'a> VCIssuanceContractTest<'a> {
             admin,
             amount,
             vc_data,
-            recipient_did,
             issuer_did,
             contract,
         }

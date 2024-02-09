@@ -25,12 +25,19 @@ jobs:
           submodules: recursive
       - run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
       - run: rustup target add wasm32-unknown-unknown
-      - name: Build required wasm
+      - run: cargo install --locked --version 20.3.0 soroban-cli --features opt
+      - name: Build required did contract wasm
         run: |
-          cargo build --target wasm32-unknown-unknown --release --package vault-contract
+          soroban contract build --package did-contract
+      - name: Optimize soroban_did_contract.wasm
+        run: |
+          soroban contract optimize --wasm target/wasm32-unknown-unknown/release/soroban_did_contract.wasm
+      - name: Build required vault contract wasm
+        run: |
+          soroban contract build --package vault-contract
       - name: Contract Build
         run: |
-          cargo build --target wasm32-unknown-unknown --release
+          soroban contract build
       - name: Code Verifications
         run: |
           cargo clippy --all-targets --all-features -- -D warnings

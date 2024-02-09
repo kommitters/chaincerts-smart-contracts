@@ -81,7 +81,7 @@ fn test_authorize_issuer_with_invalid_admin() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #5)")]
+#[should_panic(expected = "HostError: Error(Contract, #4)")]
 fn test_authorize_issuer_with_already_authorized_issuer() {
     let VaultContractTest {
         env: _,
@@ -99,7 +99,7 @@ fn test_authorize_issuer_with_already_authorized_issuer() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #7)")]
+#[should_panic(expected = "HostError: Error(Contract, #5)")]
 fn test_authorize_issuer_with_revoked_vault() {
     let VaultContractTest {
         env: _,
@@ -153,7 +153,7 @@ fn test_authorize_issuers_with_invalid_admin() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #7)")]
+#[should_panic(expected = "HostError: Error(Contract, #5)")]
 fn test_authorize_issuers_with_revoked_vault() {
     let VaultContractTest {
         env,
@@ -209,7 +209,7 @@ fn test_revoke_issuer_with_invalid_admin() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #4)")]
+#[should_panic(expected = "HostError: Error(Contract, #3)")]
 fn test_revoke_issuer_when_issuer_is_not_found() {
     let VaultContractTest {
         env,
@@ -229,7 +229,7 @@ fn test_revoke_issuer_when_issuer_is_not_found() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #7)")]
+#[should_panic(expected = "HostError: Error(Contract, #5)")]
 fn test_revoke_issuer_with_revoked_vault() {
     let VaultContractTest {
         env: _,
@@ -277,7 +277,7 @@ fn test_store_vc() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #4)")]
+#[should_panic(expected = "HostError: Error(Contract, #3)")]
 fn test_store_vc_with_empty_issuers() {
     let VaultContractTest {
         env,
@@ -307,7 +307,7 @@ fn test_store_vc_with_empty_issuers() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #4)")]
+#[should_panic(expected = "HostError: Error(Contract, #3)")]
 fn test_store_vc_with_issuer_not_found() {
     let VaultContractTest {
         env,
@@ -340,7 +340,7 @@ fn test_store_vc_with_issuer_not_found() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #4)")]
+#[should_panic(expected = "HostError: Error(Contract, #3)")]
 fn test_store_vc_with_revoked_issuer() {
     let VaultContractTest {
         env,

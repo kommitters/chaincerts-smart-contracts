@@ -109,7 +109,7 @@ fn validate_issuer(e: &Env, issuer: &Address, vc_data: &String, issuance_contrac
 }
 
 fn validate_vault_revoked(e: &Env) {
-    let vault_revoked = storage::read_revoked(e);
+    let vault_revoked: bool = storage::read_revoked(e);
     if vault_revoked {
         panic_with_error!(e, ContractError::VaultRevoked)
     }

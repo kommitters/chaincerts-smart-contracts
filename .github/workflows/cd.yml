@@ -22,7 +22,7 @@ jobs:
       - run: cargo install --locked --version 20.3.0 soroban-cli --features opt
       - name: Build required did contract wasm
         run: |
-          soroban contract build --package did-contract
+          soroban contract build --package soroban-did-contract
       - name: Optimize soroban_did_contract.wasm
         run: |
           soroban contract optimize --wasm target/wasm32-unknown-unknown/release/soroban_did_contract.wasm

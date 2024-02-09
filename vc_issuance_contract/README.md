@@ -152,6 +152,7 @@ A contract error will be triggered if:
 
 - Invoker is not the contract admin.
 - Verifiable credential is not registered.
+- Verifiable credential is already revoked.
 
 ```rust
 fn revoke(e: Env, admin: Address, vc_id: String, date: String);
@@ -179,8 +180,9 @@ soroban contract invoke \
 | 1    | `AlreadyInitialized`    | Contract has already been initialized                                   |
 | 2    | `NotAuthorized`         | Invoker is not the contract admin                                       |
 | 3    | `AmountLimitExceeded`   | Provided amount exceeds the maximum allowed                             |
-| 4    | `VCNotFound`            | Verifiable credential not found                                          |
-| 5    | `IssuanceLimitExceeded` | Contract issuance limit exceeded                                        |
+| 4    | `VCNotFound`            | Verifiable credential not found                                         |
+| 5    | `VCAlreadyRevoked`      | Verifiable credential already revoked                                   |
+| 6    | `IssuanceLimitExceeded` | Contract issuance limit exceeded                                        |
 
 ## Development
 

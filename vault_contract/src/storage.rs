@@ -72,7 +72,7 @@ pub fn extend_ttl_to_instance(e: &Env) {
         .extend_ttl(LEDGERS_TO_EXTEND, LEDGERS_TO_EXTEND);
 }
 
-pub fn extend_ttl_to_persistence(e: &Env) {
+pub fn extend_ttl_to_persistent(e: &Env) {
     let vcs_key = DataKey::VCs;
     let issuers_key = DataKey::Issuers;
 

@@ -41,7 +41,7 @@ impl VaultTrait for VaultContract {
         storage::write_vcs(&e, &Vec::new(&e));
 
         storage::extend_ttl_to_instance(&e);
-        storage::extend_ttl_to_persistence(&e);
+        storage::extend_ttl_to_persistent(&e);
         (did_contract_address, did_document.into_val(&e))
     }
 

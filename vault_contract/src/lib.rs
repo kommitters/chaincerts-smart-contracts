@@ -3,11 +3,12 @@ mod contract;
 mod error;
 mod issuer;
 mod storage;
-mod vault;
 mod vault_trait;
 mod verifiable_credential;
 mod did_contract {
-    soroban_sdk::contractimport!(file = "./soroban_did_contract.wasm");
+    soroban_sdk::contractimport!(
+        file = "../target/wasm32-unknown-unknown/release/soroban_did_contract.optimized.wasm"
+    );
 }
 
 #[cfg(test)]

@@ -1,6 +1,5 @@
 use crate::storage;
-use crate::vault::Vault;
-use soroban_sdk::{contracttype, Address, Env, Map, String, Vec};
+use soroban_sdk::{contracttype, Address, Env, String, Vec};
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -11,16 +10,8 @@ pub struct VerifiableCredential {
     pub issuer_did: String,
 }
 
-pub fn store_vc(
-    e: &Env,
-    vaults: &mut Map<String, Vault>,
-    id: String,
-    data: String,
-    issuance_contract: Address,
-    recipient_did: String,
-    issuer_did: String,
-) {
-    let mut vcs: Vec<VerifiableCredential> = vaults.get_unchecked(recipient_did.clone()).vcs;
+pub fn store_vc(e: &Env, id: String, data: String, issuance_contract: Address, issuer_did: String) {
+    let mut vcs: Vec<VerifiableCredential> = storage::read_vcs(e);
     let new_vc: VerifiableCredential = VerifiableCredential {
         id,
         data,
@@ -28,16 +19,6 @@ pub fn store_vc(
         issuer_did,
     };
 
-    vcs.push_back(new_vc);
-
-    vaults.set(
-        recipient_did.clone(),
-        Vault {
-            did: recipient_did,
-            revoked: false,
-            vcs,
-        },
-    );
-
-    storage::write_vaults(e, vaults);
+    vcs.push_front(new_vc);
+    storage::write_vcs(e, &vcs);
 }

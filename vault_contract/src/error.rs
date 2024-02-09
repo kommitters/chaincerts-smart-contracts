@@ -6,10 +6,7 @@ use soroban_sdk::contracterror;
 pub enum ContractError {
     AlreadyInitialized = 1,
     NotAuthorized = 2,
-    EmptyDIDs = 3,
-    IssuerNotAuthorized = 4,
-    IssuerAlreadyAuthorized = 5,
-    VaultNotFound = 6,
-    VaultRevoked = 7,
-    VaultAlreadyRegistered = 8,
+    IssuerNotAuthorized = 3,
+    IssuerAlreadyAuthorized = 4,
+    VaultRevoked = 5,
 }

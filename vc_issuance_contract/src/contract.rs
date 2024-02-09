@@ -1,17 +1,12 @@
-use crate::error::ContractError;
-use crate::revocation::Revocation;
 use crate::storage;
-use crate::vault_contract;
 use crate::vc_issuance_trait::VCIssuanceTrait;
 use crate::verifiable_credential;
+use crate::{error::ContractError, revocation};
 use soroban_sdk::{
-    contract, contractimpl, contractmeta, map, panic_with_error, Address, Env, Map, String, Vec,
+    contract, contractimpl, contractmeta, map, panic_with_error, vec, Address, Env, FromVal, Map,
+    String, Symbol, Val, Vec,
 };
 
-// MAXIMUM ENTRY TTL:
-// 31 days, 12 ledger close per minute.
-// (12 * 60 * 24 * 31) - 1
-const LEDGERS_TO_EXTEND: u32 = 535_679;
 const DEFAULT_AMOUNT: u32 = 20;
 const MAX_AMOUNT: u32 = 100;
 
@@ -41,17 +36,10 @@ impl VCIssuanceTrait for VCIssuanceContract {
         storage::write_vcs(&e, &Vec::new(&e));
         storage::write_vcs_revocations(&e, &Map::new(&e));
 
-        e.storage()
-            .instance()
-            .extend_ttl(LEDGERS_TO_EXTEND, LEDGERS_TO_EXTEND);
+        storage::extend_ttl_to_instance(&e);
+        storage::extend_ttl_to_persistent(&e);
     }
-    fn issue(
-        e: Env,
-        admin: Address,
-        vc_data: String,
-        recipient_did: String,
-        vault_contract: Address,
-    ) -> String {
+    fn issue(e: Env, admin: Address, vc_data: String, vault_contract: Address) -> String {
         validate_admin(&e, &admin);
 
         let vcs = storage::read_vcs(&e);
@@ -61,15 +49,18 @@ impl VCIssuanceTrait for VCIssuanceContract {
         let contract_address = e.current_contract_address();
         let issuer_did = storage::read_issuer_did(&e);
 
-        let client = vault_contract::Client::new(&e, &vault_contract);
-        client.store_vc(
-            &vc_id,
-            &vc_data,
-            &recipient_did,
-            &admin,
-            &issuer_did,
-            &contract_address,
-        );
+        let store_vc_args = vec![
+            &e,
+            Val::from_val(&e, &vc_id),
+            Val::from_val(&e, &vc_data),
+            Val::from_val(&e, &admin),
+            Val::from_val(&e, &issuer_did),
+            Val::from_val(&e, &contract_address),
+        ];
+
+        let store_vc_fn = Symbol::new(&e, "store_vc");
+        e.invoke_contract::<()>(&vault_contract, &store_vc_fn, store_vc_args);
+
         verifiable_credential::add_vc(&e, &vc_id, vcs);
 
         vc_id
@@ -94,11 +85,7 @@ impl VCIssuanceTrait for VCIssuanceContract {
         validate_admin(&e, &admin);
         validate_vc(&e, &vc_id);
 
-        let mut revocations = storage::read_vcs_revocations(&e);
-
-        revocations.set(vc_id.clone(), Revocation { vc_id, date });
-
-        storage::write_vcs_revocations(&e, &revocations);
+        revocation::revoke_vc(&e, vc_id, date);
     }
 }
 

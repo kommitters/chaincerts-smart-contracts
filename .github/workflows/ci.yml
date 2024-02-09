@@ -21,14 +21,20 @@ jobs:
           - stable
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: recursive
       - run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
       - run: rustup target add wasm32-unknown-unknown
-      - name: Build required wasm
+      - run: cargo install --locked --version 20.3.0 soroban-cli --features opt
+      - name: Build required did contract wasm
         run: |
-          cargo build --target wasm32-unknown-unknown --release --package vault-contract
+          soroban contract build --package soroban-did-contract
+      - name: Optimize soroban_did_contract.wasm
+        run: |
+          soroban contract optimize --wasm target/wasm32-unknown-unknown/release/soroban_did_contract.wasm
       - name: Contract Build
         run: |
-          cargo build --target wasm32-unknown-unknown --release
+          soroban contract build
       - name: Code Verifications
         run: |
           cargo clippy --all-targets --all-features -- -D warnings
@@ -41,7 +47,7 @@ jobs:
           version: 0.22.0
           # Due to a bug with cargo-tarpaulin crate with multi-line chain calls, the test coverage was reduced.
           # https://github.com/xd009642/tarpaulin/issues/949
-          args: --all-features --fail-under 98.0 --out Lcov
+          args: --all-features --fail-under 97.8 --out Lcov
       - name: Upload to Coveralls
         uses: coverallsapp/github-action@master
         with:

@@ -2,3 +2,4 @@
 /Cargo.lock
 tarpaulin-report.html
 **/test_snapshots/
+.soroban/

@@ -8,9 +8,10 @@ use soroban_sdk::{testutils::Address as _, vec, Address, BytesN, Env, FromVal, S
 pub struct VaultContractTest<'a> {
     pub env: Env,
     pub admin: Address,
-    pub did: String,
-    pub dids: Vec<String>,
     pub issuer: Address,
+    pub did_init_args: Vec<Val>,
+    pub did_wasm_hash: BytesN<32>,
+    pub salt: BytesN<32>,
     pub contract: VaultContractClient<'a>,
 }
 
@@ -19,17 +20,19 @@ impl<'a> VaultContractTest<'a> {
         let env: Env = Default::default();
         env.mock_all_auths();
         let admin = Address::generate(&env);
-        let did = String::from_str(&env, "did:chaincerts:5ppl9sm47frl0tpj7g3lp6eo");
-        let dids = vec![&env, did.clone()];
         let issuer = Address::generate(&env);
+        let did_wasm_hash = env.deployer().upload_contract_wasm(did_contract::WASM);
+        let did_init_args = did_init_args(&env, &admin);
+        let salt = BytesN::from_array(&env, &[0; 32]);
 
         let contract = VaultContractClient::new(&env, &env.register_contract(None, VaultContract));
         VaultContractTest {
             env,
             admin,
-            did,
-            dids,
             issuer,
+            did_init_args,
+            did_wasm_hash,
+            salt,
             contract,
         }
     }
@@ -53,25 +56,6 @@ pub fn get_vc_setup(env: &Env) -> VCVaultContractTest {
         vc_data,
         issuance_contract_address,
         issuer_did,
-    }
-}
-
-pub struct DIDContractTest {
-    pub did_init_args: Vec<Val>,
-    pub did_wasm_hash: BytesN<32>,
-    pub salt: BytesN<32>,
-    pub context: Vec<String>,
-}
-
-pub fn get_did_contract_setup(env: &Env, admin: &Address) -> DIDContractTest {
-    let salt = BytesN::from_array(env, &[0; 32]);
-    let did_wasm_hash = env.deployer().upload_contract_wasm(did_contract::WASM);
-
-    DIDContractTest {
-        did_init_args: did_init_args(env, admin),
-        did_wasm_hash,
-        salt,
-        context: did_context(env),
     }
 }
 
@@ -114,7 +98,7 @@ pub fn did_init_args(e: &Env, admin: &Address) -> Vec<Val> {
     ]
 }
 
-fn did_context(e: &Env) -> Vec<String> {
+pub fn did_context(e: &Env) -> Vec<String> {
     vec![
         e,
         String::from_str(e, "https://www.w3.org/ns/did/v1"),

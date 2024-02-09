@@ -6,15 +6,13 @@ The Vault smart contract is a secure repository for safeguarding verifiable cred
 ## Features
 With this smart contract, you will be able to:
 
-- Authorize a list of issuers to store verifiable credentials in a vault.
-- Authorize an issuer to store verifiable credentials in a vault.
+- Initialize the vault by deploying a DID and storing the corresponding DID URI.
+- Authorize a list of issuers to store verifiable credentials in the vault.
+- Authorize an issuer to store verifiable credentials in the vault.
 - Revoke an issuer for a specific vault.
 - Store a verifiable credential in the recipient's vault.
-- Deploys a DID and registers a vault using the deployed DID.
-- Register a vault given its DID.
-- Revoke a vault given its DID.
-- Retrieve a vault given its DID.
-- List all vaults.
+- Revoke the vault.
+- Retrieve the list of stored vcs in the vault.
 
 ## Types
 ### VerifiableCredential
@@ -40,44 +38,22 @@ Represents a digitally signed statement made by an issuer about a DID subject.
 }
 ```
 
-### Vault
-Represents a secure container associated with a specific DID, capable of storing a collection of verifiable credentials.
-
-#### Attributes
-
-| Name      | Type                        | Values                                                     |
-| --------- | --------------------------- | ---------------------------------------------------------- |
-| `did`     | `String`                    | DID URI (e.g., `did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h`). |
-| `revoked` | `bool`                      | Boolean indicating whether the vault is revoked.           |
-| `vcs`     | `Vec<VerifiableCredential>` | List of [VerifiableCredentials](#verifiablecredential).    |
-
-
-#### Example
-```bash
-{
-  "did": "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h",
-  "revoked": false,
-  "vcs": [
-    {
-      "id": "t5iwuct2njbbcdu2nfwr32ib",
-      "data": "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y",
-      "issuance_contract": "CBWDZIBI5NZ77EPSZLJDS3RTM57D3CIBKAIIOFER2TZEZATUYBASYF65",
-      "issuer_did": "did:chaincerts:7dotwpyzo2weqj6oto6liic6"
-    }
-  ]
-}
-```
-
 ## Functions
 
 The following functions define the behavior of the Vault smart contract.
 
 ### Initialize
 
-Initializes the contract by setting the admin and creating a vault for each DID. An error will be triggered if the contract has already been initialized.
+Initializes the contract by setting the admin, deploying a DID and storing it within the contract. An error will be triggered if the contract has already been initialized.
 
 ```rust
-fn initialize(e: Env, admin: Address, dids: Vec<String>);
+fn initialize(
+    e: Env,
+    admin: Address,
+    did_wasm_hash: BytesN<32>,
+    did_init_args: Vec<Val>,
+    salt: BytesN<32>,
+) -> (Address, Val);
 ```
 
 #### Example
@@ -91,22 +67,28 @@ soroban contract invoke \
   -- \
   initialize \
   --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
-  --dids '["did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h"]'
+  --did_wasm_hash e48a9b26734cff6b2e36117784d4474b5f91f9c50044341811816d8d7e7b63a0 \
+  --salt 8752b75c946477e1ef5613d594e2cb25433c886b45117792f00d4c84e6362cec \
+  --did_init_args '[{"address":"GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA"},{"string":"chaincerts"},{"vec":[{"string":"https://www.w3.org/ns/did/v1"},{"string":"https://w3id.org/security/suites/ed25519-2020/v1"},{"string":"https://w3id.org/security/suites/x25519-2020/v1"}]},{"vec":[{"map":{"id":{"string":"keys-1"},"type_":{"vec":[{"symbol":"Ed25519VerificationKey2020"}]},"controller":{"string":""},"public_key_multibase":{"string":"z6MkgpAN9rsVPXJ6DrrvxcsGzKwjdkVdvjNtbQsRiLfsqmuQ"},"verification_relationships":{"vec":[{"symbol":"Authentication"},{"symbol":"AssertionMethod"}]}}}]},{"vec":[{"map":{"id":{"string":"chaincerts"},"service_endpoint":{"string":"https://chaincerts.co"},"type_":{"vec":[{"symbol":"LinkedDomains"}]}}}]}]'
 
 ```
 
+### Output
+Returns a tuple containing the following values:
+- `Address`: DID Contract address that was deployed.
+- `Val`: [DID Document](https://github.com/kommitters/soroban-did-contract?tab=readme-ov-file#diddocument) parsed as a `Val` type.
+
 ### Authorize Issuers
 
-Set a list of issuers as authorized issuers to store verifiable credentials in a vault given its DID. The admin account is the only party authorized to invoke this function.
+Set a list of issuers as authorized issuers to store verifiable credentials in the vault. The admin account is the only party authorized to invoke this function.
 
 A contract error will be triggered if:
 - Invoker is not the contract admin.
-- Vault is not registered.
-- Vault is registered but revoked.
+- Vault is revoked.
 
 
 ```rust
-fn authorize_issuers(e: Env, admin: Address, issuers: Vec<Address>, did: String);
+fn authorize_issuers(e: Env, admin: Address, issuers: Vec<Address>);
 ```
 
 #### Example
@@ -120,24 +102,22 @@ soroban contract invoke \
   -- \
   authorize_issuers \
   --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
-  --issuers '["GDSOFBSZMFIY5BMZT3R5FCQK6MJAR2PGDSWHOMHZFGFFGKUO32DBNJKC", "GAH6Q4PBWCW2WZAGTEWAL3GUY3YZ2ISGBHGKG44BPFADUQNW6HOWL3GC"]' \
-  --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h"
+  --issuers '["GDSOFBSZMFIY5BMZT3R5FCQK6MJAR2PGDSWHOMHZFGFFGKUO32DBNJKC", "GAH6Q4PBWCW2WZAGTEWAL3GUY3YZ2ISGBHGKG44BPFADUQNW6HOWL3GC"]'
 
 ```
 
 ### Authorize Issuer
 
-Authorizes an issuer to store verifiable credentials in a vault given its DID. The admin account is the only party authorized to invoke this function.
+Authorizes an issuer to store verifiable credentials in the vault. The admin account is the only party authorized to invoke this function.
 
 A contract error will be triggered if:
 - Invoker is not the contract admin.
 - Issuer is already authorized.
-- Vault is not registered.
-- Vault is registered but revoked.
+- Vault is revoked.
 
 
 ```rust
-fn authorize_issuer(e: Env, admin: Address, issuer: Address, did: String);
+fn authorize_issuer(e: Env, admin: Address, issuer: Address);
 ```
 
 #### Example
@@ -151,21 +131,19 @@ soroban contract invoke \
   -- \
   authorize_issuer \
   --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
-  --issuer GDSOFBSZMFIY5BMZT3R5FCQK6MJAR2PGDSWHOMHZFGFFGKUO32DBNJKC \
-  --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h"
+  --issuer GDSOFBSZMFIY5BMZT3R5FCQK6MJAR2PGDSWHOMHZFGFFGKUO32DBNJKC
 
 ```
 
 ### Revoke Issuer
-Revokes an issuer for a specific vault. The admin account is the only party authorized to invoke this function.
+Revokes an issuer for the vault. The admin account is the only party authorized to invoke this function.
 
 A contract error will be triggered if:
 - Invoker is not the contract admin.
-- Vault is not registered.
-- Vault is registered but revoked.
+- Vault is revoked.
 
 ```rust
-fn revoke_issuer(e: Env, admin: Address, issuer: Address, did: String);
+fn revoke_issuer(e: Env, admin: Address, issuer: Address);
 ```
 
 #### Example
@@ -179,25 +157,22 @@ soroban contract invoke \
   -- \
   revoke_issuer \
   --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
-  --issuer GCPGQ32D7OTELJWJ7G2YBCM5DDXXWKDWFJYRQLOJ4HQCXYFSVXVEBLN3 \
-  --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h"
+  --issuer GCPGQ32D7OTELJWJ7G2YBCM5DDXXWKDWFJYRQLOJ4HQCXYFSVXVEBLN3
 ```
 
 ### Store VC
-Stores a verifiable credential into a vault given the recipient DID. An authorized issuer must invoke this function.
+Stores a verifiable credential into the vault. An authorized issuer must invoke this function.
 
 A contract error will be triggered if:
 
 - Issuer is not authorized.
-- Vault is not registered.
-- Vault is registered but revoked.
+- Vault is revoked.
 
 ```rust
 fn store_vc(
     e: Env,
     vc_id: String,
     vc_data: String,
-    recipient_did: String,
     issuer: Address,
     issuer_did: String,
     issuance_contract: Address,
@@ -216,80 +191,20 @@ soroban contract invoke \
   store_vc \
   --vc_id "t5iwuct2njbbcdu2nfwr32ib" \
   --vc_data "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y" \
-  --recipient_did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h" \
   --issuer GDSOFBSZMFIY5BMZT3R5FCQK6MJAR2PGDSWHOMHZFGFFGKUO32DBNJKC \
   --issuer_did "did:chaincerts:7dotwpyzo2weqj6oto6liic6" \
   --issuance_contract CAVN6QFZP2WMB5WIF5EVBBW3LUDDJ62BWLP23EBCX56AS2HGXFIJXK7R
 ```
 
-### Register Vault
-Deploys a DID and registers a vault using the deployed DID. The admin account is the only party authorized to invoke this function.
-
-```rust
-fn register_vault(
-    e: Env,
-    admin: Address,
-    did_wasm_hash: BytesN<32>,
-    did_init_args: Vec<Val>,
-    salt: BytesN<32>,
-) -> (Address, Val);
-```
-
-### Output
-Returns a tuple containing the following values:
-- `Address`: DID Contract address that was deployed.
-- `Val`: [DID Document](https://github.com/kommitters/soroban-did-contract?tab=readme-ov-file#diddocument) parsed as a `Val` type.
-
-#### Example
-
-```bash
-soroban contract invoke \
-  --id CONTRACT_ID \
-  --source SOURCE_ACCOUNT_SECRET_KEY \
-  --rpc-url https://soroban-testnet.stellar.org:443 \
-  --network-passphrase 'Test SDF Network ; September 2015' \
-  -- \
-  register_vault \
-  --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
-  --did_wasm_hash e48a9b26734cff6b2e36117784d4474b5f91f9c50044341811816d8d7e7b63a0 \
-  --salt 8752b75c946477e1ef5613d594e2cb25433c886b45117792f00d4c84e6362cec \
-  --did_init_args '[{"address":"GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA"},{"string":"chaincerts"},{"vec":[{"string":"https://www.w3.org/ns/did/v1"},{"string":"https://w3id.org/security/suites/ed25519-2020/v1"},{"string":"https://w3id.org/security/suites/x25519-2020/v1"}]},{"vec":[{"map":{"id":{"string":"keys-1"},"type_":{"vec":[{"symbol":"Ed25519VerificationKey2020"}]},"controller":{"string":""},"public_key_multibase":{"string":"z6MkgpAN9rsVPXJ6DrrvxcsGzKwjdkVdvjNtbQsRiLfsqmuQ"},"verification_relationships":{"vec":[{"symbol":"Authentication"},{"symbol":"AssertionMethod"}]}}}]},{"vec":[{"map":{"id":{"string":"chaincerts"},"service_endpoint":{"string":"https://chaincerts.co"},"type_":{"vec":[{"symbol":"LinkedDomains"}]}}}]}]'
-```
-
-### Register Vault With DID
-Registers a vault given its DID. The admin account is the only party authorized to invoke this function.
-
-A contract error will be triggered if:
-- Invoker is not the contract admin.
-- Vault is already registered.
-
-```rust
-fn register_vault(e: Env, admin: Address, did: String);
-```
-
-#### Example
-
-```bash
-soroban contract invoke \
-  --id CONTRACT_ID \
-  --source SOURCE_ACCOUNT_SECRET_KEY \
-  --rpc-url https://soroban-testnet.stellar.org:443 \
-  --network-passphrase 'Test SDF Network ; September 2015' \
-  -- \
-  register_vault \
-  --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
-  --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h"
-```
-
 ### Revoke Vault
-Revokes a vault given its DID. The admin account is the only party authorized to invoke this function.
+Revokes the vault. The admin account is the only party authorized to invoke this function.
 
 A contract error will be triggered if:
-- Invoker is not the contract admin.
-- Vault is not registered.
+ - Invoker is not the contract admin.
+ - Vault is revoked.
 
 ```rust
-fn revoke_vault(e: Env, admin: Address, did: String);
+fn revoke_vault(e: Env, admin: Address);
 ```
 
 #### Example
@@ -302,19 +217,18 @@ soroban contract invoke \
   --network-passphrase 'Test SDF Network ; September 2015' \
   -- \
   revoke_vault \
-  --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
-  --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h"
+  --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA
 ```
 
-### Get Vault
-Retrieves a vault given its DID.
+### Get VCs
+Retrieve the list of stored vcs in the vault.
 
 ```rust
-fn get_vault(e: Env, did: String) -> Vault;
+fn get_vcs(e: Env) -> Vec<VerifiableCredential>;
 ```
 
 #### Output
-Returns a vault.
+Returns a list of vcs.
 
 #### Example
 
@@ -325,76 +239,21 @@ soroban contract invoke \
   --rpc-url https://soroban-testnet.stellar.org:443 \
   --network-passphrase 'Test SDF Network ; September 2015' \
   -- \
-  get_vault \
-  --did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h"
+  get_vcs
 
-# Output: VAULT
-{
-  "did": "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h",
-  "revoked": false,
-  "vcs": [
-    {
-      "id": "t5iwuct2njbbcdu2nfwr32ib",
-      "data": "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y",
-      "issuance_contract": "CBWDZIBI5NZ77EPSZLJDS3RTM57D3CIBKAIIOFER2TZEZATUYBASYF65",
-      "issuer_did": "did:chaincerts:7dotwpyzo2weqj6oto6liic6"
-    }
-  ]
-}
-```
-
-### List Vaults
-Retrieves all the vaults.
-
-```rust
-fn list_vaults(e: Env) -> Vec<Vault>;
-```
-
-#### Output
-Returns a list of vaults.
-
-#### Example
-
-```bash
-soroban contract invoke \
-  --id CONTRACT_ID \
-  --source SOURCE_ACCOUNT_SECRET_KEY \
-  --rpc-url https://soroban-testnet.stellar.org:443 \
-  --network-passphrase 'Test SDF Network ; September 2015' \
-  -- \
-  list_vaults
-
-# Output: LIST OF VAULTS
+# Output: VCs
 [
   {
-    "did": "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h",
-    "revoked": false,
-    "vcs": [
-      {
-        "id": "t5iwuct2njbbcdu2nfwr32ib",
-        "data": "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y",
-        "issuance_contract": "CBWDZIBI5NZ77EPSZLJDS3RTM57D3CIBKAIIOFER2TZEZATUYBASYF65",
-        "issuer_did": "did:chaincerts:7dotwpyzo2weqj6oto6liic6"
-      }
-    ]
+    "id": "t5iwuct2njbbcdu2nfwr32ib",
+    "data": "gzLDVsdtPc6w8tOhyiaftVPu9gI8J+/8UKlIAmTVNkiV0QAAfahvqhgMY2ZNLHnksFA15XiLDiXb6Yam39rcif94XrsVnXZ7UKuhOFqgMew",
+    "issuance_contract": "CBCA3EDJOEHHVH3X2RGWQNUDWVHP2JZHFYVGSSCDWD3RI3IUYY4FKLD4",
+    "issuer_did": "did:chaincerts:5ppl9sm47frl0tpj7g3lp6eo"
   },
   {
-    "did": "did:chaincerts:5ppl9sm47frl0tpj7g3lp6eo",
-    "revoked": true,
-    "vcs": [
-      {
-        "id": "t5iwuct2njbbcdu2nfwr32ib",
-        "data": "gzLDVsdtPc6w8tOhyiaftVPu9gI8J+/8UKlIAmTVNkiV0QAAfahvqhgMY2ZNLHnksFA15XiLDiXb6Yam39rcif94XrsVnXZ7UKuhOFqgMew",
-        "issuance_contract": "CBCA3EDJOEHHVH3X2RGWQNUDWVHP2JZHFYVGSSCDWD3RI3IUYY4FKLD4",
-        "issuer_did": "did:chaincerts:5ppl9sm47frl0tpj7g3lp6eo"
-      },
-      {
-        "id": "wqzrxs3eq2v90i5un1ph7k8l",
-        "data": "Pc1hVUB2Mz8jXw9rEk7NxF4Lg5vmB3rYscAItJfRqiD0dVxkpwZqXlO2eau7YcDIoZaVlqSRF7sQ1B2YnmfIY",
-        "issuance_contract": "CBRM3HA7GLEI6QQ3O55RUKVRDSQASARUPKK6NXKXKKPWEYLE533GDYQD",
-        "issuer_did": "did:chaincerts:pe4t2r94dftr1n1gf6jikt6a"
-      }
-    ]
+    "id": "wqzrxs3eq2v90i5un1ph7k8l",
+    "data": "Pc1hVUB2Mz8jXw9rEk7NxF4Lg5vmB3rYscAItJfRqiD0dVxkpwZqXlO2eau7YcDIoZaVlqSRF7sQ1B2YnmfIY",
+    "issuance_contract": "CBRM3HA7GLEI6QQ3O55RUKVRDSQASARUPKK6NXKXKKPWEYLE533GDYQD",
+    "issuer_did": "did:chaincerts:pe4t2r94dftr1n1gf6jikt6a"
   }
 ]
 ```
@@ -405,12 +264,9 @@ soroban contract invoke \
 | ---- | ------------------------- | ------------------------------------------------------------- |
 | 1    | `AlreadyInitialized`      | Contract has already been initialized                         |
 | 2    | `NotAuthorized`           | Invoker is not the contract admin                             |
-| 3    | `EmptyDIDs`               | Array of DIDs is empty                                        |
-| 4    | `IssuerNotAuthorized`     | Specified issuer is not authorized                            |
-| 5    | `IssuerAlreadyAuthorized` | Specified issuer is already authorized                        |
-| 6    | `VaultNotFound`           | Specified Vault given its DID was not found                   |
-| 7    | `VaultRevoked`            | Action cannot be performed because the vault has been revoked |
-| 8    | `VaultAlreadyRegistered`  | Vault was already registered                                  |
+| 3    | `IssuerNotAuthorized`     | Specified issuer is not authorized                            |
+| 4    | `IssuerAlreadyAuthorized` | Specified issuer is already authorized                        |
+| 5    | `VaultRevoked`            | Action cannot be performed because the vault has been revoked |
 
 
 ## Development

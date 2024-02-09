@@ -2,19 +2,13 @@ use crate::did_contract::DIDDocument;
 use crate::error::ContractError;
 use crate::issuer;
 use crate::storage;
-use crate::vault;
-use crate::vault::Vault;
 use crate::vault_trait::VaultTrait;
 use crate::verifiable_credential;
+use crate::verifiable_credential::VerifiableCredential;
 use soroban_sdk::{
-    contract, contractimpl, contractmeta, panic_with_error, Address, BytesN, Env, IntoVal, Map,
-    String, Symbol, Val, Vec,
+    contract, contractimpl, contractmeta, panic_with_error, Address, BytesN, Env, IntoVal, String,
+    Symbol, Val, Vec,
 };
-
-// MAXIMUM ENTRY TTL:
-// 31 days, 12 ledger close per minute.
-// (12 * 60 * 24 * 31) - 1
-const LEDGERS_TO_EXTEND: u32 = 535_679;
 
 contractmeta!(
     key = "Description",
@@ -26,151 +20,75 @@ pub struct VaultContract;
 
 #[contractimpl]
 impl VaultTrait for VaultContract {
-    fn initialize(e: Env, admin: Address, dids: Vec<String>) {
-        if storage::has_admin(&e) {
-            panic_with_error!(e, ContractError::AlreadyInitialized);
-        }
-        storage::write_admin(&e, &admin);
-
-        vault::set_initial_vaults(&e, &dids);
-
-        e.storage()
-            .instance()
-            .extend_ttl(LEDGERS_TO_EXTEND, LEDGERS_TO_EXTEND);
-    }
-
-    fn authorize_issuers(e: Env, admin: Address, issuers: Vec<Address>, did: String) {
-        validate_admin(&e, admin);
-
-        let vaults = storage::read_vaults(&e);
-        validate_vault(&e, &vaults, &did);
-
-        issuer::authorize_issuers(&e, &issuers, &did);
-    }
-
-    fn authorize_issuer(e: Env, admin: Address, issuer: Address, did: String) {
-        validate_admin(&e, admin);
-
-        let vaults = storage::read_vaults(&e);
-        validate_vault(&e, &vaults, &did);
-
-        issuer::authorize_issuer(&e, &issuer, &did);
-    }
-
-    fn revoke_issuer(e: Env, admin: Address, issuer: Address, did: String) {
-        validate_admin(&e, admin);
-
-        let vaults = storage::read_vaults(&e);
-        validate_vault(&e, &vaults, &did);
-
-        issuer::revoke_issuer(&e, &issuer, &did)
-    }
-
-    fn store_vc(
-        e: Env,
-        vc_id: String,
-        vc_data: String,
-        recipient_did: String,
-        issuer: Address,
-        issuer_did: String,
-        issuance_contract: Address,
-    ) {
-        let mut vaults = storage::read_vaults(&e);
-        validate_vault(&e, &vaults, &recipient_did);
-
-        validate_issuer(&e, &issuer, &recipient_did, &vc_data, &issuance_contract);
-
-        verifiable_credential::store_vc(
-            &e,
-            &mut vaults,
-            vc_id,
-            vc_data,
-            issuance_contract,
-            recipient_did,
-            issuer_did,
-        );
-    }
-
-    fn register_vault(
+    fn initialize(
         e: Env,
         admin: Address,
         did_wasm_hash: BytesN<32>,
         did_init_args: Vec<Val>,
         salt: BytesN<32>,
     ) -> (Address, Val) {
-        validate_admin(&e, admin.clone());
-
+        if storage::has_admin(&e) {
+            panic_with_error!(e, ContractError::AlreadyInitialized);
+        }
         let (did_contract_address, did_document) =
             deploy_and_initialize_did(&e, salt, did_wasm_hash, did_init_args);
         let did_uri = did_document.id.clone();
 
-        let mut vaults = storage::read_vaults(&e);
-        vaults.set(
-            did_uri.clone(),
-            Vault {
-                did: did_uri,
-                revoked: false,
-                vcs: Vec::new(&e),
-            },
-        );
+        storage::write_admin(&e, &admin);
+        storage::write_did(&e, &did_uri);
+        storage::write_revoked(&e, &false);
+        storage::write_issuers(&e, &Vec::new(&e));
+        storage::write_vcs(&e, &Vec::new(&e));
 
-        storage::write_vaults(&e, &vaults);
+        storage::extend_ttl_to_instance(&e);
+        storage::extend_ttl_to_persistent(&e);
         (did_contract_address, did_document.into_val(&e))
     }
 
-    fn register_vault_with_did(e: Env, admin: Address, did: String) {
+    fn authorize_issuers(e: Env, admin: Address, issuers: Vec<Address>) {
         validate_admin(&e, admin);
-        let mut vaults = storage::read_vaults(&e);
+        validate_vault_revoked(&e);
 
-        if vault::is_registered(&vaults, &did) {
-            panic_with_error!(e, ContractError::VaultAlreadyRegistered)
-        }
-
-        vaults.set(
-            did.clone(),
-            Vault {
-                did,
-                revoked: false,
-                vcs: Vec::new(&e),
-            },
-        );
-
-        storage::write_vaults(&e, &vaults)
+        issuer::authorize_issuers(&e, &issuers);
     }
 
-    fn revoke_vault(e: Env, admin: Address, did: String) {
+    fn authorize_issuer(e: Env, admin: Address, issuer: Address) {
         validate_admin(&e, admin);
-        let mut vaults = storage::read_vaults(&e);
+        validate_vault_revoked(&e);
 
-        if !vault::is_registered(&vaults, &did) {
-            panic_with_error!(e, ContractError::VaultNotFound)
-        }
-
-        let vault = vaults.get_unchecked(did.clone());
-
-        vaults.set(
-            did.clone(),
-            Vault {
-                revoked: true,
-                ..vault
-            },
-        );
-
-        storage::write_vaults(&e, &vaults);
+        issuer::authorize_issuer(&e, &issuer);
     }
 
-    fn get_vault(e: Env, did: String) -> Vault {
-        let vaults = storage::read_vaults(&e);
+    fn revoke_issuer(e: Env, admin: Address, issuer: Address) {
+        validate_admin(&e, admin);
+        validate_vault_revoked(&e);
 
-        match vaults.get(did) {
-            Some(vault) => vault,
-            None => panic_with_error!(&e, ContractError::VaultNotFound),
-        }
+        issuer::revoke_issuer(&e, &issuer)
     }
 
-    fn list_vaults(e: Env) -> Vec<Vault> {
-        let vaults = storage::read_vaults(&e);
-        vaults.values()
+    fn store_vc(
+        e: Env,
+        vc_id: String,
+        vc_data: String,
+        issuer: Address,
+        issuer_did: String,
+        issuance_contract: Address,
+    ) {
+        validate_vault_revoked(&e);
+        validate_issuer(&e, &issuer, &vc_data, &issuance_contract);
+
+        verifiable_credential::store_vc(&e, vc_id, vc_data, issuance_contract, issuer_did);
+    }
+
+    fn revoke_vault(e: Env, admin: Address) {
+        validate_admin(&e, admin);
+        validate_vault_revoked(&e);
+
+        storage::write_revoked(&e, &true);
+    }
+
+    fn get_vcs(e: Env) -> Vec<VerifiableCredential> {
+        storage::read_vcs(&e)
     }
 }
 
@@ -182,38 +100,23 @@ fn validate_admin(e: &Env, admin: Address) {
     admin.require_auth();
 }
 
-fn validate_vault(e: &Env, vaults: &Map<String, Vault>, did: &String) {
-    if !vault::is_registered(vaults, did) {
-        panic_with_error!(e, ContractError::VaultNotFound)
-    }
-
-    if vault::is_revoked(vaults, did) {
-        panic_with_error!(e, ContractError::VaultRevoked)
-    }
-}
-
-fn validate_issuer(
-    e: &Env,
-    issuer: &Address,
-    did: &String,
-    vc_data: &String,
-    issuance_contract: &Address,
-) {
-    let issuers: Vec<Address> = storage::read_issuers(e, did);
+fn validate_issuer(e: &Env, issuer: &Address, vc_data: &String, issuance_contract: &Address) {
+    let issuers: Vec<Address> = storage::read_issuers(e);
 
     if !issuer::is_authorized(&issuers, issuer) {
         panic_with_error!(e, ContractError::IssuerNotAuthorized)
     }
 
     issuer.require_auth_for_args(
-        (
-            vc_data.clone(),
-            did.clone(),
-            issuer.clone(),
-            issuance_contract.clone(),
-        )
-            .into_val(e),
+        (vc_data.clone(), issuer.clone(), issuance_contract.clone()).into_val(e),
     );
+}
+
+fn validate_vault_revoked(e: &Env) {
+    let vault_revoked: bool = storage::read_revoked(e);
+    if vault_revoked {
+        panic_with_error!(e, ContractError::VaultRevoked)
+    }
 }
 
 fn deploy_and_initialize_did(

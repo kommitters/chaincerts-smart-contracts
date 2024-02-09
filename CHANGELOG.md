@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.17.0 (09.02.2024)
+- [[Vault] Deploy DID on Vault initialization](https://github.com/kommitters/chaincerts-smart-contracts/issues/178)
+- [[VC Issuance] Use persistent storage for VCs and Revocations](https://github.com/kommitters/chaincerts-smart-contracts/issues/179)
+- Bump `soroban-sdk` to `20.3.1`
+
 ## 0.16.0 (30.01.2024)
 - [Add the Issuer DID to the stored VC struct](https://github.com/kommitters/chaincerts-smart-contracts/issues/173)
 

@@ -1,16 +1,16 @@
 [workspace]
 resolver = "2"
 
-members = ["deployer_contract", "vault_contract", "vc_issuance_contract"]
+members = ["deployer_contract", "did_contract", "vault_contract", "vc_issuance_contract"]
 
 [workspace.package]
-version = "0.16.0"
+version = "0.17.0"
 edition = "2021"
 license = "Apache-2.0"
 repository = "https://github.com/kommitters/chaincerts-smart-contracts"
 
 [workspace.dependencies]
-soroban-sdk = { version = "=20.2.0" }
+soroban-sdk = { version = "=20.3.1" }
 
 [profile.release]
 opt-level = "z"

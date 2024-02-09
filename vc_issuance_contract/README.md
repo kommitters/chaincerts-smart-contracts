@@ -69,7 +69,6 @@ A contract error will be triggered if:
 fn issue(
     e: Env,
     admin: Address,
-    recipient_did: String,
     vc_data: String,
     vault_contract: Address,
 ) -> String;
@@ -92,7 +91,6 @@ soroban contract invoke \
   --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
   --vc_data "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y" \
   --vault_contract CBRM3HA7GLEI6QQ3O55RUKVRDSQASARUPKK6NXKXKKPWEYLE533GDYQD
-  --recipient_did "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h"
 
 # Output: VC ID
 
@@ -154,6 +152,7 @@ A contract error will be triggered if:
 
 - Invoker is not the contract admin.
 - Verifiable credential is not registered.
+- Verifiable credential is already revoked.
 
 ```rust
 fn revoke(e: Env, admin: Address, vc_id: String, date: String);
@@ -181,8 +180,9 @@ soroban contract invoke \
 | 1    | `AlreadyInitialized`    | Contract has already been initialized                                   |
 | 2    | `NotAuthorized`         | Invoker is not the contract admin                                       |
 | 3    | `AmountLimitExceeded`   | Provided amount exceeds the maximum allowed                             |
-| 4    | `VCNotFound`            | Verifiable credential not found                                          |
-| 5    | `IssuanceLimitExceeded` | Contract issuance limit exceeded                                        |
+| 4    | `VCNotFound`            | Verifiable credential not found                                         |
+| 5    | `VCAlreadyRevoked`      | Verifiable credential already revoked                                   |
+| 6    | `IssuanceLimitExceeded` | Contract issuance limit exceeded                                        |
 
 ## Development
 

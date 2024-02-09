@@ -152,6 +152,7 @@ A contract error will be triggered if:
 
 - Invoker is not the contract admin.
 - Verifiable credential is not registered.
+- Verifiable credential is already revoked.
 
 ```rust
 fn revoke(e: Env, admin: Address, vc_id: String, date: String);

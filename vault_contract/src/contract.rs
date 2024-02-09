@@ -37,7 +37,11 @@ impl VaultTrait for VaultContract {
         storage::write_admin(&e, &admin);
         storage::write_did(&e, &did_uri);
         storage::write_revoked(&e, &false);
+        storage::write_issuers(&e, &Vec::new(&e));
+        storage::write_vcs(&e, &Vec::new(&e));
+
         storage::extend_ttl_to_instance(&e);
+        storage::extend_ttl_to_persistence(&e);
         (did_contract_address, did_document.into_val(&e))
     }
 

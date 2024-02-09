@@ -32,9 +32,6 @@ jobs:
       - name: Optimize soroban_did_contract.wasm
         run: |
           soroban contract optimize --wasm target/wasm32-unknown-unknown/release/soroban_did_contract.wasm
-      - name: Build required vault contract wasm
-        run: |
-          soroban contract build --package vault-contract
       - name: Contract Build
         run: |
           soroban contract build

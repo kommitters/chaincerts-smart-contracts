@@ -48,7 +48,7 @@ pub fn write_revoked(e: &Env, revoked: &bool) {
 
 pub fn read_issuers(e: &Env) -> Vec<Address> {
     let key = DataKey::Issuers;
-    e.storage().persistent().get(&key).unwrap_or(Vec::new(e))
+    e.storage().persistent().get(&key).unwrap()
 }
 
 pub fn write_issuers(e: &Env, issuers: &Vec<Address>) {
@@ -58,7 +58,7 @@ pub fn write_issuers(e: &Env, issuers: &Vec<Address>) {
 
 pub fn read_vcs(e: &Env) -> Vec<VerifiableCredential> {
     let key = DataKey::VCs;
-    e.storage().persistent().get(&key).unwrap_or(Vec::new(e))
+    e.storage().persistent().get(&key).unwrap()
 }
 
 pub fn write_vcs(e: &Env, vcs: &Vec<VerifiableCredential>) {
@@ -70,4 +70,16 @@ pub fn extend_ttl_to_instance(e: &Env) {
     e.storage()
         .instance()
         .extend_ttl(LEDGERS_TO_EXTEND, LEDGERS_TO_EXTEND);
+}
+
+pub fn extend_ttl_to_persistence(e: &Env) {
+    let vcs_key = DataKey::VCs;
+    let issuers_key = DataKey::Issuers;
+
+    e.storage()
+        .persistent()
+        .extend_ttl(&vcs_key, LEDGERS_TO_EXTEND, LEDGERS_TO_EXTEND);
+    e.storage()
+        .persistent()
+        .extend_ttl(&issuers_key, LEDGERS_TO_EXTEND, LEDGERS_TO_EXTEND);
 }

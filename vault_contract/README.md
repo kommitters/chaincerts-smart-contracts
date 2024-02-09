@@ -6,12 +6,12 @@ The Vault smart contract is a secure repository for safeguarding verifiable cred
 ## Features
 With this smart contract, you will be able to:
 
-- Initialize a vault by deploying a DID and storing the corresponding DID URI.
-- Authorize a list of issuers to store verifiable credentials in a vault.
-- Authorize an issuer to store verifiable credentials in a vault.
+- Initialize the vault by deploying a DID and storing the corresponding DID URI.
+- Authorize a list of issuers to store verifiable credentials in the vault.
+- Authorize an issuer to store verifiable credentials in the vault.
 - Revoke an issuer for a specific vault.
 - Store a verifiable credential in the recipient's vault.
-- Revoke a vault.
+- Revoke the vault.
 - Retrieve the list of stored vcs in the vault.
 
 ## Types
@@ -201,7 +201,7 @@ Revokes the vault. The admin account is the only party authorized to invoke this
 
 A contract error will be triggered if:
  - Invoker is not the contract admin.
- - Vault is already revoked.
+ - Vault is revoked.
 
 ```rust
 fn revoke_vault(e: Env, admin: Address);

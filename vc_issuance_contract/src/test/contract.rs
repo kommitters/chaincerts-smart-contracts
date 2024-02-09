@@ -94,7 +94,7 @@ fn test_issue_with_invalid_admin() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #5)")]
+#[should_panic(expected = "HostError: Error(Contract, #6)")]
 fn test_issue_when_amount_is_exceeded() {
     let VCIssuanceContractTest {
         env,
@@ -107,6 +107,24 @@ fn test_issue_when_amount_is_exceeded() {
     let vault_contract_id = create_vc(&env, &admin, &contract, &issuer_did, &Some(1));
     contract.issue(&admin, &vc_data, &vault_contract_id);
     contract.issue(&admin, &vc_data, &vault_contract_id);
+}
+
+#[test]
+fn test_revoke_vc() {
+    let VCIssuanceContractTest {
+        env,
+        admin,
+        amount: _,
+        vc_data,
+        issuer_did,
+        contract,
+    } = VCIssuanceContractTest::setup();
+    let vault_contract_id = create_vc(&env, &admin, &contract, &issuer_did, &None);
+    let vc_id = contract.issue(&admin, &vc_data, &vault_contract_id);
+
+    let date = String::from_str(&env, "2023-12-05T21:37:44.389Z");
+
+    contract.revoke(&admin, &vc_id, &date);
 }
 
 #[test]
@@ -129,7 +147,8 @@ fn test_revoke_vc_with_invalid_vc() {
 }
 
 #[test]
-fn test_revoke_vc() {
+#[should_panic(expected = "HostError: Error(Contract, #5)")]
+fn test_revoke_vc_when_it_was_already_revoked() {
     let VCIssuanceContractTest {
         env,
         admin,
@@ -141,9 +160,11 @@ fn test_revoke_vc() {
     let vault_contract_id = create_vc(&env, &admin, &contract, &issuer_did, &None);
     let vc_id = contract.issue(&admin, &vc_data, &vault_contract_id);
 
-    let date = String::from_str(&env, "2023-12-05T21:37:44.389Z");
+    let date_1 = String::from_str(&env, "2023-12-05T21:37:44.389Z");
+    let date_2 = String::from_str(&env, "2023-21-05T21:37:44.389Z");
 
-    contract.revoke(&admin, &vc_id, &date);
+    contract.revoke(&admin, &vc_id, &date_1);
+    contract.revoke(&admin, &vc_id, &date_2);
 }
 
 #[test]

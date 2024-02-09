@@ -1,17 +1,12 @@
-use crate::error::ContractError;
-use crate::revocation::Revocation;
 use crate::storage;
 use crate::vc_issuance_trait::VCIssuanceTrait;
 use crate::verifiable_credential;
+use crate::{error::ContractError, revocation};
 use soroban_sdk::{
     contract, contractimpl, contractmeta, map, panic_with_error, vec, Address, Env, FromVal, Map,
     String, Symbol, Val, Vec,
 };
 
-// MAXIMUM ENTRY TTL:
-// 31 days, 12 ledger close per minute.
-// (12 * 60 * 24 * 31) - 1
-const LEDGERS_TO_EXTEND: u32 = 535_679;
 const DEFAULT_AMOUNT: u32 = 20;
 const MAX_AMOUNT: u32 = 100;
 
@@ -41,9 +36,8 @@ impl VCIssuanceTrait for VCIssuanceContract {
         storage::write_vcs(&e, &Vec::new(&e));
         storage::write_vcs_revocations(&e, &Map::new(&e));
 
-        e.storage()
-            .instance()
-            .extend_ttl(LEDGERS_TO_EXTEND, LEDGERS_TO_EXTEND);
+        storage::extend_ttl_to_instance(&e);
+        storage::extend_ttl_to_persistent(&e);
     }
     fn issue(e: Env, admin: Address, vc_data: String, vault_contract: Address) -> String {
         validate_admin(&e, &admin);
@@ -91,11 +85,7 @@ impl VCIssuanceTrait for VCIssuanceContract {
         validate_admin(&e, &admin);
         validate_vc(&e, &vc_id);
 
-        let mut revocations = storage::read_vcs_revocations(&e);
-
-        revocations.set(vc_id.clone(), Revocation { vc_id, date });
-
-        storage::write_vcs_revocations(&e, &revocations);
+        revocation::revoke_vc(&e, vc_id, date);
     }
 }
 

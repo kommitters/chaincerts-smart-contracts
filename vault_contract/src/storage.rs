@@ -1,4 +1,3 @@
-// use crate::vault::Vault;
 use crate::verifiable_credential::VerifiableCredential;
 use soroban_sdk::{contracttype, Address, Env, String, Vec};
 

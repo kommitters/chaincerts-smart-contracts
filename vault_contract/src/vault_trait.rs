@@ -20,7 +20,7 @@ pub trait VaultTrait {
     /// Revokes an issuer for a vault.
     fn revoke_issuer(e: Env, admin: Address, issuer: Address);
 
-    /// Stores a verifiable credential in the recipient's vault.
+    /// Stores a verifiable credential in the vault.
     fn store_vc(
         e: Env,
         vc_id: String,

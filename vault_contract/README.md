@@ -199,6 +199,10 @@ soroban contract invoke \
 ### Revoke Vault
 Revokes the vault. The admin account is the only party authorized to invoke this function.
 
+A contract error will be triggered if:
+ - Invoker is not the contract admin.
+ - Vault is already revoked.
+
 ```rust
 fn revoke_vault(e: Env, admin: Address);
 ```

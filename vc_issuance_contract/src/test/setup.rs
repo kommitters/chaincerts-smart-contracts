@@ -2,7 +2,6 @@ use self::did_contract::{
     Service, ServiceType, VerificationMethodEntry, VerificationMethodType, VerificationRelationship,
 };
 use crate::contract::{VCIssuanceContract, VCIssuanceContractClient};
-// use crate::vault_contract;
 use soroban_sdk::{
     map, testutils::Address as _, vec, Address, BytesN, Env, FromVal, Map, String, Val, Vec,
 };

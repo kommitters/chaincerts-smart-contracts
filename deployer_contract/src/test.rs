@@ -4,7 +4,9 @@ use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{vec, Address, BytesN, Env, FromVal, String, Val, Vec};
 // The contract that will be deployed by the deployer contract.
 mod contract {
-    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/vc_issuance_contract.wasm");
+    soroban_sdk::contractimport!(
+        file = "../target/wasm32-unknown-unknown/release/vc_issuance_contract.wasm"
+    );
 }
 
 extern crate std;
@@ -20,7 +22,8 @@ fn test_from_contract() {
     // Deploy contract using deployer, and include an init function to call.
     let salt = BytesN::from_array(&env, &[0; 32]);
     let init_fn_args = vc_issuance_init_args(&env);
-    let (_contract_id, init_result) = client.deploy(&client.address, &wasm_id, &salt, &init_fn_args);
+    let (_contract_id, init_result) =
+        client.deploy(&client.address, &wasm_id, &salt, &init_fn_args);
     assert!(init_result.is_void());
 }
 

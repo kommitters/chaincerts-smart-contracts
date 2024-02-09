@@ -308,26 +308,6 @@ In order to develop and test the smart contract, you need to install Rust and So
 
     CONTRACT_ID
     ```
-3. To build and optimize all smart contracts, run:
-
-  ```
-  sh build.sh
-  ```
-
-4. To install and deploy the respective smart contracts, execute:
-
-  ```
-  sh release.sh
-  ```
-
-The output will display the respective WASM IDs and the deployer contract address:
-
-  ```
-  1b2f3c9e5d807a1f2b319c4d6e98f87d4b6a0fc325a1707c08e5f7d1ae2c9b3a ## vault_contract wasm id
-  8d4f1e9b6a7032dab92f56c81eaf094d5e1b0a72f8c3ed5706cb08193c4e2f7a ## vc_issuance_contract wasm id
-  4fe937d2b8e1a0c6f312dbaf6987c3c0d2d1ae7364c87e0a95e047fd8fb2c1e3 ## soroban_did_contract wasm id
-  CGKFDN2X8VU4AJHRMZK35YMSYRWBSWTPVJ4I32EHDRRJK9YKU4W9CD9X ## deployer_contract address
-  ```
 
 ## Changelog
 Features and bug fixes are listed in the [CHANGELOG][changelog] file.

@@ -1,15 +1,16 @@
-use crate::contract::{VCIssuanceContract, VCIssuanceContractClient};
 use self::did_contract::{
-    Service, ServiceType, VerificationMethodEntry, VerificationMethodType,
-    VerificationRelationship,
+    Service, ServiceType, VerificationMethodEntry, VerificationMethodType, VerificationRelationship,
 };
+use crate::contract::{VCIssuanceContract, VCIssuanceContractClient};
 // use crate::vault_contract;
 use soroban_sdk::{
     map, testutils::Address as _, vec, Address, BytesN, Env, FromVal, Map, String, Val, Vec,
 };
 
 mod did_contract {
-    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/soroban_did_contract.wasm");
+    soroban_sdk::contractimport!(
+        file = "../target/wasm32-unknown-unknown/release/soroban_did_contract.wasm"
+    );
 }
 mod vault_contract {
     soroban_sdk::contractimport!(

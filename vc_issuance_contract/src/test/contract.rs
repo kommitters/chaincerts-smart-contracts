@@ -203,3 +203,18 @@ fn test_verify_vc_with_revoked_vc() {
     let revoked_vc_map = get_revoked_vc_map(&env, date);
     assert_eq!(contract.verify(&vc_id), revoked_vc_map)
 }
+
+#[test]
+fn test_version() {
+    let VCIssuanceContractTest {
+        env,
+        admin: _,
+        amount: _,
+        vc_data: _,
+        issuer_did: _,
+        contract,
+    } = VCIssuanceContractTest::setup();
+
+    let expected_version = String::from_str(&env, "0.18.0");
+    assert_eq!(contract.version(), expected_version)
+}

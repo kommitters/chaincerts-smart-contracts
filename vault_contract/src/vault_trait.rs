@@ -35,4 +35,10 @@ pub trait VaultTrait {
 
     /// Retrieves the vcs.
     fn get_vcs(e: Env) -> Vec<VerifiableCredential>;
+
+    /// Upgrades WASM code.
+    fn upgrade(e: Env, new_wasm_hash: BytesN<32>);
+
+    /// Returns the version of the contract.
+    fn version(e: Env) -> String;
 }

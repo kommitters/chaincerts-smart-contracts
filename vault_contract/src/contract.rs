@@ -90,6 +90,17 @@ impl VaultTrait for VaultContract {
     fn get_vcs(e: Env) -> Vec<VerifiableCredential> {
         storage::read_vcs(&e)
     }
+
+    fn upgrade(e: Env, new_wasm_hash: BytesN<32>) {
+        let admin = storage::read_admin(&e);
+        admin.require_auth();
+
+        e.deployer().update_current_contract_wasm(new_wasm_hash);
+    }
+
+    fn version(e: Env) -> String {
+        String::from_str(&e, "0.18.0")
+    }
 }
 
 fn validate_admin(e: &Env, admin: Address) {

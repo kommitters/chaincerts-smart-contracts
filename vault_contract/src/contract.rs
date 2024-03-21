@@ -10,6 +10,8 @@ use soroban_sdk::{
     Symbol, Val, Vec,
 };
 
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 contractmeta!(
     key = "Description",
     val = "Smart contract for Chaincerts Vault",
@@ -99,7 +101,7 @@ impl VaultTrait for VaultContract {
     }
 
     fn version(e: Env) -> String {
-        String::from_str(&e, "0.18.0")
+        String::from_str(&e, VERSION)
     }
 }
 

@@ -478,6 +478,7 @@ fn test_version() {
     } = VaultContractTest::setup();
 
     contract.initialize(&admin, &did_wasm_hash, &did_init_args, &salt);
-    let expected_version = String::from_str(&env, "0.18.0");
+    let pkg_version = env!("CARGO_PKG_VERSION");
+    let expected_version = String::from_str(&env, pkg_version);
     assert_eq!(contract.version(), expected_version)
 }

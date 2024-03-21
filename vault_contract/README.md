@@ -13,6 +13,8 @@ With this smart contract, you will be able to:
 - Store a verifiable credential in the recipient's vault.
 - Revoke the vault.
 - Retrieve the list of stored vcs in the vault.
+- Upgrade the contract.
+- Get the contract version.
 
 ## Types
 ### VerifiableCredential
@@ -256,6 +258,52 @@ soroban contract invoke \
     "issuer_did": "did:chaincerts:pe4t2r94dftr1n1gf6jikt6a"
   }
 ]
+```
+
+### Upgrade contract
+Replaces the current contract code with a new one.
+
+```rust
+fn upgrade(e: Env, new_wasm_hash: BytesN<32>);
+```
+
+#### Example
+
+```bash
+soroban contract invoke \
+  --id CONTRACT_ID \
+  --source SOURCE_ACCOUNT_SECRET_KEY \
+  --rpc-url https://soroban-testnet.stellar.org:443 \
+  --network-passphrase 'Test SDF Network ; September 2015' \
+  -- \
+  upgrade \
+  --new_wasm_hash 4e3e2a3e6286149775c308c8420fd87c9e5f655549073506f72b917577ef1e33
+
+```
+
+### Get contract version
+Returns the contract version.
+
+```rust
+fn version(e: Env) -> String;
+```
+
+#### Output
+Returns the contract version as a string.
+
+#### Example
+
+```bash
+soroban contract invoke \
+  --id CONTRACT_ID \
+  --source SOURCE_ACCOUNT_SECRET_KEY \
+  --rpc-url https://soroban-testnet.stellar.org:443 \
+  --network-passphrase 'Test SDF Network ; September 2015' \
+  -- \
+  version
+
+# Output: CONTRACT VERSION
+"0.18.0"
 ```
 
 ## Contract Errors

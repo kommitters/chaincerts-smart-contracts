@@ -7,8 +7,9 @@ use soroban_sdk::{
     FromVal, Map, String, Symbol, Val, Vec,
 };
 
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 const DEFAULT_AMOUNT: u32 = 20;
-const MAX_AMOUNT: u32 = 100;
+const MAX_AMOUNT: u32 = 200;
 
 contractmeta!(
     key = "Description",
@@ -39,6 +40,7 @@ impl VCIssuanceTrait for VCIssuanceContract {
         storage::extend_ttl_to_instance(&e);
         storage::extend_ttl_to_persistent(&e);
     }
+
     fn issue(e: Env, admin: Address, vc_data: String, vault_contract: Address) -> String {
         validate_admin(&e, &admin);
 
@@ -96,7 +98,7 @@ impl VCIssuanceTrait for VCIssuanceContract {
     }
 
     fn version(e: Env) -> String {
-        String::from_str(&e, "0.18.0")
+        String::from_str(&e, VERSION)
     }
 }
 

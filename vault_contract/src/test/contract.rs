@@ -464,3 +464,21 @@ fn test_get_vcs() {
     assert_eq!(vcs.get_unchecked(1), vc_1);
     assert_eq!(vcs.get_unchecked(0), vc_2);
 }
+
+#[test]
+fn test_version() {
+    let VaultContractTest {
+        env,
+        admin,
+        issuer: _issuer,
+        did_init_args,
+        did_wasm_hash,
+        salt,
+        contract,
+    } = VaultContractTest::setup();
+
+    contract.initialize(&admin, &did_wasm_hash, &did_init_args, &salt);
+    let pkg_version = env!("CARGO_PKG_VERSION");
+    let expected_version = String::from_str(&env, pkg_version);
+    assert_eq!(contract.version(), expected_version)
+}

@@ -40,7 +40,7 @@ fn test_initialize_with_too_high_amount() {
         issuer_did,
         contract,
     } = VCIssuanceContractTest::setup();
-    let high_amount = Some(101);
+    let high_amount = Some(201);
 
     contract.initialize(&admin, &issuer_did, &high_amount);
 }
@@ -202,4 +202,20 @@ fn test_verify_vc_with_revoked_vc() {
 
     let revoked_vc_map = get_revoked_vc_map(&env, date);
     assert_eq!(contract.verify(&vc_id), revoked_vc_map)
+}
+
+#[test]
+fn test_version() {
+    let VCIssuanceContractTest {
+        env,
+        admin: _,
+        amount: _,
+        vc_data: _,
+        issuer_did: _,
+        contract,
+    } = VCIssuanceContractTest::setup();
+
+    let pkg_version = env!("CARGO_PKG_VERSION");
+    let expected_version = String::from_str(&env, pkg_version);
+    assert_eq!(contract.version(), expected_version)
 }

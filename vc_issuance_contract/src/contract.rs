@@ -3,12 +3,13 @@ use crate::vc_issuance_trait::VCIssuanceTrait;
 use crate::verifiable_credential;
 use crate::{error::ContractError, revocation};
 use soroban_sdk::{
-    contract, contractimpl, contractmeta, map, panic_with_error, vec, Address, Env, FromVal, Map,
-    String, Symbol, Val, Vec,
+    contract, contractimpl, contractmeta, map, panic_with_error, vec, Address, BytesN, Env,
+    FromVal, Map, String, Symbol, Val, Vec,
 };
 
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 const DEFAULT_AMOUNT: u32 = 20;
-const MAX_AMOUNT: u32 = 100;
+const MAX_AMOUNT: u32 = 200;
 
 contractmeta!(
     key = "Description",
@@ -39,6 +40,7 @@ impl VCIssuanceTrait for VCIssuanceContract {
         storage::extend_ttl_to_instance(&e);
         storage::extend_ttl_to_persistent(&e);
     }
+
     fn issue(e: Env, admin: Address, vc_data: String, vault_contract: Address) -> String {
         validate_admin(&e, &admin);
 
@@ -86,6 +88,17 @@ impl VCIssuanceTrait for VCIssuanceContract {
         validate_vc(&e, &vc_id);
 
         revocation::revoke_vc(&e, vc_id, date);
+    }
+
+    fn upgrade(e: Env, new_wasm_hash: BytesN<32>) {
+        let admin = storage::read_admin(&e);
+        admin.require_auth();
+
+        e.deployer().update_current_contract_wasm(new_wasm_hash);
+    }
+
+    fn version(e: Env) -> String {
+        String::from_str(&e, VERSION)
     }
 }
 

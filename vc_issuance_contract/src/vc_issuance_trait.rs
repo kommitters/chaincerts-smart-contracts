@@ -1,4 +1,4 @@
-use soroban_sdk::{Address, Env, Map, String};
+use soroban_sdk::{Address, BytesN, Env, Map, String};
 
 pub trait VCIssuanceTrait {
     /// Initializes the Verifiable Credentials Issuance Contract by setting the admin, the issuer_did and an optional amount.
@@ -12,4 +12,10 @@ pub trait VCIssuanceTrait {
 
     /// Revokes a Verifiable Credential
     fn revoke(e: Env, admin: Address, vc_id: String, date: String);
+
+    /// Upgrades WASM code.
+    fn upgrade(e: Env, new_wasm_hash: BytesN<32>);
+
+    /// Returns the version of the contract.
+    fn version(e: Env) -> String;
 }

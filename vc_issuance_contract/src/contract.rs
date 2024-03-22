@@ -3,12 +3,13 @@ use crate::vc_issuance_trait::VCIssuanceTrait;
 use crate::verifiable_credential;
 use crate::{error::ContractError, revocation};
 use soroban_sdk::{
-    contract, contractimpl, contractmeta, map, panic_with_error, vec, Address, Env, FromVal, Map,
-    String, Symbol, Val, Vec,
+    contract, contractimpl, contractmeta, map, panic_with_error, vec, Address, BytesN, Env,
+    FromVal, Map, String, Symbol, Val, Vec,
 };
 
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 const DEFAULT_AMOUNT: u32 = 20;
-const MAX_AMOUNT: u32 = 100;
+const MAX_AMOUNT: u32 = 200;
 
 contractmeta!(
     key = "Description",
@@ -35,17 +36,14 @@ impl VCIssuanceTrait for VCIssuanceContract {
         // set initial empty values
         storage::write_vcs(&e, &Vec::new(&e));
         storage::write_vcs_revocations(&e, &Map::new(&e));
-
-        storage::extend_ttl_to_instance(&e);
-        storage::extend_ttl_to_persistent(&e);
     }
-    fn issue(e: Env, admin: Address, vc_data: String, vault_contract: Address) -> String {
-        validate_admin(&e, &admin);
+
+    fn issue(e: Env, vc_id: String, vc_data: String, vault_contract: Address) -> String {
+        let admin = validate_admin(&e);
 
         let vcs = storage::read_vcs(&e);
         validate_vc_amount(&e, &vcs);
 
-        let vc_id = verifiable_credential::generate_id(&e);
         let contract_address = e.current_contract_address();
         let issuer_did = storage::read_issuer_did(&e);
 
@@ -81,20 +79,30 @@ impl VCIssuanceTrait for VCIssuanceContract {
         }
     }
 
-    fn revoke(e: Env, admin: Address, vc_id: String, date: String) {
-        validate_admin(&e, &admin);
+    fn revoke(e: Env, vc_id: String, date: String) {
+        validate_admin(&e);
         validate_vc(&e, &vc_id);
 
         revocation::revoke_vc(&e, vc_id, date);
     }
+
+    fn upgrade(e: Env, new_wasm_hash: BytesN<32>) {
+        let admin = storage::read_admin(&e);
+        admin.require_auth();
+
+        e.deployer().update_current_contract_wasm(new_wasm_hash);
+    }
+
+    fn version(e: Env) -> String {
+        String::from_str(&e, VERSION)
+    }
 }
 
-fn validate_admin(e: &Env, admin: &Address) {
+fn validate_admin(e: &Env) -> Address {
     let contract_admin = storage::read_admin(e);
-    if contract_admin != admin.clone() {
-        panic_with_error!(e, ContractError::NotAuthorized)
-    }
-    admin.require_auth();
+    contract_admin.require_auth();
+
+    contract_admin
 }
 
 fn validate_vc_amount(e: &Env, vcs: &Vec<String>) {

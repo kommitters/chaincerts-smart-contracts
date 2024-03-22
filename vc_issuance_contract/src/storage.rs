@@ -1,11 +1,6 @@
 use crate::revocation::Revocation;
 use soroban_sdk::{contracttype, Address, Env, Map, String, Vec};
 
-// MAXIMUM ENTRY TTL:
-// 31 days, 12 ledger close per minute.
-// (12 * 60 * 24 * 31) - 1
-const LEDGERS_TO_EXTEND: u32 = 535_679;
-
 #[derive(Clone)]
 #[contracttype]
 pub enum DataKey {
@@ -69,22 +64,4 @@ pub fn write_vcs_revocations(e: &Env, revocations: &Map<String, Revocation>) {
 pub fn read_vcs_revocations(e: &Env) -> Map<String, Revocation> {
     let key = DataKey::Revocations;
     e.storage().persistent().get(&key).unwrap()
-}
-
-pub fn extend_ttl_to_instance(e: &Env) {
-    e.storage()
-        .instance()
-        .extend_ttl(LEDGERS_TO_EXTEND, LEDGERS_TO_EXTEND);
-}
-
-pub fn extend_ttl_to_persistent(e: &Env) {
-    let vcs_key = DataKey::VCs;
-    let revocations_key = DataKey::Revocations;
-
-    e.storage()
-        .persistent()
-        .extend_ttl(&vcs_key, LEDGERS_TO_EXTEND, LEDGERS_TO_EXTEND);
-    e.storage()
-        .persistent()
-        .extend_ttl(&revocations_key, LEDGERS_TO_EXTEND, LEDGERS_TO_EXTEND);
 }

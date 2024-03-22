@@ -13,6 +13,8 @@ With this smart contract, you will be able to:
 - Store a verifiable credential in the recipient's vault.
 - Revoke the vault.
 - Retrieve the list of stored vcs in the vault.
+- Upgrade the contract.
+- Get the contract version.
 
 ## Types
 ### VerifiableCredential
@@ -88,7 +90,7 @@ A contract error will be triggered if:
 
 
 ```rust
-fn authorize_issuers(e: Env, admin: Address, issuers: Vec<Address>);
+fn authorize_issuers(e: Env, issuers: Vec<Address>);
 ```
 
 #### Example
@@ -101,7 +103,6 @@ soroban contract invoke \
   --network-passphrase 'Test SDF Network ; September 2015' \
   -- \
   authorize_issuers \
-  --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
   --issuers '["GDSOFBSZMFIY5BMZT3R5FCQK6MJAR2PGDSWHOMHZFGFFGKUO32DBNJKC", "GAH6Q4PBWCW2WZAGTEWAL3GUY3YZ2ISGBHGKG44BPFADUQNW6HOWL3GC"]'
 
 ```
@@ -117,7 +118,7 @@ A contract error will be triggered if:
 
 
 ```rust
-fn authorize_issuer(e: Env, admin: Address, issuer: Address);
+fn authorize_issuer(e: Env, issuer: Address);
 ```
 
 #### Example
@@ -130,7 +131,6 @@ soroban contract invoke \
   --network-passphrase 'Test SDF Network ; September 2015' \
   -- \
   authorize_issuer \
-  --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
   --issuer GDSOFBSZMFIY5BMZT3R5FCQK6MJAR2PGDSWHOMHZFGFFGKUO32DBNJKC
 
 ```
@@ -143,7 +143,7 @@ A contract error will be triggered if:
 - Vault is revoked.
 
 ```rust
-fn revoke_issuer(e: Env, admin: Address, issuer: Address);
+fn revoke_issuer(e: Env, issuer: Address);
 ```
 
 #### Example
@@ -156,7 +156,6 @@ soroban contract invoke \
   --network-passphrase 'Test SDF Network ; September 2015' \
   -- \
   revoke_issuer \
-  --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
   --issuer GCPGQ32D7OTELJWJ7G2YBCM5DDXXWKDWFJYRQLOJ4HQCXYFSVXVEBLN3
 ```
 
@@ -204,7 +203,7 @@ A contract error will be triggered if:
  - Vault is revoked.
 
 ```rust
-fn revoke_vault(e: Env, admin: Address);
+fn revoke_vault(e: Env);
 ```
 
 #### Example
@@ -216,8 +215,7 @@ soroban contract invoke \
   --rpc-url https://soroban-testnet.stellar.org:443 \
   --network-passphrase 'Test SDF Network ; September 2015' \
   -- \
-  revoke_vault \
-  --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA
+  revoke_vault
 ```
 
 ### Get VCs
@@ -258,15 +256,60 @@ soroban contract invoke \
 ]
 ```
 
+### Upgrade contract
+Replaces the current contract code with a new one.
+
+```rust
+fn upgrade(e: Env, new_wasm_hash: BytesN<32>);
+```
+
+#### Example
+
+```bash
+soroban contract invoke \
+  --id CONTRACT_ID \
+  --source SOURCE_ACCOUNT_SECRET_KEY \
+  --rpc-url https://soroban-testnet.stellar.org:443 \
+  --network-passphrase 'Test SDF Network ; September 2015' \
+  -- \
+  upgrade \
+  --new_wasm_hash 4e3e2a3e6286149775c308c8420fd87c9e5f655549073506f72b917577ef1e33
+
+```
+
+### Get contract version
+Returns the contract version.
+
+```rust
+fn version(e: Env) -> String;
+```
+
+#### Output
+Returns the contract version as a string.
+
+#### Example
+
+```bash
+soroban contract invoke \
+  --id CONTRACT_ID \
+  --source SOURCE_ACCOUNT_SECRET_KEY \
+  --rpc-url https://soroban-testnet.stellar.org:443 \
+  --network-passphrase 'Test SDF Network ; September 2015' \
+  -- \
+  version
+
+# Output: CONTRACT VERSION
+"0.18.0"
+```
+
 ## Contract Errors
 
 | Code | Error                     | Description                                                   |
 | ---- | ------------------------- | ------------------------------------------------------------- |
 | 1    | `AlreadyInitialized`      | Contract has already been initialized                         |
-| 2    | `NotAuthorized`           | Invoker is not the contract admin                             |
-| 3    | `IssuerNotAuthorized`     | Specified issuer is not authorized                            |
-| 4    | `IssuerAlreadyAuthorized` | Specified issuer is already authorized                        |
-| 5    | `VaultRevoked`            | Action cannot be performed because the vault has been revoked |
+| 2    | `IssuerNotAuthorized`     | Specified issuer is not authorized                            |
+| 3    | `IssuerAlreadyAuthorized` | Specified issuer is already authorized                        |
+| 4    | `VaultRevoked`            | Action cannot be performed because the vault has been revoked |
 
 
 ## Development

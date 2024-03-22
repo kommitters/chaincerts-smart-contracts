@@ -1,5 +1,4 @@
 #![no_std]
-mod base32;
 mod contract;
 mod error;
 mod revocation;

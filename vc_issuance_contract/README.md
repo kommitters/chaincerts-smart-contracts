@@ -12,6 +12,8 @@ With this smart contract, you will be able to:
 - Issue a verifiable credential.
 - Verify a verifiable credential.
 - Revoke a verifiable credential.
+- Upgrade the contract.
+- Get the contract version.
 
 ## Types
 
@@ -37,7 +39,7 @@ Represents a revoked verifiable credential.
 ## Functions
 
 ### Initialize
-Initializes the contract by setting the contract admin, the issuer DID and the limit amount of verifiable credentials that can be issued. The maximum amount allowed is **100**; if no amount is provided, the default value is **20**. An error will be triggered if the contract has already been initialized.
+Initializes the contract by setting the contract admin, the issuer DID and the limit amount of verifiable credentials that can be issued. The maximum amount allowed is **200**; if no amount is provided, the default value is **20**. An error will be triggered if the contract has already been initialized.
 
 ```rust
 fn initialize(e: Env, admin: Address, issuer_did: String, amount: Option<u32>);
@@ -68,7 +70,7 @@ A contract error will be triggered if:
 ```rust
 fn issue(
     e: Env,
-    admin: Address,
+    vc_id: String,
     vc_data: String,
     vault_contract: Address,
 ) -> String;
@@ -88,7 +90,7 @@ soroban contract invoke \
   --network-passphrase 'Test SDF Network ; September 2015' \
   -- \
   issue \
-  --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
+  --vc_id "t5iwuct2njbbcdu2nfwr32ib" \
   --vc_data "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y" \
   --vault_contract CBRM3HA7GLEI6QQ3O55RUKVRDSQASARUPKK6NXKXKKPWEYLE533GDYQD
 
@@ -155,7 +157,7 @@ A contract error will be triggered if:
 - Verifiable credential is already revoked.
 
 ```rust
-fn revoke(e: Env, admin: Address, vc_id: String, date: String);
+fn revoke(e: Env, vc_id: String, date: String);
 ```
 
 #### Example
@@ -168,9 +170,53 @@ soroban contract invoke \
   --network-passphrase 'Test SDF Network ; September 2015' \
   -- \
   revoke \
-  --admin GC6RRIN6XUZ7NBQS3AYWS6OOWFRLNBOHAYKX3IBYLPKGRODWEANTWJDA \
   --vc_id "t5iwuct2njbbcdu2nfwr32ib" \
   --date "2023-12-05T21:37:44.389Z"
+```
+### Upgrade contract
+Replaces the current contract code with a new one.
+
+```rust
+fn upgrade(e: Env, new_wasm_hash: BytesN<32>);
+```
+
+#### Example
+
+```bash
+soroban contract invoke \
+  --id CONTRACT_ID \
+  --source SOURCE_ACCOUNT_SECRET_KEY \
+  --rpc-url https://soroban-testnet.stellar.org:443 \
+  --network-passphrase 'Test SDF Network ; September 2015' \
+  -- \
+  upgrade \
+  --new_wasm_hash 4e3e2a3e6286149775c308c8420fd87c9e5f655549073506f72b917577ef1e33
+
+```
+
+### Get contract version
+Returns the contract version.
+
+```rust
+fn version(e: Env) -> String;
+```
+
+#### Output
+Returns the contract version as a string.
+
+#### Example
+
+```bash
+soroban contract invoke \
+  --id CONTRACT_ID \
+  --source SOURCE_ACCOUNT_SECRET_KEY \
+  --rpc-url https://soroban-testnet.stellar.org:443 \
+  --network-passphrase 'Test SDF Network ; September 2015' \
+  -- \
+  version
+
+# Output: CONTRACT VERSION
+"0.18.0"
 ```
 
 ## Contract Errors
@@ -178,11 +224,10 @@ soroban contract invoke \
 | Code | Error                   | Description                                                             |
 | ---- | ----------------------- | ----------------------------------------------------------------------- |
 | 1    | `AlreadyInitialized`    | Contract has already been initialized                                   |
-| 2    | `NotAuthorized`         | Invoker is not the contract admin                                       |
-| 3    | `AmountLimitExceeded`   | Provided amount exceeds the maximum allowed                             |
-| 4    | `VCNotFound`            | Verifiable credential not found                                         |
-| 5    | `VCAlreadyRevoked`      | Verifiable credential already revoked                                   |
-| 6    | `IssuanceLimitExceeded` | Contract issuance limit exceeded                                        |
+| 2    | `AmountLimitExceeded`   | Provided amount exceeds the maximum allowed                             |
+| 3    | `VCNotFound`            | Verifiable credential not found                                         |
+| 4    | `VCAlreadyRevoked`      | Verifiable credential already revoked                                   |
+| 5    | `IssuanceLimitExceeded` | Contract issuance limit exceeded                                        |
 
 ## Development
 

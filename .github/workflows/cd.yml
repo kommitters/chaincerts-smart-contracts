@@ -7,6 +7,9 @@ on:
 env:
   CARGO_TERM_COLOR: always
 
+permissions:
+  contents: read
+
 jobs:
   build_and_test:
     name: Rust project - latest
@@ -16,10 +19,10 @@ jobs:
         toolchain:
           - stable
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
       - run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
       - run: rustup target add wasm32-unknown-unknown
-      - run: cargo install --locked --version 20.3.0 soroban-cli --features opt
+      - run: cargo install --locked soroban-cli --features opt
       - name: Build required did contract wasm
         run: |
           soroban contract build --package soroban-did-contract

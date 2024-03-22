@@ -59,30 +59,11 @@ fn test_authorize_issuer() {
     } = VaultContractTest::setup();
 
     contract.initialize(&admin, &did_wasm_hash, &did_init_args, &salt);
-    contract.authorize_issuer(&admin, &issuer);
+    contract.authorize_issuer(&issuer);
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #2)")]
-fn test_authorize_issuer_with_invalid_admin() {
-    let VaultContractTest {
-        env,
-        admin,
-        issuer,
-        did_init_args,
-        did_wasm_hash,
-        salt,
-        contract,
-    } = VaultContractTest::setup();
-
-    let invalid_admin = Address::generate(&env);
-    contract.initialize(&admin, &did_wasm_hash, &did_init_args, &salt);
-
-    contract.authorize_issuer(&invalid_admin, &issuer);
-}
-
-#[test]
-#[should_panic(expected = "HostError: Error(Contract, #4)")]
+#[should_panic(expected = "HostError: Error(Contract, #3)")]
 fn test_authorize_issuer_with_already_authorized_issuer() {
     let VaultContractTest {
         env: _,
@@ -95,12 +76,12 @@ fn test_authorize_issuer_with_already_authorized_issuer() {
     } = VaultContractTest::setup();
 
     contract.initialize(&admin, &did_wasm_hash, &did_init_args, &salt);
-    contract.authorize_issuer(&admin, &issuer);
-    contract.authorize_issuer(&admin, &issuer);
+    contract.authorize_issuer(&issuer);
+    contract.authorize_issuer(&issuer);
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #5)")]
+#[should_panic(expected = "HostError: Error(Contract, #4)")]
 fn test_authorize_issuer_with_revoked_vault() {
     let VaultContractTest {
         env: _,
@@ -113,8 +94,8 @@ fn test_authorize_issuer_with_revoked_vault() {
     } = VaultContractTest::setup();
 
     contract.initialize(&admin, &did_wasm_hash, &did_init_args, &salt);
-    contract.revoke_vault(&admin);
-    contract.authorize_issuer(&admin, &issuer);
+    contract.revoke_vault();
+    contract.authorize_issuer(&issuer);
 }
 
 #[test]
@@ -131,30 +112,11 @@ fn test_authorize_issuers() {
     let issuers = vec![&env, issuer.clone()];
 
     contract.initialize(&admin, &did_wasm_hash, &did_init_args, &salt);
-    contract.authorize_issuers(&admin, &issuers);
+    contract.authorize_issuers(&issuers);
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #2)")]
-fn test_authorize_issuers_with_invalid_admin() {
-    let VaultContractTest {
-        env,
-        admin,
-        issuer,
-        did_init_args,
-        did_wasm_hash,
-        salt,
-        contract,
-    } = VaultContractTest::setup();
-    let issuers = vec![&env, issuer.clone()];
-    let invalid_admin = Address::generate(&env);
-
-    contract.initialize(&admin, &did_wasm_hash, &did_init_args, &salt);
-    contract.authorize_issuers(&invalid_admin, &issuers);
-}
-
-#[test]
-#[should_panic(expected = "HostError: Error(Contract, #5)")]
+#[should_panic(expected = "HostError: Error(Contract, #4)")]
 fn test_authorize_issuers_with_revoked_vault() {
     let VaultContractTest {
         env,
@@ -168,8 +130,8 @@ fn test_authorize_issuers_with_revoked_vault() {
     let issuers = vec![&env, issuer.clone()];
 
     contract.initialize(&admin, &did_wasm_hash, &did_init_args, &salt);
-    contract.revoke_vault(&admin);
-    contract.authorize_issuers(&admin, &issuers);
+    contract.revoke_vault();
+    contract.authorize_issuers(&issuers);
 }
 
 #[test]
@@ -185,32 +147,12 @@ fn test_revoke_issuer() {
     } = VaultContractTest::setup();
 
     contract.initialize(&admin, &did_wasm_hash, &did_init_args, &salt);
-    contract.authorize_issuer(&admin, &issuer);
-    contract.revoke_issuer(&admin, &issuer);
+    contract.authorize_issuer(&issuer);
+    contract.revoke_issuer(&issuer);
 }
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #2)")]
-fn test_revoke_issuer_with_invalid_admin() {
-    let VaultContractTest {
-        env,
-        admin,
-        issuer,
-        did_init_args,
-        did_wasm_hash,
-        salt,
-        contract,
-    } = VaultContractTest::setup();
-
-    contract.initialize(&admin, &did_wasm_hash, &did_init_args, &salt);
-    contract.authorize_issuer(&admin, &issuer);
-
-    let invalid_admin = Address::generate(&env);
-    contract.revoke_issuer(&invalid_admin, &issuer);
-}
-
-#[test]
-#[should_panic(expected = "HostError: Error(Contract, #3)")]
 fn test_revoke_issuer_when_issuer_is_not_found() {
     let VaultContractTest {
         env,
@@ -223,14 +165,14 @@ fn test_revoke_issuer_when_issuer_is_not_found() {
     } = VaultContractTest::setup();
 
     contract.initialize(&admin, &did_wasm_hash, &did_init_args, &salt);
-    contract.authorize_issuer(&admin, &issuer);
+    contract.authorize_issuer(&issuer);
 
     let invalid_issuer = Address::generate(&env);
-    contract.revoke_issuer(&admin, &invalid_issuer);
+    contract.revoke_issuer(&invalid_issuer);
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #5)")]
+#[should_panic(expected = "HostError: Error(Contract, #4)")]
 fn test_revoke_issuer_with_revoked_vault() {
     let VaultContractTest {
         env: _,
@@ -243,8 +185,8 @@ fn test_revoke_issuer_with_revoked_vault() {
     } = VaultContractTest::setup();
 
     contract.initialize(&admin, &did_wasm_hash, &did_init_args, &salt);
-    contract.revoke_vault(&admin);
-    contract.revoke_issuer(&admin, &issuer);
+    contract.revoke_vault();
+    contract.revoke_issuer(&issuer);
 }
 
 #[test]
@@ -267,7 +209,7 @@ fn test_store_vc() {
     } = get_vc_setup(&env);
 
     contract.initialize(&admin, &did_wasm_hash, &did_init_args, &salt);
-    contract.authorize_issuer(&admin, &issuer);
+    contract.authorize_issuer(&issuer);
     contract.store_vc(
         &vc_id,
         &vc_data,
@@ -278,7 +220,7 @@ fn test_store_vc() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #3)")]
+#[should_panic(expected = "HostError: Error(Contract, #2)")]
 fn test_store_vc_with_empty_issuers() {
     let VaultContractTest {
         env,
@@ -308,7 +250,7 @@ fn test_store_vc_with_empty_issuers() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #3)")]
+#[should_panic(expected = "HostError: Error(Contract, #2)")]
 fn test_store_vc_with_issuer_not_found() {
     let VaultContractTest {
         env,
@@ -330,7 +272,7 @@ fn test_store_vc_with_issuer_not_found() {
     } = get_vc_setup(&env);
 
     contract.initialize(&admin, &did_wasm_hash, &did_init_args, &salt);
-    contract.authorize_issuer(&admin, &issuer);
+    contract.authorize_issuer(&issuer);
     contract.store_vc(
         &vc_id,
         &vc_data,
@@ -341,7 +283,7 @@ fn test_store_vc_with_issuer_not_found() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #3)")]
+#[should_panic(expected = "HostError: Error(Contract, #2)")]
 fn test_store_vc_with_revoked_issuer() {
     let VaultContractTest {
         env,
@@ -361,8 +303,8 @@ fn test_store_vc_with_revoked_issuer() {
     } = get_vc_setup(&env);
 
     contract.initialize(&admin, &did_wasm_hash, &did_init_args, &salt);
-    contract.authorize_issuer(&admin, &issuer);
-    contract.revoke_issuer(&admin, &issuer);
+    contract.authorize_issuer(&issuer);
+    contract.revoke_issuer(&issuer);
 
     contract.store_vc(
         &vc_id,
@@ -386,25 +328,7 @@ fn test_revoke_vault() {
     } = VaultContractTest::setup();
 
     contract.initialize(&admin, &did_wasm_hash, &did_init_args, &salt);
-    contract.revoke_vault(&admin);
-}
-
-#[test]
-#[should_panic(expected = "HostError: Error(Contract, #2)")]
-fn test_revoke_vault_with_invalid_admin() {
-    let VaultContractTest {
-        env,
-        admin,
-        issuer: _,
-        did_init_args,
-        did_wasm_hash,
-        salt,
-        contract,
-    } = VaultContractTest::setup();
-    let invalid_admin = Address::generate(&env);
-
-    contract.initialize(&admin, &did_wasm_hash, &did_init_args, &salt);
-    contract.revoke_vault(&invalid_admin);
+    contract.revoke_vault();
 }
 
 #[test]
@@ -443,7 +367,7 @@ fn test_get_vcs() {
     };
 
     contract.initialize(&admin, &did_wasm_hash, &did_init_args, &salt);
-    contract.authorize_issuer(&admin, &issuer);
+    contract.authorize_issuer(&issuer);
     contract.store_vc(
         &vc_id,
         &vc_data,
@@ -463,4 +387,22 @@ fn test_get_vcs() {
     assert_eq!(vcs.len(), 2);
     assert_eq!(vcs.get_unchecked(1), vc_1);
     assert_eq!(vcs.get_unchecked(0), vc_2);
+}
+
+#[test]
+fn test_version() {
+    let VaultContractTest {
+        env,
+        admin,
+        issuer: _issuer,
+        did_init_args,
+        did_wasm_hash,
+        salt,
+        contract,
+    } = VaultContractTest::setup();
+
+    contract.initialize(&admin, &did_wasm_hash, &did_init_args, &salt);
+    let pkg_version = env!("CARGO_PKG_VERSION");
+    let expected_version = String::from_str(&env, pkg_version);
+    assert_eq!(contract.version(), expected_version)
 }

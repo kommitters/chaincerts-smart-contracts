@@ -12,13 +12,13 @@ pub trait VaultTrait {
     ) -> (Address, Val);
 
     /// Authorizes a list of issuers.
-    fn authorize_issuers(e: Env, admin: Address, issuers: Vec<Address>);
+    fn authorize_issuers(e: Env, issuers: Vec<Address>);
 
     /// Authorizes an issuer for a vault.
-    fn authorize_issuer(e: Env, admin: Address, issuer: Address);
+    fn authorize_issuer(e: Env, issuer: Address);
 
     /// Revokes an issuer for a vault.
-    fn revoke_issuer(e: Env, admin: Address, issuer: Address);
+    fn revoke_issuer(e: Env, issuer: Address);
 
     /// Stores a verifiable credential in the vault.
     fn store_vc(
@@ -31,7 +31,7 @@ pub trait VaultTrait {
     );
 
     /// Revokes the vault.
-    fn revoke_vault(e: Env, admin: Address);
+    fn revoke_vault(e: Env);
 
     /// Retrieves the vcs.
     fn get_vcs(e: Env) -> Vec<VerifiableCredential>;

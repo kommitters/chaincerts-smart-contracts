@@ -47,22 +47,22 @@ impl VaultTrait for VaultContract {
         (did_contract_address, did_document.into_val(&e))
     }
 
-    fn authorize_issuers(e: Env, admin: Address, issuers: Vec<Address>) {
-        validate_admin(&e, admin);
+    fn authorize_issuers(e: Env, issuers: Vec<Address>) {
+        validate_admin(&e);
         validate_vault_revoked(&e);
 
         issuer::authorize_issuers(&e, &issuers);
     }
 
-    fn authorize_issuer(e: Env, admin: Address, issuer: Address) {
-        validate_admin(&e, admin);
+    fn authorize_issuer(e: Env, issuer: Address) {
+        validate_admin(&e);
         validate_vault_revoked(&e);
 
         issuer::authorize_issuer(&e, &issuer);
     }
 
-    fn revoke_issuer(e: Env, admin: Address, issuer: Address) {
-        validate_admin(&e, admin);
+    fn revoke_issuer(e: Env, issuer: Address) {
+        validate_admin(&e);
         validate_vault_revoked(&e);
 
         issuer::revoke_issuer(&e, &issuer)
@@ -82,8 +82,8 @@ impl VaultTrait for VaultContract {
         verifiable_credential::store_vc(&e, vc_id, vc_data, issuance_contract, issuer_did);
     }
 
-    fn revoke_vault(e: Env, admin: Address) {
-        validate_admin(&e, admin);
+    fn revoke_vault(e: Env) {
+        validate_admin(&e);
         validate_vault_revoked(&e);
 
         storage::write_revoked(&e, &true);
@@ -105,12 +105,9 @@ impl VaultTrait for VaultContract {
     }
 }
 
-fn validate_admin(e: &Env, admin: Address) {
+fn validate_admin(e: &Env) {
     let contract_admin = storage::read_admin(e);
-    if contract_admin != admin {
-        panic_with_error!(e, ContractError::NotAuthorized)
-    }
-    admin.require_auth();
+    contract_admin.require_auth();
 }
 
 fn validate_issuer(e: &Env, issuer: &Address, vc_data: &String, issuance_contract: &Address) {

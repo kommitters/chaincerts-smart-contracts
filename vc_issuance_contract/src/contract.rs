@@ -41,13 +41,12 @@ impl VCIssuanceTrait for VCIssuanceContract {
         storage::extend_ttl_to_persistent(&e);
     }
 
-    fn issue(e: Env, vc_data: String, vault_contract: Address) -> String {
+    fn issue(e: Env, vc_id: String, vc_data: String, vault_contract: Address) -> String {
         let admin = validate_admin(&e);
 
         let vcs = storage::read_vcs(&e);
         validate_vc_amount(&e, &vcs);
 
-        let vc_id = verifiable_credential::generate_id(&e);
         let contract_address = e.current_contract_address();
         let issuer_did = storage::read_issuer_did(&e);
 

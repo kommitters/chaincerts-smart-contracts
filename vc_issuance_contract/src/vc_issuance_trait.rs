@@ -5,13 +5,13 @@ pub trait VCIssuanceTrait {
     fn initialize(e: Env, admin: Address, issuer_did: String, amount: Option<u32>);
 
     /// Issues a new Verifiable Credential and returns the Verifiable Credential id
-    fn issue(e: Env, admin: Address, vc_data: String, vault_contract: Address) -> String;
+    fn issue(e: Env, vc_id: String, vc_data: String, vault_contract: Address) -> String;
 
     /// Verifies if the Verifiable Credential is not revoked
     fn verify(e: Env, vc_id: String) -> Map<String, String>;
 
     /// Revokes a Verifiable Credential
-    fn revoke(e: Env, admin: Address, vc_id: String, date: String);
+    fn revoke(e: Env, vc_id: String, date: String);
 
     /// Upgrades WASM code.
     fn upgrade(e: Env, new_wasm_hash: BytesN<32>);

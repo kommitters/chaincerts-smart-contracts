@@ -1,11 +1,6 @@
 use crate::verifiable_credential::VerifiableCredential;
 use soroban_sdk::{contracttype, Address, Env, String, Vec};
 
-// MAXIMUM ENTRY TTL:
-// 31 days, 12 ledger close per minute.
-// (12 * 60 * 24 * 31) - 1
-const LEDGERS_TO_EXTEND: u32 = 535_679;
-
 #[derive(Clone)]
 #[contracttype]
 pub enum DataKey {
@@ -64,22 +59,4 @@ pub fn read_vcs(e: &Env) -> Vec<VerifiableCredential> {
 pub fn write_vcs(e: &Env, vcs: &Vec<VerifiableCredential>) {
     let key = DataKey::VCs;
     e.storage().persistent().set(&key, vcs)
-}
-
-pub fn extend_ttl_to_instance(e: &Env) {
-    e.storage()
-        .instance()
-        .extend_ttl(LEDGERS_TO_EXTEND, LEDGERS_TO_EXTEND);
-}
-
-pub fn extend_ttl_to_persistent(e: &Env) {
-    let vcs_key = DataKey::VCs;
-    let issuers_key = DataKey::Issuers;
-
-    e.storage()
-        .persistent()
-        .extend_ttl(&vcs_key, LEDGERS_TO_EXTEND, LEDGERS_TO_EXTEND);
-    e.storage()
-        .persistent()
-        .extend_ttl(&issuers_key, LEDGERS_TO_EXTEND, LEDGERS_TO_EXTEND);
 }

@@ -5,6 +5,7 @@
 - [ci: Harden GitHub Actions](https://github.com/kommitters/chaincerts-smart-contracts/pull/185)
 - [Remove `admin` param from fns + Add `vc_id` to issue fn](https://github.com/kommitters/chaincerts-smart-contracts/pull/187)
 - Update Security Policy
+- Update github actions
 
 ## 0.17.0 (09.02.2024)
 - [[Vault] Deploy DID on Vault initialization](https://github.com/kommitters/chaincerts-smart-contracts/issues/178)

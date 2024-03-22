@@ -49,7 +49,7 @@ jobs:
           # https://github.com/xd009642/tarpaulin/issues/949
           args: --all-features --fail-under 95 --out Lcov
       - name: Upload to Coveralls
-        uses: coverallsapp/github-action@c203f016dd0ff7855ebef0ed852000c20c117148 # master
+        uses: coverallsapp/github-action@3dfc5567390f6fa9267c0ee9c251e4c8c3f18949 # v2.2.3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: "./lcov.info"

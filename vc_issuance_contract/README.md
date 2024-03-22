@@ -70,6 +70,7 @@ A contract error will be triggered if:
 ```rust
 fn issue(
     e: Env,
+    vc_id: String,
     vc_data: String,
     vault_contract: Address,
 ) -> String;
@@ -89,6 +90,7 @@ soroban contract invoke \
   --network-passphrase 'Test SDF Network ; September 2015' \
   -- \
   issue \
+  --vc_id "t5iwuct2njbbcdu2nfwr32ib" \
   --vc_data "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y" \
   --vault_contract CBRM3HA7GLEI6QQ3O55RUKVRDSQASARUPKK6NXKXKKPWEYLE533GDYQD
 

@@ -36,9 +36,6 @@ impl VCIssuanceTrait for VCIssuanceContract {
         // set initial empty values
         storage::write_vcs(&e, &Vec::new(&e));
         storage::write_vcs_revocations(&e, &Map::new(&e));
-
-        storage::extend_ttl_to_instance(&e);
-        storage::extend_ttl_to_persistent(&e);
     }
 
     fn issue(e: Env, vc_id: String, vc_data: String, vault_contract: Address) -> String {

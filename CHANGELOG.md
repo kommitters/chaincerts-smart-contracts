@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.18.0 (22.03.2024)
+- [Feature: Upgradeable contracts](https://github.com/kommitters/chaincerts-smart-contracts/pull/184)
+- [ci: Harden GitHub Actions](https://github.com/kommitters/chaincerts-smart-contracts/pull/185)
+- [Remove `admin` param from fns + Add `vc_id` to issue fn](https://github.com/kommitters/chaincerts-smart-contracts/pull/187)
+- Update Security Policy
+
 ## 0.17.0 (09.02.2024)
 - [[Vault] Deploy DID on Vault initialization](https://github.com/kommitters/chaincerts-smart-contracts/issues/178)
 - [[VC Issuance] Use persistent storage for VCs and Revocations](https://github.com/kommitters/chaincerts-smart-contracts/issues/179)

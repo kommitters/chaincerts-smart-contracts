@@ -52,38 +52,42 @@ Through the implementation of control access mechanisms, the smart contract auth
 
 ### Deployment
 
-1. To build and optimize all smart contracts, run:
+1. Fetch the submodule for the DID smart contract:
+    If it's the first time you're cloning the repository, execute:
+    ```
+    git submodule update --init --recursive
+    ```
 
-  ```
-  chmod +x build.sh
-  ```
+    If you've already cloned the repository and want to update the DID smart contract, run:
+    ```
+    git submodule update --remote --recursive
+    ```
 
-  ```
-  sh build.sh
-  ```
+2. To build and optimize all smart contracts, run:
+    ```bash
+    chmod +x build.sh
+    sh build.sh
+    ```
 
-2. To install and deploy the respective smart contracts, execute:
+3. To install and deploy the respective smart contracts, execute:
 
-  ```
-  chmod +x release.sh
-  ```
+    ```bash
+    chmod +x release.sh
+    sh release.sh
+    ```
 
-  ```
-  sh release.sh
-  ```
+    The output will display the respective WASM IDs and the deployer contract address:
 
-The output will display the respective WASM IDs and the deployer contract address:
-
-  ```
-  Vault contract WASM ID:
-  1b2f3c9e5d807a1f2b319c4d6e98f87d4b6a0fc325a1707c08e5f7d1ae2c9b3a
-  Issuance contract WASM ID:
-  8d4f1e9b6a7032dab92f56c81eaf094d5e1b0a72f8c3ed5706cb08193c4e2f7a
-  DID contract WASM ID:
-  4fe937d2b8e1a0c6f312dbaf6987c3c0d2d1ae7364c87e0a95e047fd8fb2c1e3
-  Deployer contract Address:
-  CGKFDN2X8VU4AJHRMZK35YMSYRWBSWTPVJ4I32EHDRRJK9YKU4W9CD9X
-  ```
+      ```
+      Vault contract WASM ID:
+      1b2f3c9e5d807a1f2b319c4d6e98f87d4b6a0fc325a1707c08e5f7d1ae2c9b3a
+      Issuance contract WASM ID:
+      8d4f1e9b6a7032dab92f56c81eaf094d5e1b0a72f8c3ed5706cb08193c4e2f7a
+      DID contract WASM ID:
+      4fe937d2b8e1a0c6f312dbaf6987c3c0d2d1ae7364c87e0a95e047fd8fb2c1e3
+      Deployer contract Address:
+      CGKFDN2X8VU4AJHRMZK35YMSYRWBSWTPVJ4I32EHDRRJK9YKU4W9CD9X
+      ```
 
 <br/>
 

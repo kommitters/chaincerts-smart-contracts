@@ -67,7 +67,7 @@ pub fn create_vc(
     let salt = BytesN::from_array(env, &[0; 32]);
 
     vault_client.initialize(&vault_admin, &did_wasm_hash, &did_init_args, &salt);
-    vault_client.authorize_issuer(&vault_admin, admin);
+    vault_client.authorize_issuer(admin);
 
     contract.initialize(admin, issuer_did, amount);
     vault_contract_address

@@ -41,8 +41,8 @@ impl VCIssuanceTrait for VCIssuanceContract {
         storage::extend_ttl_to_persistent(&e);
     }
 
-    fn issue(e: Env, admin: Address, vc_data: String, vault_contract: Address) -> String {
-        validate_admin(&e, &admin);
+    fn issue(e: Env, vc_data: String, vault_contract: Address) -> String {
+        let admin = validate_admin(&e);
 
         let vcs = storage::read_vcs(&e);
         validate_vc_amount(&e, &vcs);
@@ -83,8 +83,8 @@ impl VCIssuanceTrait for VCIssuanceContract {
         }
     }
 
-    fn revoke(e: Env, admin: Address, vc_id: String, date: String) {
-        validate_admin(&e, &admin);
+    fn revoke(e: Env, vc_id: String, date: String) {
+        validate_admin(&e);
         validate_vc(&e, &vc_id);
 
         revocation::revoke_vc(&e, vc_id, date);
@@ -102,12 +102,11 @@ impl VCIssuanceTrait for VCIssuanceContract {
     }
 }
 
-fn validate_admin(e: &Env, admin: &Address) {
+fn validate_admin(e: &Env) -> Address {
     let contract_admin = storage::read_admin(e);
-    if contract_admin != admin.clone() {
-        panic_with_error!(e, ContractError::NotAuthorized)
-    }
-    admin.require_auth();
+    contract_admin.require_auth();
+
+    contract_admin
 }
 
 fn validate_vc_amount(e: &Env, vcs: &Vec<String>) {

@@ -91,6 +91,12 @@ impl VaultTrait for VaultContract {
         storage::read_vcs(&e)
     }
 
+    fn set_admin(e: Env, new_admin: Address) {
+        validate_admin(&e);
+
+        storage::write_admin(&e, &new_admin);
+    }
+
     fn upgrade(e: Env, new_wasm_hash: BytesN<32>) {
         let admin = storage::read_admin(&e);
         admin.require_auth();

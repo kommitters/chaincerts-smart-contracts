@@ -12,6 +12,7 @@ With this smart contract, you will be able to:
 - Issue a verifiable credential.
 - Verify a verifiable credential.
 - Revoke a verifiable credential.
+- Set the contract admin.
 - Upgrade the contract.
 - Get the contract version.
 
@@ -173,6 +174,28 @@ soroban contract invoke \
   --vc_id "t5iwuct2njbbcdu2nfwr32ib" \
   --date "2023-12-05T21:37:44.389Z"
 ```
+
+### Set contract admin
+Replaces the current contract admin with a new one.
+
+```rust
+fn set_admin(e: Env, new_admin: Address);
+```
+
+#### Example
+
+```bash
+soroban contract invoke \
+  --id CONTRACT_ID \
+  --source SOURCE_ACCOUNT_SECRET_KEY \
+  --rpc-url https://soroban-testnet.stellar.org:443 \
+  --network-passphrase 'Test SDF Network ; September 2015' \
+  -- \
+  set_admin \
+  --new_admin GCWZBFEKWUGQKYLCLI5ULI4DTXLEA7LPC5QVB55NZPC7FY2NGMLP4YMC
+
+```
+
 ### Upgrade contract
 Replaces the current contract code with a new one.
 

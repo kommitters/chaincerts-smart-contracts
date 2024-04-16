@@ -13,7 +13,7 @@ pub trait VCIssuanceTrait {
     /// Revokes a Verifiable Credential
     fn revoke(e: Env, vc_id: String, date: String);
 
-    /// Set the new contract admin.
+    /// Sets the new contract admin.
     fn set_admin(e: Env, new_admin: Address);
 
     /// Upgrades WASM code.

@@ -36,7 +36,7 @@ pub trait VaultTrait {
     /// Retrieves the vcs.
     fn get_vcs(e: Env) -> Vec<VerifiableCredential>;
 
-    /// Set the new contract admin.
+    /// Sets the new contract admin.
     fn set_admin(e: Env, new_admin: Address);
 
     /// Upgrades WASM code.

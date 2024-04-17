@@ -93,6 +93,12 @@ impl VCIssuanceTrait for VCIssuanceContract {
         e.deployer().update_current_contract_wasm(new_wasm_hash);
     }
 
+    fn set_admin(e: Env, new_admin: Address) {
+        validate_admin(&e);
+
+        storage::write_admin(&e, &new_admin);
+    }
+
     fn version(e: Env) -> String {
         String::from_str(&e, VERSION)
     }

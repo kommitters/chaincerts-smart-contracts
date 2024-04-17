@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.19.0 (17.04.2024)
+- Feature: [Set new admin function](https://github.com/kommitters/chaincerts-smart-contracts/issues/192)
+
 ## 0.18.0 (22.03.2024)
 - [Feature: Upgradeable contracts](https://github.com/kommitters/chaincerts-smart-contracts/pull/184)
 - [ci: Harden GitHub Actions](https://github.com/kommitters/chaincerts-smart-contracts/pull/185)

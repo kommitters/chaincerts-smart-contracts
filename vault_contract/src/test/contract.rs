@@ -390,6 +390,25 @@ fn test_get_vcs() {
 }
 
 #[test]
+fn test_set_admin() {
+    let VaultContractTest {
+        env,
+        admin,
+        issuer: _issuer,
+        did_init_args,
+        did_wasm_hash,
+        salt,
+        contract,
+    } = VaultContractTest::setup();
+
+    contract.initialize(&admin, &did_wasm_hash, &did_init_args, &salt);
+
+    let new_admin = Address::generate(&env);
+
+    contract.set_admin(&new_admin);
+}
+
+#[test]
 fn test_version() {
     let VaultContractTest {
         env,

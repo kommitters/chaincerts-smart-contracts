@@ -1,5 +1,5 @@
 use crate::test::setup::{create_vc, get_revoked_vc_map, get_valid_vc_map, VCIssuanceContractTest};
-use soroban_sdk::String;
+use soroban_sdk::{testutils::Address as _, Address, String};
 
 #[test]
 fn test_initialize_with_amount() {
@@ -196,6 +196,25 @@ fn test_verify_vc_with_revoked_vc() {
 
     let revoked_vc_map = get_revoked_vc_map(&env, date);
     assert_eq!(contract.verify(&vc_id), revoked_vc_map)
+}
+
+#[test]
+fn test_set_admin() {
+    let VCIssuanceContractTest {
+        env,
+        admin,
+        amount,
+        vc_id: _,
+        vc_data: _,
+        issuer_did,
+        contract,
+    } = VCIssuanceContractTest::setup();
+
+    contract.initialize(&admin, &issuer_did, &amount);
+
+    let new_admin = Address::generate(&env);
+
+    contract.set_admin(&new_admin);
 }
 
 #[test]

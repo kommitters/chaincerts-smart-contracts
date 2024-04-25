@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.19.1 (25.04.2024)
+- Add stale issues policy. See [PR #196](https://github.com/kommitters/chaincerts-smart-contracts/pull/196)
+
 ## 0.19.0 (17.04.2024)
 - Feature: [Set new admin function](https://github.com/kommitters/chaincerts-smart-contracts/issues/192)
 

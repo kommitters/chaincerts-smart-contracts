@@ -6,7 +6,7 @@ use soroban_sdk::{contracttype, Address, Env, String};
 pub enum DataKey {
     Admin,       // Address
     IssuerDID,   // String
-    VC(String),  // Vec<String>
+    VC(String),  // VCStatus
     Revocations, // Map<String, Revocation>
 }
 

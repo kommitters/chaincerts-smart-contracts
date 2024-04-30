@@ -1,4 +1,3 @@
-use crate::verifiable_credential::VerifiableCredential;
 use soroban_sdk::{Address, BytesN, Env, String, Val, Vec};
 
 pub trait VaultTrait {
@@ -32,9 +31,6 @@ pub trait VaultTrait {
 
     /// Revokes the vault.
     fn revoke_vault(e: Env);
-
-    /// Retrieves the vcs.
-    fn get_vcs(e: Env) -> Vec<VerifiableCredential>;
 
     /// Sets the new contract admin.
     fn set_admin(e: Env, new_admin: Address);

@@ -1,5 +1,5 @@
 use crate::storage;
-use soroban_sdk::{contracttype, Address, Env, String, Vec};
+use soroban_sdk::{contracttype, Address, Env, String};
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -11,14 +11,12 @@ pub struct VerifiableCredential {
 }
 
 pub fn store_vc(e: &Env, id: String, data: String, issuance_contract: Address, issuer_did: String) {
-    let mut vcs: Vec<VerifiableCredential> = storage::read_vcs(e);
     let new_vc: VerifiableCredential = VerifiableCredential {
-        id,
+        id: id.clone(),
         data,
         issuance_contract,
         issuer_did,
     };
 
-    vcs.push_front(new_vc);
-    storage::write_vcs(e, &vcs);
+    storage::write_vc(e, &id, &new_vc);
 }

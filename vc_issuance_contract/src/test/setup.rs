@@ -20,7 +20,6 @@ mod vault_contract {
 pub struct VCIssuanceContractTest<'a> {
     pub env: Env,
     pub admin: Address,
-    pub amount: Option<u32>,
     pub vc_id: String,
     pub vc_data: String,
     pub issuer_did: String,
@@ -34,7 +33,6 @@ impl<'a> VCIssuanceContractTest<'a> {
         let admin = Address::generate(&env);
         let contract =
             VCIssuanceContractClient::new(&env, &env.register_contract(None, VCIssuanceContract));
-        let amount = Some(10);
         let vc_id = String::from_str(&env, "iwvkdjquj3fscmafrgeeqblw");
         let vc_data = String::from_str(&env, "eoZXggNeVDW2g5GeA0G2s0QJBn3SZWzWSE3fXM9V6IB5wWIfFJRxPrTLQRMHulCF62bVQNmZkj7zbSa39fVjAUTtfm6JMio75uMxoDlAN/Y");
         let issuer_did = String::from_str(&env, "did:chaincerts:7dotwpyzo2weqj6oto6liic6");
@@ -42,7 +40,6 @@ impl<'a> VCIssuanceContractTest<'a> {
         VCIssuanceContractTest {
             env,
             admin,
-            amount,
             vc_id,
             vc_data,
             issuer_did,
@@ -56,7 +53,6 @@ pub fn create_vc(
     admin: &Address,
     contract: &VCIssuanceContractClient,
     issuer_did: &String,
-    amount: &Option<u32>,
 ) -> Address {
     let vault_admin = Address::generate(env);
     let vault_contract_address = env.register_contract_wasm(None, vault_contract::WASM);
@@ -69,7 +65,7 @@ pub fn create_vc(
     vault_client.initialize(&vault_admin, &did_wasm_hash, &did_init_args, &salt);
     vault_client.authorize_issuer(admin);
 
-    contract.initialize(admin, issuer_did, amount);
+    contract.initialize(admin, issuer_did);
     vault_contract_address
 }
 

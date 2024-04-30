@@ -8,8 +8,6 @@ use soroban_sdk::{
 };
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
-const DEFAULT_AMOUNT: u32 = 20;
-const MAX_AMOUNT: u32 = 200;
 
 contractmeta!(
     key = "Description",
@@ -21,18 +19,13 @@ pub struct VCIssuanceContract;
 
 #[contractimpl]
 impl VCIssuanceTrait for VCIssuanceContract {
-    fn initialize(e: Env, admin: Address, issuer_did: String, amount: Option<u32>) {
+    fn initialize(e: Env, admin: Address, issuer_did: String) {
         if storage::has_admin(&e) {
             panic_with_error!(e, ContractError::AlreadyInitialized);
-        }
-        if amount.is_some() && amount.unwrap() > MAX_AMOUNT {
-            panic_with_error!(e, ContractError::AmountLimitExceeded);
         }
 
         storage::write_admin(&e, &admin);
         storage::write_issuer_did(&e, &issuer_did);
-        storage::write_amount(&e, &amount.unwrap_or(DEFAULT_AMOUNT));
-
         // set initial empty values
         storage::write_vcs(&e, &Vec::new(&e));
         storage::write_vcs_revocations(&e, &Map::new(&e));
@@ -42,7 +35,6 @@ impl VCIssuanceTrait for VCIssuanceContract {
         let admin = validate_admin(&e);
 
         let vcs = storage::read_vcs(&e);
-        validate_vc_amount(&e, &vcs);
 
         let contract_address = e.current_contract_address();
         let issuer_did = storage::read_issuer_did(&e);
@@ -109,13 +101,6 @@ fn validate_admin(e: &Env) -> Address {
     contract_admin.require_auth();
 
     contract_admin
-}
-
-fn validate_vc_amount(e: &Env, vcs: &Vec<String>) {
-    let amount = storage::read_amount(e);
-    if amount == vcs.len() {
-        panic_with_error!(e, ContractError::IssuanceLimitExceeded);
-    }
 }
 
 fn validate_vc(e: &Env, vc_id: &String) {

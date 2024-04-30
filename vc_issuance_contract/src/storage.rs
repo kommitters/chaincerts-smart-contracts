@@ -6,7 +6,6 @@ use soroban_sdk::{contracttype, Address, Env, Map, String, Vec};
 pub enum DataKey {
     Admin,       // Address
     IssuerDID,   // String
-    Amount,      // U32
     VCs,         // Vec<String>
     Revocations, // Map<String, Revocation>
 }
@@ -34,16 +33,6 @@ pub fn read_issuer_did(e: &Env) -> String {
 pub fn write_issuer_did(e: &Env, issuer_did: &String) {
     let key = DataKey::IssuerDID;
     e.storage().instance().set(&key, issuer_did);
-}
-
-pub fn read_amount(e: &Env) -> u32 {
-    let key = DataKey::Amount;
-    e.storage().instance().get(&key).unwrap()
-}
-
-pub fn write_amount(e: &Env, amount: &u32) {
-    let key = DataKey::Amount;
-    e.storage().instance().set(&key, amount)
 }
 
 pub fn write_vcs(e: &Env, vc: &Vec<String>) {

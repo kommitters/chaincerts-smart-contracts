@@ -5,7 +5,6 @@ use soroban_sdk::contracterror;
 #[repr(u32)]
 pub enum ContractError {
     AlreadyInitialized = 1,
-    AmountLimitExceeded = 2,
     VCNotFound = 3,
     VCAlreadyRevoked = 4,
     IssuanceLimitExceeded = 5,

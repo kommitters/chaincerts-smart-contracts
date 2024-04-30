@@ -79,7 +79,7 @@ fn test_revoke_vc() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #3)")]
+#[should_panic(expected = "HostError: Error(Contract, #2)")]
 fn test_revoke_vc_with_invalid_vc() {
     let VCIssuanceContractTest {
         env,
@@ -98,7 +98,7 @@ fn test_revoke_vc_with_invalid_vc() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #4)")]
+#[should_panic(expected = "HostError: Error(Contract, #3)")]
 fn test_revoke_vc_when_it_was_already_revoked() {
     let VCIssuanceContractTest {
         env,

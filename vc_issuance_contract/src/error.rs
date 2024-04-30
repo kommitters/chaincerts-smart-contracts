@@ -7,5 +7,4 @@ pub enum ContractError {
     AlreadyInitialized = 1,
     VCNotFound = 3,
     VCAlreadyRevoked = 4,
-    IssuanceLimitExceeded = 5,
 }

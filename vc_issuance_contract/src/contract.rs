@@ -1,7 +1,7 @@
+use crate::error::ContractError;
 use crate::storage;
 use crate::vc_issuance_trait::VCIssuanceTrait;
-use crate::verifiable_credential::VCStatus;
-use crate::{error::ContractError, verifiable_credential};
+use crate::verifiable_credential::{self, VCStatus};
 use soroban_sdk::{
     contract, contractimpl, contractmeta, map, panic_with_error, vec, Address, BytesN, Env,
     FromVal, Map, String, Symbol, Val,
@@ -62,7 +62,9 @@ impl VCIssuanceTrait for VCIssuanceContract {
         match vc_status {
             VCStatus::Invalid => map![&e, (status_str, invalid_str)],
             VCStatus::Valid => map![&e, (status_str, valid_str)],
-            VCStatus::Revoked(revocation_date) => map![&e, (status_str, revoked_str), (since_str, revocation_date)]
+            VCStatus::Revoked(revocation_date) => {
+                map![&e, (status_str, revoked_str), (since_str, revocation_date)]
+            }
         }
     }
 

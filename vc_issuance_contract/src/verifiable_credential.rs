@@ -1,6 +1,6 @@
-use soroban_sdk::{contracttype, String, panic_with_error, Env};
 use crate::error::ContractError;
 use crate::storage;
+use soroban_sdk::{contracttype, panic_with_error, Env, String};
 
 #[derive(PartialEq)]
 #[contracttype]

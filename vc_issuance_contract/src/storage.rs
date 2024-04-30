@@ -1,5 +1,5 @@
-use soroban_sdk::{contracttype, Address, Env, String};
 use crate::verifiable_credential::VCStatus;
+use soroban_sdk::{contracttype, Address, Env, String};
 
 #[derive(Clone)]
 #[contracttype]
@@ -42,5 +42,8 @@ pub fn write_vc(e: &Env, vc_id: &String, status: &VCStatus) {
 
 pub fn read_vc(e: &Env, vc_id: &String) -> VCStatus {
     let key = DataKey::VC(vc_id.clone());
-    e.storage().persistent().get(&key).unwrap_or(VCStatus::Invalid)
+    e.storage()
+        .persistent()
+        .get(&key)
+        .unwrap_or(VCStatus::Invalid)
 }

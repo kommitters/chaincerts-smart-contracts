@@ -35,6 +35,9 @@ jobs:
       - name: Contract Build
         run: |
           soroban contract build
+      - name: Add clippy
+        run: |
+          rustup component add clippy
       - name: Code Verifications
         run: |
           cargo clippy --all-targets --all-features -- -D warnings

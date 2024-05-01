@@ -47,7 +47,7 @@ jobs:
       - name: Code Tests and coverage
         uses: actions-rs/tarpaulin@044a1e5bdace8dd2f727b1af63c1d9a1d3572068 # v0.1.3
         with:
-          version: 0.27.3
+          version: 0.22.0
           # Due to a bug with cargo-tarpaulin crate with multi-line chain calls, the test coverage was reduced.
           # https://github.com/xd009642/tarpaulin/issues/949
           args: --all-features --fail-under 95 --out Lcov

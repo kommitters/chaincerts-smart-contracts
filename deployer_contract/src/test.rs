@@ -53,11 +53,9 @@ fn test_deploy_from_address() {
 fn vc_issuance_init_args(env: &Env) -> Vec<Val> {
     let admin = Address::generate(env);
     let issuer_did = String::from_str(env, "did:chaincerts:3mtjfbxad3wzh7qa4w5f7q4h");
-    let amount: Option<u32> = Some(10);
     vec![
         env,
         Val::from_val(env, &admin),
         Val::from_val(env, &issuer_did),
-        Val::from_val(env, &amount),
     ]
 }

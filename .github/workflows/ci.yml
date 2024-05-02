@@ -34,7 +34,7 @@ jobs:
           soroban contract optimize --wasm target/wasm32-unknown-unknown/release/soroban_did_contract.wasm
       - name: Contract Build
         run: |
-          soroban contract build      
+          soroban contract build
       - name: Code Verifications
         run: |
           cargo clippy --all-targets --all-features -- -D warnings

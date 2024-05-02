@@ -1,5 +1,6 @@
 use soroban_sdk::{Address, BytesN, Env, String, Val, Vec};
 
+#[allow(dead_code)]
 pub trait VaultTrait {
     /// Initializes the vault contract by setting the admin and deploying the DID.
     fn initialize(

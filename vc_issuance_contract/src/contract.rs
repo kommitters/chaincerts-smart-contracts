@@ -14,6 +14,7 @@ contractmeta!(
     val = "Smart Contract to issue, transfer, verify, and revoke Verifiable Credentials (VCs).",
 );
 
+#[allow(dead_code)]
 #[contract]
 pub struct VCIssuanceContract;
 

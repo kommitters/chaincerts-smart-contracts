@@ -16,6 +16,7 @@ contractmeta!(
     val = "Smart contract for Chaincerts Vault",
 );
 
+#[allow(dead_code)]
 #[contract]
 pub struct VaultContract;
 

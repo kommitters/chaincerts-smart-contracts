@@ -1,5 +1,6 @@
 use soroban_sdk::{Address, BytesN, Env, Map, String};
 
+#[allow(dead_code)]
 pub trait VCIssuanceTrait {
     /// Initializes the Verifiable Credentials Issuance Contract by setting the admin and the issuer_did.
     fn initialize(e: Env, admin: Address, issuer_did: String);

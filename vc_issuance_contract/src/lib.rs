@@ -1,7 +1,6 @@
 #![no_std]
 mod contract;
 mod error;
-mod revocation;
 mod storage;
 mod vc_issuance_trait;
 mod verifiable_credential;

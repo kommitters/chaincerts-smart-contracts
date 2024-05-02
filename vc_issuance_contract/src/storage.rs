@@ -1,13 +1,12 @@
-use crate::revocation::Revocation;
-use soroban_sdk::{contracttype, Address, Env, Map, String, Vec};
+use crate::verifiable_credential::VCStatus;
+use soroban_sdk::{contracttype, Address, Env, String};
 
 #[derive(Clone)]
 #[contracttype]
 pub enum DataKey {
     Admin,       // Address
     IssuerDID,   // String
-    Amount,      // U32
-    VCs,         // Vec<String>
+    VC(String),  // VCStatus
     Revocations, // Map<String, Revocation>
 }
 
@@ -36,32 +35,15 @@ pub fn write_issuer_did(e: &Env, issuer_did: &String) {
     e.storage().instance().set(&key, issuer_did);
 }
 
-pub fn read_amount(e: &Env) -> u32 {
-    let key = DataKey::Amount;
-    e.storage().instance().get(&key).unwrap()
+pub fn write_vc(e: &Env, vc_id: &String, status: &VCStatus) {
+    let key = DataKey::VC(vc_id.clone());
+    e.storage().persistent().set(&key, status)
 }
 
-pub fn write_amount(e: &Env, amount: &u32) {
-    let key = DataKey::Amount;
-    e.storage().instance().set(&key, amount)
-}
-
-pub fn write_vcs(e: &Env, vc: &Vec<String>) {
-    let key = DataKey::VCs;
-    e.storage().persistent().set(&key, vc)
-}
-
-pub fn read_vcs(e: &Env) -> Vec<String> {
-    let key = DataKey::VCs;
-    e.storage().persistent().get(&key).unwrap()
-}
-
-pub fn write_vcs_revocations(e: &Env, revocations: &Map<String, Revocation>) {
-    let key = DataKey::Revocations;
-    e.storage().persistent().set(&key, revocations)
-}
-
-pub fn read_vcs_revocations(e: &Env) -> Map<String, Revocation> {
-    let key = DataKey::Revocations;
-    e.storage().persistent().get(&key).unwrap()
+pub fn read_vc(e: &Env, vc_id: &String) -> VCStatus {
+    let key = DataKey::VC(vc_id.clone());
+    e.storage()
+        .persistent()
+        .get(&key)
+        .unwrap_or(VCStatus::Invalid)
 }

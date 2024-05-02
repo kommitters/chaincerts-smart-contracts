@@ -16,34 +16,13 @@ With this smart contract, you will be able to:
 - Upgrade the contract.
 - Get the contract version.
 
-## Types
-
-### Revocation
-Represents a revoked verifiable credential.
-
-### Attributes
-
-| Name         | Type      | Values                                            |
-| ------------ | --------- | ------------------------------------------------- |
-| `vc_id` | `String` | The verifiable credential id.                      |
-| `date`    | `String`    | The date of revocation. |
-
-### Example
-
-```bash
-{
-  "vc_id": "a4tkzct2njbbcdu2nfwr32ib",
-  "date": "2023-12-05T21:37:44.389Z"
-}
-```
-
 ## Functions
 
 ### Initialize
-Initializes the contract by setting the contract admin, the issuer DID and the limit amount of verifiable credentials that can be issued. The maximum amount allowed is **200**; if no amount is provided, the default value is **20**. An error will be triggered if the contract has already been initialized.
+Initializes the contract by setting the contract admin and the issuer DID. An error will be triggered if the contract has already been initialized.
 
 ```rust
-fn initialize(e: Env, admin: Address, issuer_did: String, amount: Option<u32>);
+fn initialize(e: Env, admin: Address, issuer_did: String);
 ```
 
 #### Example:
@@ -101,7 +80,7 @@ soroban contract invoke \
 ```
 
 ### Verify
-Verifies the verifiable credential status, returning a map indicating if it is **valid** or **revoked**. If the status is revoked, it additionally provides the date of revocation. An error will be triggered if the verifiable credential is not registered.
+Verifies the verifiable credential status, returning a map indicating if it is **valid**, **revoked** or **invalid**. If the status is revoked, it additionally provides the date of revocation. An error will be triggered if the verifiable credential is not registered.
 
 ```rust
 fn verify(e: Env, vc_id: String) -> Map<String, String>;
@@ -247,10 +226,8 @@ soroban contract invoke \
 | Code | Error                   | Description                                                             |
 | ---- | ----------------------- | ----------------------------------------------------------------------- |
 | 1    | `AlreadyInitialized`    | Contract has already been initialized                                   |
-| 2    | `AmountLimitExceeded`   | Provided amount exceeds the maximum allowed                             |
 | 3    | `VCNotFound`            | Verifiable credential not found                                         |
 | 4    | `VCAlreadyRevoked`      | Verifiable credential already revoked                                   |
-| 5    | `IssuanceLimitExceeded` | Contract issuance limit exceeded                                        |
 
 ## Development
 

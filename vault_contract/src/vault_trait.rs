@@ -1,6 +1,6 @@
-use crate::verifiable_credential::VerifiableCredential;
 use soroban_sdk::{Address, BytesN, Env, String, Val, Vec};
 
+#[allow(dead_code)]
 pub trait VaultTrait {
     /// Initializes the vault contract by setting the admin and deploying the DID.
     fn initialize(
@@ -32,9 +32,6 @@ pub trait VaultTrait {
 
     /// Revokes the vault.
     fn revoke_vault(e: Env);
-
-    /// Retrieves the vcs.
-    fn get_vcs(e: Env) -> Vec<VerifiableCredential>;
 
     /// Sets the new contract admin.
     fn set_admin(e: Env, new_admin: Address);

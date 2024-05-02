@@ -12,7 +12,6 @@ With this smart contract, you will be able to:
 - Revoke an issuer for a specific vault.
 - Store a verifiable credential in the recipient's vault.
 - Revoke the vault.
-- Retrieve the list of stored vcs in the vault.
 - Set the contract admin.
 - Upgrade the contract.
 - Get the contract version.
@@ -28,7 +27,7 @@ Represents a digitally signed statement made by an issuer about a DID subject.
 | `id`                | `String`  | Unique identifier (e.g., `t5iwuct2njbbcdu2nfwr32ib`).                          |
 | `data`              | `String`  | VC data encrypted utilizing a key agreement algorithm for heightened security. |
 | `issuance_contract` | `Address` | Smart contract address responsible for verifiable credential issuance.         |
-| `issuer_did`        | `String`  | DID of the verifiable credential issuer.                                  |
+| `issuer_did`        | `String`  | DID of the verifiable credential issuer.                                       |
 
 #### Example
 

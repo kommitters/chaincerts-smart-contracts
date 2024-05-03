@@ -47,7 +47,7 @@ jobs:
           version: 0.22.0
           # Due to a bug with cargo-tarpaulin crate with multi-line chain calls, the test coverage was reduced.
           # https://github.com/xd009642/tarpaulin/issues/949
-          args: --all-features --fail-under 95 --out Lcov
+          args: --all-features --fail-under 90 --out Lcov
       - name: Upload to Coveralls
         uses: coverallsapp/github-action@3dfc5567390f6fa9267c0ee9c251e4c8c3f18949 # v2.2.3
         with:

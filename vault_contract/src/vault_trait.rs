@@ -33,6 +33,9 @@ pub trait VaultTrait {
     /// Revokes the vault.
     fn revoke_vault(e: Env);
 
+    /// Migrates the VCs from being stored in a single vector to multiple vectors.
+    fn migrate(e: Env);
+
     /// Sets the new contract admin.
     fn set_admin(e: Env, new_admin: Address);
 

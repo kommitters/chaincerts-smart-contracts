@@ -12,6 +12,7 @@ With this smart contract, you will be able to:
 - Revoke an issuer for a specific vault.
 - Store a verifiable credential in the recipient's vault.
 - Revoke the vault.
+- Migrate the VCs key for contracts older than version v0.20.0.
 - Set the contract admin.
 - Upgrade the contract.
 - Get the contract version.
@@ -216,6 +217,25 @@ soroban contract invoke \
   --network-passphrase 'Test SDF Network ; September 2015' \
   -- \
   revoke_vault
+```
+
+### Migrate VCs
+Migrates the VCs from being stored in a single vector to multiple vectors.
+
+```rust
+fn migrate(e: Env);
+```
+
+#### Example
+
+```bash
+soroban contract invoke \
+  --id CONTRACT_ID \
+  --source SOURCE_ACCOUNT_SECRET_KEY \
+  --rpc-url https://soroban-testnet.stellar.org:443 \
+  --network-passphrase 'Test SDF Network ; September 2015' \
+  -- \
+  migrate
 ```
 
 ### Set contract admin

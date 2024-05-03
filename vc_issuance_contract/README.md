@@ -12,6 +12,7 @@ With this smart contract, you will be able to:
 - Issue a verifiable credential.
 - Verify a verifiable credential.
 - Revoke a verifiable credential.
+- Migrate the VCs key for contracts older than version v0.20.0.
 - Set the contract admin.
 - Upgrade the contract.
 - Get the contract version.
@@ -152,6 +153,25 @@ soroban contract invoke \
   revoke \
   --vc_id "t5iwuct2njbbcdu2nfwr32ib" \
   --date "2023-12-05T21:37:44.389Z"
+```
+
+### Migrate VCs
+Migrates the VCs from being stored in a single vector to multiple vectors.
+
+```rust
+fn migrate(e: Env);
+```
+
+#### Example
+
+```bash
+soroban contract invoke \
+  --id CONTRACT_ID \
+  --source SOURCE_ACCOUNT_SECRET_KEY \
+  --rpc-url https://soroban-testnet.stellar.org:443 \
+  --network-passphrase 'Test SDF Network ; September 2015' \
+  -- \
+  migrate
 ```
 
 ### Set contract admin

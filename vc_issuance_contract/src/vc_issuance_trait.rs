@@ -17,6 +17,9 @@ pub trait VCIssuanceTrait {
     /// Sets the new contract admin.
     fn set_admin(e: Env, new_admin: Address);
 
+    /// Migrates the VCs from being stored in a single vector to multiple vectors.
+    fn migrate(e: Env);
+
     /// Upgrades WASM code.
     fn upgrade(e: Env, new_wasm_hash: BytesN<32>);
 

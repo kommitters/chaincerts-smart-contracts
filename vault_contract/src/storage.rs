@@ -10,6 +10,7 @@ pub enum DataKey {
     Revoked,     // Boolean
     Issuers,     // Vec<Address>
     VC(String),  // VerifiableCredential
+    VCs,         // Vec<VerifiableCredential>
 }
 
 pub fn has_admin(e: &Env) -> bool {
@@ -60,4 +61,14 @@ pub fn write_issuers(e: &Env, issuers: &Vec<Address>) {
 pub fn write_vc(e: &Env, vc_id: &String, vc: &VerifiableCredential) {
     let key = DataKey::VC(vc_id.clone());
     e.storage().persistent().set(&key, vc)
+}
+
+pub fn read_old_vcs(e: &Env) -> Option<Vec<VerifiableCredential>> {
+    let key = DataKey::VCs;
+    e.storage().persistent().get(&key)
+}
+
+pub fn remove_old_vcs(e: &Env) {
+    let key = DataKey::VCs;
+    e.storage().persistent().remove(&key);
 }

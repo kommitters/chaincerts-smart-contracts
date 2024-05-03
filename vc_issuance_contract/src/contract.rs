@@ -76,9 +76,32 @@ impl VCIssuanceTrait for VCIssuanceContract {
         verifiable_credential::revoke_vc(&e, vc_id, date);
     }
 
+    fn migrate(e: Env) {
+        validate_admin(&e);
+
+        let vcs = storage::read_old_vcs(&e);
+
+        if vcs.is_none() {
+            panic_with_error!(e, ContractError::VCSAlreadyMigrated)
+        }
+
+        let revocations = storage::read_old_revocations(&e);
+
+        for vc_id in vcs.unwrap().iter() {
+            match revocations.get(vc_id.clone()) {
+                Some(revocation) => {
+                    storage::write_vc(&e, &vc_id.clone(), &VCStatus::Revoked(revocation.date))
+                }
+                None => storage::write_vc(&e, &vc_id, &VCStatus::Valid),
+            }
+        }
+
+        storage::remove_old_vcs(&e);
+        storage::remove_old_revocations(&e);
+    }
+
     fn upgrade(e: Env, new_wasm_hash: BytesN<32>) {
-        let admin = storage::read_admin(&e);
-        admin.require_auth();
+        validate_admin(&e);
 
         e.deployer().update_current_contract_wasm(new_wasm_hash);
     }

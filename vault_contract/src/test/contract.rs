@@ -331,6 +331,23 @@ fn test_revoke_vault() {
 }
 
 #[test]
+#[should_panic(expected = "HostError: Error(Contract, #5)")]
+fn test_migrate_should_fail_without_vcs() {
+    let VaultContractTest {
+        env: _,
+        admin,
+        issuer: _,
+        did_init_args,
+        did_wasm_hash,
+        salt,
+        contract,
+    } = VaultContractTest::setup();
+
+    contract.initialize(&admin, &did_wasm_hash, &did_init_args, &salt);
+    contract.migrate();
+}
+
+#[test]
 fn test_set_admin() {
     let VaultContractTest {
         env,

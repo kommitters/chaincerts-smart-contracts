@@ -1,5 +1,5 @@
 use crate::verifiable_credential::VCStatus;
-use soroban_sdk::{contracttype, Address, Env, String};
+use soroban_sdk::{contracttype, Address, Env, Map, String, Vec};
 
 #[derive(Clone)]
 #[contracttype]
@@ -8,6 +8,14 @@ pub enum DataKey {
     IssuerDID,   // String
     VC(String),  // VCStatus
     Revocations, // Map<String, Revocation>
+    VCs,         // Vec<VerifiableCredential>
+}
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Revocation {
+    pub vc_id: String,
+    pub date: String,
 }
 
 pub fn has_admin(e: &Env) -> bool {
@@ -46,4 +54,24 @@ pub fn read_vc(e: &Env, vc_id: &String) -> VCStatus {
         .persistent()
         .get(&key)
         .unwrap_or(VCStatus::Invalid)
+}
+
+pub fn read_old_vcs(e: &Env) -> Option<Vec<String>> {
+    let key = DataKey::VCs;
+    e.storage().persistent().get(&key)
+}
+
+pub fn remove_old_vcs(e: &Env) {
+    let key = DataKey::VCs;
+    e.storage().persistent().remove(&key);
+}
+
+pub fn read_old_revocations(e: &Env) -> Map<String, Revocation> {
+    let key = DataKey::Revocations;
+    e.storage().persistent().get(&key).unwrap()
+}
+
+pub fn remove_old_revocations(e: &Env) {
+    let key = DataKey::Revocations;
+    e.storage().persistent().remove(&key);
 }

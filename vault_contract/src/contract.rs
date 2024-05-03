@@ -87,6 +87,28 @@ impl VaultTrait for VaultContract {
         storage::write_revoked(&e, &true);
     }
 
+    fn migrate(e: Env) {
+        validate_admin(&e);
+
+        let vcs = storage::read_old_vcs(&e);
+
+        if vcs.is_none() {
+            panic_with_error!(e, ContractError::VCSAlreadyMigrated)
+        }
+
+        for vc in vcs.unwrap().iter() {
+            verifiable_credential::store_vc(
+                &e,
+                vc.id.clone(),
+                vc.data.clone(),
+                vc.issuance_contract.clone(),
+                vc.issuer_did.clone(),
+            );
+        }
+
+        storage::remove_old_vcs(&e);
+    }
+
     fn set_admin(e: Env, new_admin: Address) {
         validate_admin(&e);
 

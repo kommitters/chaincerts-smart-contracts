@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.20.0 (08.05.2024)
+- Remove VCs amount limit. See [PR #200](https://github.com/kommitters/chaincerts-smart-contracts/pull/200)
+- Migrate VCs storage in old contracts. See [PR #203](https://github.com/kommitters/chaincerts-smart-contracts/pull/203)
+
 ## 0.19.1 (25.04.2024)
 - Add stale issues policy. See [PR #196](https://github.com/kommitters/chaincerts-smart-contracts/pull/196)
 

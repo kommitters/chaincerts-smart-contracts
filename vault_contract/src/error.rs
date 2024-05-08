@@ -8,4 +8,5 @@ pub enum ContractError {
     IssuerNotAuthorized = 2,
     IssuerAlreadyAuthorized = 3,
     VaultRevoked = 4,
+    VCSAlreadyMigrated = 5,
 }

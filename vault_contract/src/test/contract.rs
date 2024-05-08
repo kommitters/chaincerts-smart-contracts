@@ -1,7 +1,6 @@
 use super::setup::{did_context, get_vc_setup, VCVaultContractTest};
 use crate::did_contract;
 use crate::test::setup::VaultContractTest;
-use crate::verifiable_credential::VerifiableCredential;
 use soroban_sdk::{testutils::Address as _, vec, Address, String};
 
 #[test]
@@ -332,61 +331,20 @@ fn test_revoke_vault() {
 }
 
 #[test]
-fn test_get_vcs() {
+#[should_panic(expected = "HostError: Error(Contract, #5)")]
+fn test_migrate_should_fail_without_vcs() {
     let VaultContractTest {
-        env,
+        env: _,
         admin,
-        issuer,
+        issuer: _,
         did_init_args,
         did_wasm_hash,
         salt,
         contract,
     } = VaultContractTest::setup();
 
-    let VCVaultContractTest {
-        vc_id,
-        vc_data,
-        issuance_contract_address,
-        issuer_did,
-    } = get_vc_setup(&env);
-
-    let vc_id_2 = String::from_str(&env, "vc_id2");
-
-    let vc_1 = VerifiableCredential {
-        id: vc_id.clone(),
-        data: vc_data.clone(),
-        issuance_contract: issuance_contract_address.clone(),
-        issuer_did: issuer_did.clone(),
-    };
-
-    let vc_2 = VerifiableCredential {
-        id: vc_id_2.clone(),
-        data: vc_data.clone(),
-        issuance_contract: issuance_contract_address.clone(),
-        issuer_did: issuer_did.clone(),
-    };
-
     contract.initialize(&admin, &did_wasm_hash, &did_init_args, &salt);
-    contract.authorize_issuer(&issuer);
-    contract.store_vc(
-        &vc_id,
-        &vc_data,
-        &issuer,
-        &issuer_did,
-        &issuance_contract_address,
-    );
-    contract.store_vc(
-        &vc_id_2,
-        &vc_data,
-        &issuer,
-        &issuer_did,
-        &issuance_contract_address,
-    );
-    let vcs = contract.get_vcs();
-
-    assert_eq!(vcs.len(), 2);
-    assert_eq!(vcs.get_unchecked(1), vc_1);
-    assert_eq!(vcs.get_unchecked(0), vc_2);
+    contract.migrate();
 }
 
 #[test]

@@ -12,7 +12,7 @@ With this smart contract, you will be able to:
 - Revoke an issuer for a specific vault.
 - Store a verifiable credential in the recipient's vault.
 - Revoke the vault.
-- Retrieve the list of stored vcs in the vault.
+- Migrate the VCs key for contracts older than version v0.20.0.
 - Set the contract admin.
 - Upgrade the contract.
 - Get the contract version.
@@ -28,7 +28,7 @@ Represents a digitally signed statement made by an issuer about a DID subject.
 | `id`                | `String`  | Unique identifier (e.g., `t5iwuct2njbbcdu2nfwr32ib`).                          |
 | `data`              | `String`  | VC data encrypted utilizing a key agreement algorithm for heightened security. |
 | `issuance_contract` | `Address` | Smart contract address responsible for verifiable credential issuance.         |
-| `issuer_did`        | `String`  | DID of the verifiable credential issuer.                                  |
+| `issuer_did`        | `String`  | DID of the verifiable credential issuer.                                       |
 
 #### Example
 
@@ -219,15 +219,12 @@ soroban contract invoke \
   revoke_vault
 ```
 
-### Get VCs
-Retrieve the list of stored vcs in the vault.
+### Migrate VCs
+Migrates the VCs from being stored in a single vector to multiple vectors.
 
 ```rust
-fn get_vcs(e: Env) -> Vec<VerifiableCredential>;
+fn migrate(e: Env);
 ```
-
-#### Output
-Returns a list of vcs.
 
 #### Example
 
@@ -238,23 +235,7 @@ soroban contract invoke \
   --rpc-url https://soroban-testnet.stellar.org:443 \
   --network-passphrase 'Test SDF Network ; September 2015' \
   -- \
-  get_vcs
-
-# Output: VCs
-[
-  {
-    "id": "t5iwuct2njbbcdu2nfwr32ib",
-    "data": "gzLDVsdtPc6w8tOhyiaftVPu9gI8J+/8UKlIAmTVNkiV0QAAfahvqhgMY2ZNLHnksFA15XiLDiXb6Yam39rcif94XrsVnXZ7UKuhOFqgMew",
-    "issuance_contract": "CBCA3EDJOEHHVH3X2RGWQNUDWVHP2JZHFYVGSSCDWD3RI3IUYY4FKLD4",
-    "issuer_did": "did:chaincerts:5ppl9sm47frl0tpj7g3lp6eo"
-  },
-  {
-    "id": "wqzrxs3eq2v90i5un1ph7k8l",
-    "data": "Pc1hVUB2Mz8jXw9rEk7NxF4Lg5vmB3rYscAItJfRqiD0dVxkpwZqXlO2eau7YcDIoZaVlqSRF7sQ1B2YnmfIY",
-    "issuance_contract": "CBRM3HA7GLEI6QQ3O55RUKVRDSQASARUPKK6NXKXKKPWEYLE533GDYQD",
-    "issuer_did": "did:chaincerts:pe4t2r94dftr1n1gf6jikt6a"
-  }
-]
+  migrate
 ```
 
 ### Set contract admin

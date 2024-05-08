@@ -4,11 +4,13 @@ use soroban_sdk::{contracttype, Address, Env, String, Vec};
 #[derive(Clone)]
 #[contracttype]
 pub enum DataKey {
-    Admin,   // Address
-    Did,     // String
-    Revoked, // Boolean
-    Issuers, // Vec<Address>
-    VCs,     // Vec<VerifiableCredential>
+    Admin,       // Address
+    Did,         // String
+    DidContract, // Address
+    Revoked,     // Boolean
+    Issuers,     // Vec<Address>
+    VC(String),  // VerifiableCredential
+    VCs,         // Vec<VerifiableCredential>
 }
 
 pub fn has_admin(e: &Env) -> bool {
@@ -31,6 +33,11 @@ pub fn write_did(e: &Env, did: &String) {
     e.storage().instance().set(&key, did);
 }
 
+pub fn write_did_contract(e: &Env, did_contract: &Address) {
+    let key = DataKey::DidContract;
+    e.storage().instance().set(&key, did_contract);
+}
+
 pub fn read_revoked(e: &Env) -> bool {
     let key = DataKey::Revoked;
     e.storage().instance().get(&key).unwrap()
@@ -51,12 +58,17 @@ pub fn write_issuers(e: &Env, issuers: &Vec<Address>) {
     e.storage().persistent().set(&key, issuers)
 }
 
-pub fn read_vcs(e: &Env) -> Vec<VerifiableCredential> {
-    let key = DataKey::VCs;
-    e.storage().persistent().get(&key).unwrap()
+pub fn write_vc(e: &Env, vc_id: &String, vc: &VerifiableCredential) {
+    let key = DataKey::VC(vc_id.clone());
+    e.storage().persistent().set(&key, vc)
 }
 
-pub fn write_vcs(e: &Env, vcs: &Vec<VerifiableCredential>) {
+pub fn read_old_vcs(e: &Env) -> Option<Vec<VerifiableCredential>> {
     let key = DataKey::VCs;
-    e.storage().persistent().set(&key, vcs)
+    e.storage().persistent().get(&key)
+}
+
+pub fn remove_old_vcs(e: &Env) {
+    let key = DataKey::VCs;
+    e.storage().persistent().remove(&key);
 }

@@ -4,7 +4,6 @@ use crate::issuer;
 use crate::storage;
 use crate::vault_trait::VaultTrait;
 use crate::verifiable_credential;
-use crate::verifiable_credential::VerifiableCredential;
 use soroban_sdk::{
     contract, contractimpl, contractmeta, panic_with_error, Address, BytesN, Env, IntoVal, String,
     Symbol, Val, Vec,
@@ -17,6 +16,7 @@ contractmeta!(
     val = "Smart contract for Chaincerts Vault",
 );
 
+#[allow(dead_code)]
 #[contract]
 pub struct VaultContract;
 
@@ -38,9 +38,9 @@ impl VaultTrait for VaultContract {
 
         storage::write_admin(&e, &admin);
         storage::write_did(&e, &did_uri);
+        storage::write_did_contract(&e, &did_contract_address);
         storage::write_revoked(&e, &false);
         storage::write_issuers(&e, &Vec::new(&e));
-        storage::write_vcs(&e, &Vec::new(&e));
 
         (did_contract_address, did_document.into_val(&e))
     }
@@ -75,7 +75,7 @@ impl VaultTrait for VaultContract {
         issuance_contract: Address,
     ) {
         validate_vault_revoked(&e);
-        validate_issuer(&e, &issuer, &vc_data, &issuance_contract);
+        validate_issuer(&e, &issuer);
 
         verifiable_credential::store_vc(&e, vc_id, vc_data, issuance_contract, issuer_did);
     }
@@ -87,8 +87,26 @@ impl VaultTrait for VaultContract {
         storage::write_revoked(&e, &true);
     }
 
-    fn get_vcs(e: Env) -> Vec<VerifiableCredential> {
-        storage::read_vcs(&e)
+    fn migrate(e: Env) {
+        validate_admin(&e);
+
+        let vcs = storage::read_old_vcs(&e);
+
+        if vcs.is_none() {
+            panic_with_error!(e, ContractError::VCSAlreadyMigrated)
+        }
+
+        for vc in vcs.unwrap().iter() {
+            verifiable_credential::store_vc(
+                &e,
+                vc.id.clone(),
+                vc.data.clone(),
+                vc.issuance_contract.clone(),
+                vc.issuer_did.clone(),
+            );
+        }
+
+        storage::remove_old_vcs(&e);
     }
 
     fn set_admin(e: Env, new_admin: Address) {
@@ -114,16 +132,14 @@ fn validate_admin(e: &Env) {
     contract_admin.require_auth();
 }
 
-fn validate_issuer(e: &Env, issuer: &Address, vc_data: &String, issuance_contract: &Address) {
+fn validate_issuer(e: &Env, issuer: &Address) {
     let issuers: Vec<Address> = storage::read_issuers(e);
 
     if !issuer::is_authorized(&issuers, issuer) {
         panic_with_error!(e, ContractError::IssuerNotAuthorized)
     }
 
-    issuer.require_auth_for_args(
-        (vc_data.clone(), issuer.clone(), issuance_contract.clone()).into_val(e),
-    );
+    issuer.require_auth();
 }
 
 fn validate_vault_revoked(e: &Env) {
